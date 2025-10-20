@@ -1,10 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from app.auth import register_user, login_user
+
 
 # Încarcă cheia API din .env
 load_dotenv()
@@ -52,3 +54,22 @@ async def generate_recipe(ingredients: Ingredients):
         raise HTTPException(status_code=500, detail=f"Eroare OpenAI: {e}")
 
     return {"recipes": response.choices[0].message.content}
+
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    otp_code: str
+
+@app.post("/register")
+def register(data: RegisterRequest):
+    # accesezi câmpurile: data.email, data.password
+    return register_user(data.email, data.password)
+
+@app.post("/login")
+def login(data: LoginRequest):
+    return login_user(data.email, data.password, data.otp_code)
