@@ -1,0 +1,12 @@
+fastapi==0.118.0
+uvicorn==0.37.0
+python-dotenv==1.1.1
+pymongo==4.15.2
+passlib[bcrypt]==1.7.4
+pyotp==2.9.0
+pydantic==2.12.0
+torch==2.9.1
+torchvision==0.24.1
+pillow==11.0.0
+numpy==2.2.1
+python-multipart==0.0.6
