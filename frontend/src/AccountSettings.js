@@ -74,15 +74,12 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
 
       const data = await res.json();
       
-      // Parola este corectă DOAR dacă primim status 400 cu mesajul "No changes requested"
-      if (res.ok && res.status === 400 && data.detail === "No changes requested") {
+      // Parola este corectă dacă primim 200 OK cu validation_only=true
+      if (res.ok && data.validation_only === true) {
         setPasswordValid(true);
       } else if (!res.ok && res.status === 401) {
         // 401 = Unauthorized = parolă incorectă
         setPasswordValid(false);
-      } else if (!res.ok && res.status === 400 && data.detail === "No changes requested") {
-        // Backend returnează 400 pentru "No changes requested" - înseamnă că parola e corectă
-        setPasswordValid(true);
       } else {
         // Orice alt caz = parolă incorectă
         setPasswordValid(false);

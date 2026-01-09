@@ -372,9 +372,13 @@ async def update_account_settings(email: str, settings_data: AccountSettingsData
         if not pbkdf2_sha256.verify(settings_data.current_password, stored_password_hash):
             raise HTTPException(status_code=401, detail="Current password is incorrect")
         
-        # Now validate that at least one change is requested
+        # If only validating password (no changes requested), return success
         if not settings_data.new_email and not settings_data.new_password:
-            raise HTTPException(status_code=400, detail="No changes requested")
+            return {
+                "status": "success",
+                "message": "Password validated successfully",
+                "validation_only": True
+            }
         
         # Prepare updates
         updates = {}
