@@ -8,7 +8,8 @@ from typing import Optional
 from app.auth import register_user, login_user
 from app.model import get_model
 from app.nutrition import get_nutrition_info, format_nutrition_response
-from app.database import food_analyses_collection
+from app.database import food_analyses_collection, user_profiles_collection, users_collection
+from passlib.hash import pbkdf2_sha256
 
 
 # Load environment variables
@@ -115,13 +116,13 @@ def login(data: LoginRequest):
     return login_user(data.email, data.password, data.otp_code)
 
 @app.get("/analysis_history/{user_email}")
-def get_analysis_history(user_email: str, limit: int = 10):
+def get_analysis_history(user_email: str, limit: int = 100):
     """
     Get food analysis history for a specific user.
     
     Args:
         user_email: Email of the authenticated user
-        limit: Maximum number of results to return (default: 10)
+        limit: Maximum number of results to return (default: 100)
         
     Returns:
         List of past analyses with ingredients and nutrition data
@@ -230,3 +231,193 @@ async def toggle_favorite(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error toggling favorite: {str(e)}")
+
+
+# User Profile Models
+class UserProfileData(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    height: Optional[float] = None  # in cm
+    weight: Optional[float] = None  # in kg
+    sex: Optional[str] = None  # "male", "female", "other"
+
+
+@app.get("/user_profile/{email}")
+async def get_user_profile(email: str):
+    """
+    Get user profile data (personal information).
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        User profile data or empty object if not yet filled
+    """
+    try:
+        profile = user_profiles_collection.find_one({"email": email})
+        
+        if not profile:
+            # Return empty profile if not found
+            return {
+                "status": "success",
+                "profile": {
+                    "email": email,
+                    "first_name": "",
+                    "last_name": "",
+                    "age": None,
+                    "height": None,
+                    "weight": None,
+                    "sex": ""
+                }
+            }
+        
+        # Remove MongoDB _id from response
+        if "_id" in profile:
+            del profile["_id"]
+        
+        return {
+            "status": "success",
+            "profile": profile
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching profile: {str(e)}")
+
+
+@app.put("/user_profile/{email}")
+async def update_user_profile(email: str, profile_data: UserProfileData):
+    """
+    Update user profile data (personal information).
+    
+    Args:
+        email: User's email address
+        profile_data: Profile data to update
+        
+    Returns:
+        Updated profile data
+    """
+    try:
+        # Validate sex field if provided
+        if profile_data.sex and profile_data.sex not in ["male", "female", "other", ""]:
+            raise HTTPException(status_code=400, detail="Invalid sex value. Must be: male, female, or other")
+        
+        # Prepare update data (only include non-None fields)
+        update_data = {"email": email}
+        if profile_data.first_name is not None:
+            update_data["first_name"] = profile_data.first_name
+        if profile_data.last_name is not None:
+            update_data["last_name"] = profile_data.last_name
+        if profile_data.age is not None:
+            update_data["age"] = profile_data.age
+        if profile_data.height is not None:
+            update_data["height"] = profile_data.height
+        if profile_data.weight is not None:
+            update_data["weight"] = profile_data.weight
+        if profile_data.sex is not None:
+            update_data["sex"] = profile_data.sex
+        
+        # Upsert (update if exists, insert if not)
+        user_profiles_collection.update_one(
+            {"email": email},
+            {"$set": update_data},
+            upsert=True
+        )
+        
+        # Fetch and return updated profile
+        updated_profile = user_profiles_collection.find_one({"email": email})
+        if "_id" in updated_profile:
+            del updated_profile["_id"]
+        
+        return {
+            "status": "success",
+            "message": "Profile updated successfully",
+            "profile": updated_profile
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
+
+
+# Account Settings Models
+class AccountSettingsData(BaseModel):
+    current_password: str
+    new_email: Optional[str] = None
+    new_password: Optional[str] = None
+
+
+@app.put("/account_settings/{email}")
+async def update_account_settings(email: str, settings_data: AccountSettingsData):
+    """
+    Update account settings (email and/or password).
+    User must provide current password for verification.
+    
+    Args:
+        email: Current user's email address
+        settings_data: New settings data including current password for verification
+        
+    Returns:
+        Success message with updated email if changed
+    """
+    try:
+        # Find user in database first
+        user = users_collection.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Verify current password FIRST (before checking if changes are requested)
+        stored_password_hash = user["password"]
+        
+        # Use passlib's pbkdf2_sha256 to verify (same as auth.py)
+        if not pbkdf2_sha256.verify(settings_data.current_password, stored_password_hash):
+            raise HTTPException(status_code=401, detail="Current password is incorrect")
+        
+        # Now validate that at least one change is requested
+        if not settings_data.new_email and not settings_data.new_password:
+            raise HTTPException(status_code=400, detail="No changes requested")
+        
+        # Prepare updates
+        updates = {}
+        new_email_value = email  # Default to current email
+        
+        # Update email if provided
+        if settings_data.new_email and settings_data.new_email != email:
+            # Check if new email already exists
+            existing_user = users_collection.find_one({"email": settings_data.new_email})
+            if existing_user:
+                raise HTTPException(status_code=400, detail="Email already in use")
+            
+            updates["email"] = settings_data.new_email
+            new_email_value = settings_data.new_email
+            
+            # Also update email in user_profiles and food_analyses
+            user_profiles_collection.update_one(
+                {"email": email},
+                {"$set": {"email": settings_data.new_email}}
+            )
+            # Note: For food_analyses, we keep the old email for historical accuracy
+            # but you could update if needed
+        
+        # Update password if provided
+        if settings_data.new_password:
+            # Hash the new password using passlib (same as registration)
+            new_password_hash = pbkdf2_sha256.hash(settings_data.new_password)
+            updates["password"] = new_password_hash
+        
+        # Apply updates to users collection
+        if updates:
+            users_collection.update_one(
+                {"email": email},
+                {"$set": updates}
+            )
+        
+        return {
+            "status": "success",
+            "message": "Account settings updated successfully",
+            "new_email": new_email_value
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating account settings: {str(e)}")
+

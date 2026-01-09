@@ -1,12 +1,37 @@
 import { useState, useEffect } from "react";
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 import "./App.css";
 
-export default function Dashboard({ userEmail, onBack, onLogout, onNavigate }) {
+export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, darkMode, toggleDarkMode, handleSettings, handleHelp }) {
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [timeRange, setTimeRange] = useState(7); // 7 or 30 days
+  const [showNavDropdown, setShowNavDropdown] = useState(false);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
+  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
+
+  const handleNavMouseEnter = () => {
+    if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
+    setShowNavDropdown(true);
+  };
+
+  const handleNavMouseLeave = () => {
+    const timeout = setTimeout(() => setShowNavDropdown(false), 200);
+    setNavDropdownTimeout(timeout);
+  };
+
+  const handleUserMouseEnter = () => {
+    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
+    setShowUserDropdown(true);
+  };
+
+  const handleUserMouseLeave = () => {
+    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
+    setUserDropdownTimeout(timeout);
+  };
 
   useEffect(() => {
     fetchAnalyses();
@@ -15,7 +40,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate }) {
 
   const fetchAnalyses = async () => {
     try {
-      const res = await fetch(`http://localhost:8001/analysis_history/${userEmail}?limit=100`);
+      const res = await fetch(`http://localhost:8001/analysis_history/${userEmail}`);
       const data = await res.json();
       if (data.status === "success") {
         setAnalyses(data.analyses);
@@ -133,36 +158,106 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate }) {
             🍳 SmartChef
           </div>
           <div className="nav-buttons">
-            <button
-              className="btn btn-outline"
-              onClick={() => onNavigate('dashboard')}
-              style={{ marginRight: "1rem", background: "rgba(255,255,255,0.2)" }}
-            >
-              📈 Dashboard
-            </button>
-            <button
-              className="btn btn-outline"
-              onClick={() => onNavigate('history')}
-              style={{ marginRight: "1rem" }}
-            >
-              📊 Istoric
-            </button>
-            <span style={{ 
-              color: "white", 
-              marginRight: "1rem", 
-              fontWeight: "500",
-              display: "inline-flex",
-              alignItems: "center",
-              height: "100%"
-            }}>
-              👤 {userEmail}
-            </span>
-            <button
-              className="btn btn-outline"
-              onClick={onLogout}
-            >
-              Logout
-            </button>
+            {/* Right side - Menu & User */}
+              <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
+              {/* Navigation Dropdown */}
+              <div 
+                style={{ position: "relative" }}
+                onMouseEnter={handleNavMouseEnter}
+                onMouseLeave={handleNavMouseLeave}
+              >
+                <button
+                  className="btn btn-outline"
+                  style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem", background: "rgba(255,255,255,0.2)" }}
+                >
+                  ☰
+                </button>
+                {showNavDropdown && (
+                  <div className="nav-dropdown">
+                    <button
+                      className="nav-dropdown-item"
+                      onClick={() => {
+                        onNavigate('dashboard');
+                        setShowNavDropdown(false);
+                      }}
+                      style={{ fontWeight: "600", background: "rgba(255, 107, 53, 0.1)" }}
+                    >
+                      📈 Dashboard
+                    </button>
+                    <button
+                      className="nav-dropdown-item"
+                      onClick={() => {
+                        onNavigate('history');
+                        setShowNavDropdown(false);
+                      }}
+                    >
+                      📊 Istoric
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div style={{
+                width: "1px",
+                height: "30px",
+                background: "rgba(255,255,255,0.3)",
+                margin: "0 0.5rem"
+              }}></div>
+              
+              {/* User Dropdown */}
+              <div 
+                style={{ position: "relative" }}
+                onMouseEnter={handleUserMouseEnter}
+                onMouseLeave={handleUserMouseLeave}
+              >
+                <button
+                  className="btn btn-outline"
+                  style={{ 
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem"
+                  }}
+                >
+                  👤 {userEmail}
+                  <span style={{ 
+                    fontSize: "0.7rem",
+                    transition: "transform 0.3s",
+                    display: "inline-block",
+                    transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
+                  }}>►</span>
+                </button>
+                {showUserDropdown && (
+                  <div className="user-dropdown">
+                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                      <span className="dropdown-icon">👤</span>
+                      Profil
+                    </button>
+                    
+                    <button className="user-dropdown-item" onClick={() => {
+                      onNavigate('personal-data');
+                      setShowUserDropdown(false);
+                    }}>
+                      <span className="dropdown-icon">📊</span>
+                      Date personale
+                    </button>
+                    
+                    <button className="user-dropdown-item" onClick={() => {
+                      onNavigate('account-settings');
+                      setShowUserDropdown(false);
+                    }}>
+                      <span className="dropdown-icon">⚙️</span>
+                      Setările contului
+                    </button>
+                    
+                    <div className="user-dropdown-divider"></div>
+                    <button className="user-dropdown-item logout-item" onClick={onLogout}>
+                      <span className="dropdown-icon">🚪</span>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -376,6 +471,41 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate }) {
             </div>
           </>
         )}
+      </div>
+      
+      {/* Floating Action Button with Expandable Menu */}
+      <div className="fab-container">
+        {/* Menu Items (appear when expanded) */}
+        <button
+          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
+          onClick={toggleDarkMode}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleSettings}
+          title="Settings"
+        >
+          ⚙️
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleHelp}
+          title="Help & Support"
+        >
+          ❓
+        </button>
+        
+        {/* Main FAB Button */}
+        <button
+          className={`fab-main ${showFabMenu ? 'active' : ''}`}
+          onClick={() => setShowFabMenu(!showFabMenu)}
+          title="Menu"
+        >
+          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
+        </button>
       </div>
     </div>
   );

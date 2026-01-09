@@ -7,6 +7,8 @@ import Login from "./Login";
 import Register from "./Register";
 import History from "./History";
 import Dashboard from "./Dashboard";
+import PersonalData from "./PersonalData";
+import AccountSettings from "./AccountSettings";
 import "./App.css";
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
@@ -17,9 +19,29 @@ function App() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
-  const [authToken, setAuthToken] = useState(null);
-  const [userEmail, setUserEmail] = useState("");
+  const [authToken, setAuthToken] = useState(() => {
+    // Restaurează token-ul din localStorage la mount
+    return localStorage.getItem('authToken') || null;
+  });
+  const [userEmail, setUserEmail] = useState(() => {
+    // Restaurează email-ul din localStorage la mount
+    return localStorage.getItem('userEmail') || "";
+  });
   const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const [showNavDropdown, setShowNavDropdown] = useState(false);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
+
+  const handleUserMouseEnter = () => {
+    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
+    setShowUserDropdown(true);
+  };
+
+  const handleUserMouseLeave = () => {
+    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
+    setUserDropdownTimeout(timeout);
+  };
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : false;
@@ -41,15 +63,22 @@ function App() {
   const handleLoginSuccess = (token, email) => {
     setAuthToken(token);
     setUserEmail(email);
+    // Salvează datele în localStorage pentru persistență
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userEmail', email);
     setCurrentPage("main");
   };
 
   const handleLogout = () => {
     setAuthToken(null);
     setUserEmail("");
+    // Șterge datele din localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userEmail');
     setSelectedFile(null);
     setPreviewUrl(null);
     setResults(null);
+    setCurrentPage("main");
   };
 
   const handleGoHome = () => {
@@ -58,6 +87,16 @@ function App() {
     setPreviewUrl(null);
     setResults(null);
     setSelectedIngredient(null);
+  };
+
+  const handleSettings = () => {
+    // Placeholder pentru pagina de setări
+    alert("⚙️ Settings page - Coming soon!\n\nHere you will be able to:\n- Change password\n- Update email\n- Manage 2FA settings\n- Set calorie goals\n- Export preferences");
+  };
+
+  const handleHelp = () => {
+    // Placeholder pentru pagina de help
+    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n📚 Documentation: Check FEATURES.md\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
   };
 
   const handleIngredientClick = (ingredientName) => {
@@ -256,9 +295,17 @@ function App() {
       case "register":
         return <Register onBack={() => setCurrentPage("main")} onRegisterSuccess={() => setCurrentPage("login")} onNavigateToLogin={() => setCurrentPage("login")} />;
       case "history":
-        return <History userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} />;
+        return <History userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleSettings={handleSettings} handleHelp={handleHelp} />;
       case "dashboard":
-        return <Dashboard userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} />;
+        return <Dashboard userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleSettings={handleSettings} handleHelp={handleHelp} />;
+      case "personal-data":
+        return <PersonalData userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} />;
+      case "account-settings":
+        return <AccountSettings userEmail={userEmail} onBack={handleGoHome} onEmailChange={(newEmail) => { 
+          setUserEmail(newEmail); 
+          localStorage.setItem('userEmail', newEmail); 
+          handleLogout(); 
+        }} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} />;
       default:
         return (
           <div className="animated-bg" style={{ minHeight: "100vh" }}>
@@ -271,47 +318,108 @@ function App() {
                 <div className="nav-buttons">
                   {authToken ? (
                     <>
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => setCurrentPage("dashboard")}
-                        style={{ marginRight: "1rem" }}
-                      >
-                        📈 Dashboard
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => setCurrentPage("history")}
-                        style={{ marginRight: "1rem" }}
-                      >
-                        📊 Istoric
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        onClick={toggleDarkMode}
-                        style={{ marginRight: "1rem" }}
-                        title={darkMode ? "Light Mode" : "Dark Mode"}
-                      >
-                        {darkMode ? "☀️" : "🌙"}
-                      </button>
-                      <span style={{ 
-                        color: "white", 
-                        marginRight: "1rem", 
-                        fontWeight: "500",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        height: "100%"
-                      }}>
-                        👤 {userEmail}
-                      </span>
-                      <button
-                        className="btn btn-outline"
-                        onClick={handleLogout}
-                      >
-                        Logout
-                      </button>
+                      {/* Right side - Menu & User */}
+                      <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
+                        {/* Navigation Dropdown */}
+                        <div 
+                          style={{ position: "relative" }}
+                          onMouseEnter={() => setShowNavDropdown(true)}
+                          onMouseLeave={() => setShowNavDropdown(false)}
+                        >
+                          <button
+                            className="btn btn-outline"
+                            style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem" }}
+                          >
+                            ☰
+                          </button>
+                          {showNavDropdown && (
+                            <div className="nav-dropdown">
+                              <button
+                                className="nav-dropdown-item"
+                                onClick={() => {
+                                  setCurrentPage("dashboard");
+                                  setShowNavDropdown(false);
+                                }}
+                              >
+                                📈 Dashboard
+                              </button>
+                              <button
+                                className="nav-dropdown-item"
+                                onClick={() => {
+                                  setCurrentPage("history");
+                                  setShowNavDropdown(false);
+                                }}
+                              >
+                                📊 Istoric
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div style={{
+                          width: "1px",
+                          height: "30px",
+                          background: "rgba(255,255,255,0.3)",
+                          margin: "0 0.5rem"
+                        }}></div>
+                        
+                        {/* User Dropdown */}
+                        <div 
+                          style={{ position: "relative" }}
+                          onMouseEnter={handleUserMouseEnter}
+                          onMouseLeave={handleUserMouseLeave}
+                        >
+                          <button
+                            className="btn btn-outline"
+                            style={{ 
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem"
+                            }}
+                          >
+                            👤 {userEmail}
+                            <span style={{ 
+                              fontSize: "0.7rem",
+                              transition: "transform 0.3s",
+                              display: "inline-block",
+                              transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
+                            }}>►</span>
+                          </button>
+                          {showUserDropdown && (
+                            <div className="user-dropdown">
+                              <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                                <span className="dropdown-icon">👤</span>
+                                Profil
+                              </button>
+                              
+                              <button className="user-dropdown-item" onClick={() => {
+                                setCurrentPage("personal-data");
+                                setShowUserDropdown(false);
+                              }}>
+                                <span className="dropdown-icon">📊</span>
+                                Date personale
+                              </button>
+                              
+                              <button className="user-dropdown-item" onClick={() => {
+                                setCurrentPage("account-settings");
+                                setShowUserDropdown(false);
+                              }}>
+                                <span className="dropdown-icon">⚙️</span>
+                                Setările contului
+                              </button>
+                              
+                              <div className="user-dropdown-divider"></div>
+                              <button className="user-dropdown-item logout-item" onClick={handleLogout}>
+                                <span className="dropdown-icon">🚪</span>
+                                Logout
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </>
                   ) : (
-                    <>
+                    <div style={{ display: "flex", gap: "0.5rem", marginLeft: "auto" }}>
                       <button
                         className="btn btn-outline"
                         onClick={() => setCurrentPage("login")}
@@ -324,7 +432,7 @@ function App() {
                       >
                         Register
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
@@ -877,6 +985,41 @@ function App() {
           </div>
         </div>
       )}
+      
+      {/* Floating Action Button with Expandable Menu */}
+      <div className="fab-container">
+        {/* Menu Items (appear when expanded) */}
+        <button
+          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
+          onClick={toggleDarkMode}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleSettings}
+          title="Settings"
+        >
+          ⚙️
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleHelp}
+          title="Help & Support"
+        >
+          ❓
+        </button>
+        
+        {/* Main FAB Button */}
+        <button
+          className={`fab-main ${showFabMenu ? 'active' : ''}`}
+          onClick={() => setShowFabMenu(!showFabMenu)}
+          title="Menu"
+        >
+          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
+        </button>
+      </div>
     </>
   );
 }
