@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { ShortcutsHelp } from "./utils/keyboardShortcuts";
+import "./utils/keyboardShortcuts.css";
 import "./App.css";
 
 export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }) {
@@ -11,6 +13,8 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
   const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const handleNavMouseEnter = () => {
     if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
@@ -31,6 +35,14 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
     const timeout = setTimeout(() => setShowUserDropdown(false), 200);
     setUserDropdownTimeout(timeout);
   };
+
+  const handleSettings = () => {
+    onNavigate("app-settings");
+  };
+
+  const handleHelp = () => {
+    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
+  };
   
   const [formData, setFormData] = useState({
     first_name: "",
@@ -49,6 +61,11 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
   const fetchProfile = async () => {
     try {
       const res = await fetch(`http://localhost:8001/user_profile/${userEmail}`);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
       
       if (data.status === "success") {
@@ -64,7 +81,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
         setError("Eroare la încărcarea datelor");
       }
     } catch (err) {
-      setError("Eroare la conectarea cu serverul");
+      setError(`Eroare la conectarea cu serverul. Asigură-te că backend-ul rulează pe portul 8001.`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -124,8 +141,18 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
 
   if (loading) {
     return (
-      <div className="animated-bg" style={{ minHeight: "100vh", padding: "2rem" }}>
-        <div style={{ textAlign: "center", padding: "3rem" }}>
+      <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
+        <header className="header">
+          <div className="header-content">
+            <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
+              🍳 SmartChef
+            </div>
+            <button className="btn btn-secondary" onClick={onBack}>
+              ← Înapoi
+            </button>
+          </div>
+        </header>
+        <div style={{ textAlign: "center", padding: "3rem", marginTop: "4rem" }}>
           <div className="spinner" style={{ margin: "0 auto 1rem" }}></div>
           <p style={{ color: "#666" }}>Se încarcă datele...</p>
         </div>
@@ -226,8 +253,16 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                       onNavigate('account-settings');
                       setShowUserDropdown(false);
                     }}>
-                      <span className="dropdown-icon">⚙️</span>
+                      <span className="dropdown-icon">🔑</span>
                       Setările contului
+                    </button>
+
+                    <button className="user-dropdown-item" onClick={() => {
+                      onNavigate('app-settings');
+                      setShowUserDropdown(false);
+                    }}>
+                      <span className="dropdown-icon">⚙️</span>
+                      Setări aplicație
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -518,6 +553,58 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
           </p>
         </div>
       </div>
+
+      {/* Floating Action Button Menu */}
+      <div className="fab-container">
+        {/* Menu Items (appear when expanded) */}
+        <button
+          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
+          onClick={() => {
+            // Toggle dark mode via parent if you like
+            alert('🌙 Dark Mode toggle - funcționalitate viitoare!');
+          }}
+          title="Dark Mode"
+        >
+          🌙
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleSettings}
+          title="Settings"
+        >
+          ⚙️
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleHelp}
+          title="Help & Support"
+        >
+          ❓
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
+          onClick={() => setShowShortcuts(true)}
+          title="Keyboard Shortcuts (apasă ?)"
+        >
+          ⌨️
+        </button>
+        
+        {/* Main FAB Button */}
+        <button
+          className={`fab-main ${showFabMenu ? 'active' : ''}`}
+          onClick={() => setShowFabMenu(!showFabMenu)}
+          title="Menu"
+        >
+          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
+        </button>
+      </div>
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showShortcuts && (
+        <ShortcutsHelp 
+          onClose={() => setShowShortcuts(false)}
+        />
+      )}
     </div>
   );
 }

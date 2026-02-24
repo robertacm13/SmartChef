@@ -1,0 +1,133 @@
+/* Tooltip Styles - Nielsen Heuristic #6 */
+
+.tooltip-wrapper {
+  position: relative;
+}
+
+.tooltip-bubble {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  max-width: 250px;
+  white-space: normal;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: tooltipFadeIn 0.2s ease;
+  pointer-events: none;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Position variations */
+.tooltip-top {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip-bottom {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.tooltip-left {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltip-right {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Arrow */
+.tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.tooltip-arrow-top {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px 6px 0 6px;
+  border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+}
+
+.tooltip-arrow-bottom {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 6px 6px 6px;
+  border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+}
+
+.tooltip-arrow-left {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px 0 6px 6px;
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.9);
+}
+
+.tooltip-arrow-right {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 6px 6px 6px 0;
+  border-color: transparent rgba(0, 0, 0, 0.9) transparent transparent;
+}
+
+/* Dark mode adaptation */
+body.dark-mode .tooltip-bubble {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a2e;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .tooltip-arrow-top {
+  border-color: rgba(255, 255, 255, 0.95) transparent transparent transparent;
+}
+
+body.dark-mode .tooltip-arrow-bottom {
+  border-color: transparent transparent rgba(255, 255, 255, 0.95) transparent;
+}
+
+body.dark-mode .tooltip-arrow-left {
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.95);
+}
+
+body.dark-mode .tooltip-arrow-right {
+  border-color: transparent rgba(255, 255, 255, 0.95) transparent transparent;
+}
+
+/* Info icon hover effect */
+.info-icon:hover {
+  background: rgba(255, 107, 53, 0.2);
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+.info-icon:focus {
+  outline: 2px solid var(--primary, #ff6b35);
+  outline-offset: 2px;
+}

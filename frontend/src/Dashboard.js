@@ -1,17 +1,59 @@
 import { useState, useEffect } from "react";
 import { Line, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip as ChartTooltip,
+  Legend
+} from 'chart.js';
 import "./App.css";
+import { InfoIcon } from "./components/Tooltip";
+import { StatCardSkeleton, ChartSkeleton } from "./components/SkeletonLoader";
+import "./utils/errorMessages.css";
+import { useKeyboardShortcuts, ShortcutsHelp } from "./utils/keyboardShortcuts";
+import "./utils/keyboardShortcuts.css";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  ChartTooltip,
+  Legend
+);
 
 export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, darkMode, toggleDarkMode, handleSettings, handleHelp }) {
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [timeRange, setTimeRange] = useState(7); // 7 or 30 days
+  const [streak, setStreak] = useState(null);
+  const [goals, setGoals] = useState(null);
   const [showNavDropdown, setShowNavDropdown] = useState(false);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
   const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [userFriendlyError, setUserFriendlyError] = useState(null);
+
+  // Keyboard shortcuts - Nielsen Heuristic #7
+  useKeyboardShortcuts({
+    'h': () => onBack(),
+    's': () => onNavigate('history'),
+    't': () => toggleDarkMode(),
+    '?': () => setShowShortcuts(true),
+    'Escape': () => {
+      if (showShortcuts) setShowShortcuts(false);
+    }
+  });
 
   const handleNavMouseEnter = () => {
     if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
@@ -35,6 +77,8 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
   useEffect(() => {
     fetchAnalyses();
+    fetchStreak();
+    fetchGoals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -52,6 +96,30 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStreak = async () => {
+    try {
+      const res = await fetch(`http://localhost:8001/streak/${userEmail}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setStreak(data);
+      }
+    } catch (err) {
+      console.error("Error fetching streak:", err);
+    }
+  };
+
+  const fetchGoals = async () => {
+    try {
+      const res = await fetch(`http://localhost:8001/user_goals/${userEmail}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setGoals(data.goals);
+      }
+    } catch (err) {
+      console.error("Error fetching goals:", err);
     }
   };
 
@@ -111,6 +179,29 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
   const stats = getStats();
 
+  // Calculează progresul zilnic vs obiective
+  const getTodayProgress = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const todaysAnalyses = analyses.filter(a => 
+      new Date(a.timestamp).toISOString().slice(0, 10) === today
+    );
+
+    let calories = 0, protein = 0, carbs = 0, fat = 0;
+    todaysAnalyses.forEach(a => {
+      const nutrition = a.nutrition?.total_nutrition;
+      if (nutrition) {
+        calories += nutrition.calories || 0;
+        protein += nutrition.protein || 0;
+        carbs += nutrition.carbohydrates || 0;
+        fat += nutrition.fat || 0;
+      }
+    });
+
+    return { calories, protein, carbs, fat, count: todaysAnalyses.length };
+  };
+
+  const todayProgress = getTodayProgress();
+
   // Pregătire date grafice
   const lineChartData = {
     labels: stats.dailyData.map(d => {
@@ -152,6 +243,11 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
   return (
     <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
+      {/* Skip Link pentru keyboard navigation - WCAG 2.1 */}
+      <a href="#main-content" className="skip-link">
+        Sari la conținut principal
+      </a>
+      
       <header className="header">
         <div className="header-content">
           <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
@@ -245,8 +341,16 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                       onNavigate('account-settings');
                       setShowUserDropdown(false);
                     }}>
-                      <span className="dropdown-icon">⚙️</span>
+                      <span className="dropdown-icon">🔑</span>
                       Setările contului
+                    </button>
+
+                    <button className="user-dropdown-item" onClick={() => {
+                      onNavigate('app-settings');
+                      setShowUserDropdown(false);
+                    }}>
+                      <span className="dropdown-icon">⚙️</span>
+                      Setări aplicație
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -262,7 +366,8 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
         </div>
       </header>
 
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem" }}>
+      {/* Main Content Area - Accessible landmark */}
+      <main id="main-content" style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#ff6b35", marginBottom: "0.5rem" }}>
@@ -303,23 +408,54 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
         </button>
 
         {loading && (
-          <div style={{ textAlign: "center", padding: "3rem" }}>
-            <div className="spinner"></div>
-            <p style={{ marginTop: "1rem", color: "#666" }}>Se încarcă datele...</p>
+          <div style={{ display: "grid", gap: "1.5rem", padding: "1rem 0" }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "1.5rem"
+            }}>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </div>
+            <ChartSkeleton height="320px" />
+            <ChartSkeleton height="320px" />
           </div>
         )}
 
-        {error && (
-          <div style={{
-            background: "#fee",
-            border: "2px solid #fcc",
-            borderRadius: "12px",
-            padding: "1rem",
-            textAlign: "center",
-            color: "#c33",
-            marginBottom: "2rem"
-          }}>
-            ⚠️ {error}
+        {userFriendlyError && (
+          <div className={`error-display error-${userFriendlyError.severity}`} role="alert" aria-live="assertive">
+            <div className="error-icon">{userFriendlyError.icon}</div>
+            <div className="error-content">
+              <h3 className="error-title">{userFriendlyError.title}</h3>
+              <p className="error-message">{userFriendlyError.message}</p>
+              {userFriendlyError.tips && userFriendlyError.tips.length > 0 && (
+                <ul className="error-tips">
+                  {userFriendlyError.tips.map((tip, index) => (
+                    <li key={index}>💡 {tip}</li>
+                  ))}
+                </ul>
+              )}
+              <div className="error-actions">
+                <button 
+                  className="error-action-btn primary"
+                  onClick={() => {
+                    fetchAnalyses();
+                    fetchStreak();
+                    fetchGoals();
+                  }}
+                >
+                  {userFriendlyError.action}
+                </button>
+                <button 
+                  className="error-action-btn secondary"
+                  onClick={() => setUserFriendlyError(null)}
+                >
+                  Închide
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -337,7 +473,10 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                 <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
                   {stats.totalAnalyses}
                 </div>
-                <div style={{ color: "#666", fontSize: "0.9rem" }}>Total Analize</div>
+                <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                  Total Analize
+                  <InfoIcon text={`Numărul total de analize efectuate în ultimele ${timeRange} zile`} />
+                </div>
               </div>
 
               <div className="feature-card" style={{ textAlign: "center" }}>
@@ -345,7 +484,10 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                 <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
                   {stats.totalCalories.toLocaleString()}
                 </div>
-                <div style={{ color: "#666", fontSize: "0.9rem" }}>Total Calorii (kcal)</div>
+                <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                  Total Calorii (kcal)
+                  <InfoIcon text="Suma totală a caloriilor din toate analizele tale" />
+                </div>
               </div>
 
               <div className="feature-card" style={{ textAlign: "center" }}>
@@ -353,7 +495,10 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                 <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
                   {stats.avgCalories}
                 </div>
-                <div style={{ color: "#666", fontSize: "0.9rem" }}>Medie Calorii/Analiză</div>
+                <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                  Medie Calorii/Analiză
+                  <InfoIcon text="Media caloriilor per masă analizată - util pentru tracking zilnic" />
+                </div>
               </div>
 
               <div className="feature-card" style={{ textAlign: "center" }}>
@@ -361,9 +506,209 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                 <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
                   {stats.topIngredients.length > 0 ? stats.topIngredients[0][0] : 'N/A'}
                 </div>
-                <div style={{ color: "#666", fontSize: "0.9rem" }}>Top Ingredient</div>
+                <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                  Top Ingredient
+                  <InfoIcon text="Ingredientul cel mai frecvent din analizele tale" />
+                </div>
+              </div>
+
+              <div className="feature-card" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🔥</div>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                  {streak ? streak.current_streak : 0}
+                </div>
+                <div style={{ color: "#666", fontSize: "0.9rem" }}>Streak Actual (zile)</div>
+              </div>
+
+              <div className="feature-card" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🏆</div>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                  {streak ? streak.longest_streak : 0}
+                </div>
+                <div style={{ color: "#666", fontSize: "0.9rem" }}>Record Streak</div>
               </div>
             </div>
+
+            {/* Daily Progress vs Goals */}
+            {goals && (
+              <div className="nutrition-box" style={{ 
+                padding: "1.5rem",
+                marginBottom: "2rem"
+              }}>
+                <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem", color: "#333", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span>🎯 Progres Zilnic ({todayProgress.count} analize astăzi)</span>
+                  <button 
+                    onClick={() => onNavigate("goals")}
+                    style={{
+                      background: "linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)",
+                      color: "white",
+                      border: "none",
+                      padding: "0.5rem 1rem",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                      fontWeight: "600"
+                    }}
+                  >
+                    ⚙️ Setări Obiective
+                  </button>
+                </h3>
+
+                <div style={{ display: "grid", gap: "1rem" }}>
+                  {/* Calories */}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                      <span>🔥 Calorii</span>
+                      <span style={{ fontWeight: "600" }}>
+                        {Math.round(todayProgress.calories)} / {goals.target_calories} kcal
+                      </span>
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "24px",
+                      background: "#eee",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      position: "relative"
+                    }}>
+                      <div style={{
+                        width: `${Math.min((todayProgress.calories / goals.target_calories) * 100, 100)}%`,
+                        height: "100%",
+                        background: todayProgress.calories > goals.target_calories 
+                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
+                          : "linear-gradient(90deg, #51cf66, #37b24d)",
+                        transition: "width 0.3s ease"
+                      }}></div>
+                      <span style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: todayProgress.calories > goals.target_calories * 0.3 ? "white" : "#333"
+                      }}>
+                        {Math.round((todayProgress.calories / goals.target_calories) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Protein */}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                      <span>🍗 Proteine</span>
+                      <span style={{ fontWeight: "600" }}>
+                        {Math.round(todayProgress.protein)}g / {goals.target_protein}g
+                      </span>
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "24px",
+                      background: "#eee",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      position: "relative"
+                    }}>
+                      <div style={{
+                        width: `${Math.min((todayProgress.protein / goals.target_protein) * 100, 100)}%`,
+                        height: "100%",
+                        background: todayProgress.protein > goals.target_protein 
+                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
+                          : "linear-gradient(90deg, #4dabf7, #339af0)",
+                        transition: "width 0.3s ease"
+                      }}></div>
+                      <span style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: todayProgress.protein > goals.target_protein * 0.3 ? "white" : "#333"
+                      }}>
+                        {Math.round((todayProgress.protein / goals.target_protein) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Carbs */}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                      <span>🍞 Carbohidrați</span>
+                      <span style={{ fontWeight: "600" }}>
+                        {Math.round(todayProgress.carbs)}g / {goals.target_carbs}g
+                      </span>
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "24px",
+                      background: "#eee",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      position: "relative"
+                    }}>
+                      <div style={{
+                        width: `${Math.min((todayProgress.carbs / goals.target_carbs) * 100, 100)}%`,
+                        height: "100%",
+                        background: todayProgress.carbs > goals.target_carbs 
+                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
+                          : "linear-gradient(90deg, #ffd43b, #fab005)",
+                        transition: "width 0.3s ease"
+                      }}></div>
+                      <span style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: todayProgress.carbs > goals.target_carbs * 0.3 ? "white" : "#333"
+                      }}>
+                        {Math.round((todayProgress.carbs / goals.target_carbs) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Fat */}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+                      <span>🥑 Grăsimi</span>
+                      <span style={{ fontWeight: "600" }}>
+                        {Math.round(todayProgress.fat)}g / {goals.target_fat}g
+                      </span>
+                    </div>
+                    <div style={{
+                      width: "100%",
+                      height: "24px",
+                      background: "#eee",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      position: "relative"
+                    }}>
+                      <div style={{
+                        width: `${Math.min((todayProgress.fat / goals.target_fat) * 100, 100)}%`,
+                        height: "100%",
+                        background: todayProgress.fat > goals.target_fat 
+                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
+                          : "linear-gradient(90deg, #ff8787, #fa5252)",
+                        transition: "width 0.3s ease"
+                      }}></div>
+                      <span style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: todayProgress.fat > goals.target_fat * 0.3 ? "white" : "#333"
+                      }}>
+                        {Math.round((todayProgress.fat / goals.target_fat) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Charts Grid */}
             <div style={{ 
@@ -471,7 +816,6 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
             </div>
           </>
         )}
-      </div>
       
       {/* Floating Action Button with Expandable Menu */}
       <div className="fab-container">
@@ -479,34 +823,61 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
         <button
           className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
           onClick={toggleDarkMode}
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={darkMode ? "Light Mode" : "Dark Mode"}
         >
           {darkMode ? "☀️" : "🌙"}
         </button>
+        
         <button
           className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
           onClick={handleSettings}
-          title="Settings"
+          aria-label="Settings"
+          title="Setări aplicație"
         >
           ⚙️
         </button>
+        
         <button
           className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
           onClick={handleHelp}
+          aria-label="Help & Support"
           title="Help & Support"
         >
           ❓
+        </button>
+        
+        <button
+          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
+          onClick={() => setShowShortcuts(true)}
+          aria-label="Keyboard Shortcuts"
+          title="Keyboard Shortcuts (apasă ?)"
+        >
+          ⌨️
         </button>
         
         {/* Main FAB Button */}
         <button
           className={`fab-main ${showFabMenu ? 'active' : ''}`}
           onClick={() => setShowFabMenu(!showFabMenu)}
-          title="Menu"
+          aria-label="Menu"
+          aria-expanded={showFabMenu}
+          title="Meniu acțiuni rapide"
         >
           <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
         </button>
       </div>
+      
+      {/* Keyboard Shortcuts Help Modal */}
+      {showShortcuts && (
+        <ShortcutsHelp 
+          onClose={() => setShowShortcuts(false)}
+          customShortcuts={{
+            'd': { description: 'Mergi la Dashboard (acum)', action: 'navigate-dashboard' }
+          }}
+        />
+      )}
+      </main>
     </div>
   );
 }

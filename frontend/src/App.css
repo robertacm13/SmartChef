@@ -2,6 +2,95 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
+/* ===================================== */
+/* ACCESSIBILITY STYLES (WCAG 2.1) */
+/* ===================================== */
+
+/* Screen Reader Only - hides visually but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip Link - helps keyboard users jump to main content */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  text-decoration: none;
+  border-radius: 0 0 8px 8px;
+  z-index: 10001;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: top 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--primary, #ff6b35);
+  outline-offset: 2px;
+}
+
+body.dark-mode .skip-link {
+  background: #fff;
+  color: #000;
+}
+
+/* Global Focus Indicator - WCAG 2.1 Level AA compliant */
+*:focus {
+  outline: 3px solid var(--primary, #ff6b35);
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline for mouse users, keep for keyboard */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid var(--primary, #ff6b35);
+  outline-offset: 2px;
+}
+
+/* Enhanced focus for interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible {
+  outline: 3px solid var(--primary, #ff6b35);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.2);
+}
+
+/* ===================================== */
+/* END ACCESSIBILITY STYLES */
+/* ===================================== */
+
+/* ===== CSS Custom Properties (theming) ===== */
+:root {
+  --primary: #ff6b35;
+  --accent: #ff8c42;
+  --bg: #ffecd1;
+  --header-from: #ff8c42;
+  --header-to: #ff6b35;
+  --fab-color: #ff6b35;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,7 +99,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background: #ffecd1;
+  background: var(--bg, #ffecd1);
   min-height: 100vh;
   padding-top: 0;
   margin: 0;
@@ -18,14 +107,15 @@ body {
 
 /* Static Background */
 .animated-bg {
-  background: #ffecd1;
+  background: var(--bg, #ffecd1);
   min-height: 100vh;
   padding-top: 80px;
+  transition: background 0.4s ease;
 }
 
 /* Header Styles */
 .header {
-  background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+  background: linear-gradient(135deg, var(--header-from, #ff8c42) 0%, var(--header-to, #ff6b35) 100%);
   padding: 1.2rem 2rem;
   position: fixed;
   top: 0;
@@ -233,6 +323,24 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* Disabled button state - WCAG AAA compliant */
+.btn:disabled,
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ccc !important;
+  color: #666 !important;
+  border: 2px solid #999 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.btn:disabled:hover,
+button:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* Floating Action Button (FAB) with Expandable Circular Menu */
 .fab-container {
   position: fixed;
@@ -246,14 +354,14 @@ body {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+  background: linear-gradient(135deg, var(--header-from, #ff8c42) 0%, var(--header-to, #ff6b35) 100%);
   color: white;
   border: none;
   font-size: 2.5rem;
   font-weight: 200;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 6px 24px rgba(255, 107, 53, 0.5);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   display: flex;
   align-items: center;
@@ -264,12 +372,12 @@ body {
 
 .fab-main:hover {
   transform: scale(1.08);
-  box-shadow: 0 8px 32px rgba(255, 107, 53, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .fab-main.active {
-  background: linear-gradient(135deg, #ff6b35 0%, #ff5722 100%);
-  box-shadow: 0 8px 32px rgba(255, 91, 53, 0.8);
+  background: linear-gradient(135deg, var(--primary, #ff6b35) 0%, var(--header-to, #ff5722) 100%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .fab-icon {
@@ -285,12 +393,12 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+  background: linear-gradient(135deg, var(--header-from, #ff8c42) 0%, var(--header-to, #ff6b35) 100%);
   color: white;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   display: flex;
   align-items: center;
@@ -303,8 +411,8 @@ body {
 }
 
 .fab-menu-item:hover {
-  box-shadow: 0 6px 28px rgba(255, 107, 53, 0.7);
-  background: linear-gradient(135deg, #ff9f5a 0%, #ff7b47 100%);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.1);
 }
 
 /* Show animation for menu items */
@@ -313,32 +421,41 @@ body {
   pointer-events: all;
 }
 
-/* Poziționare pe axe și diagonală */
+/* Poziționare circulară - rază 140px - arc larg și bine spațiat */
 .fab-menu-item-1.show {
-  transform: scale(1) translate(0px, -100px);
+  transform: scale(1) translate(0px, -140px);
   transition-delay: 0.05s;
 }
 
 .fab-menu-item-1.show:hover {
-  transform: scale(1.1) translate(0px, -100px);
+  transform: scale(1.1) translate(0px, -140px);
 }
 
 .fab-menu-item-2.show {
-  transform: scale(1) translate(-75px, -75px);
+  transform: scale(1) translate(-70px, -120px);
   transition-delay: 0.1s;
 }
 
 .fab-menu-item-2.show:hover {
-  transform: scale(1.1) translate(-75px, -75px);
+  transform: scale(1.1) translate(-70px, -120px);
 }
 
 .fab-menu-item-3.show {
-  transform: scale(1) translate(-110px, 0px);
+  transform: scale(1) translate(-120px, -70px);
   transition-delay: 0.15s;
 }
 
 .fab-menu-item-3.show:hover {
-  transform: scale(1.1) translate(-110px, 0px);
+  transform: scale(1.1) translate(-120px, -70px);
+}
+
+.fab-menu-item-4.show {
+  transform: scale(1) translate(-140px, 0px);
+  transition-delay: 0.2s;
+}
+
+.fab-menu-item-4.show:hover {
+  transform: scale(1.1) translate(-140px, 0px);
 }
 
 /* Backdrop overlay when menu is open */
@@ -367,7 +484,7 @@ body {
 
 .btn-secondary {
   background: white;
-  color: #ff6b35;
+  color: var(--primary, #ff6b35);
 }
 
 .btn-outline {
@@ -400,9 +517,9 @@ body {
 }
 
 .feature-card:hover {
-  border-color: #ff6b35;
+  border-color: var(--primary, #ff6b35);
   transform: translateY(-10px);
-  box-shadow: 0 20px 50px rgba(255, 107, 53, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
@@ -809,7 +926,7 @@ body {
 
 body.dark-mode {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
   transition: all 0.4s ease;
 }
 
@@ -820,7 +937,7 @@ body.dark-mode .animated-bg {
 /* Cards and containers */
 body.dark-mode .card {
   background: linear-gradient(145deg, #2d2d44 0%, #252540 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
@@ -830,7 +947,7 @@ body.dark-mode .card:hover {
 
 body.dark-mode .feature-card {
   background: linear-gradient(145deg, #2d2d44 0%, #252540 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
   border-color: transparent;
 }
 
@@ -848,23 +965,23 @@ body.dark-mode .form-container {
 body.dark-mode .form-input {
   background: #1a1a2e;
   border-color: #444;
-  color: #e0e0e0;
+  color: #f5f5f5;
 }
 
 body.dark-mode .form-input:focus {
-  border-color: #ff6b35;
+  border-color: var(--primary, #ff6b35);
   background: #252540;
 }
 
 body.dark-mode .form-label {
-  color: #e0e0e0;
+  color: #f5f5f5;
 }
 
 /* Nutrition boxes */
 body.dark-mode .nutrition-box,
 body.dark-mode .nutrition-summary {
   background: linear-gradient(145deg, #2d2d44 0%, #252540 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
 }
 
 body.dark-mode .nutrition-item {
@@ -874,7 +991,7 @@ body.dark-mode .nutrition-item {
 /* Ingredient badges */
 body.dark-mode .ingredient-badge {
   background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
@@ -887,7 +1004,7 @@ body.dark-mode .ingredient-badge:hover {
 body.dark-mode .ingredient-modal-content,
 body.dark-mode .delete-confirm-modal > div {
   background: linear-gradient(145deg, #2d2d44 0%, #252540 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
   border: 1px solid #444;
 }
 
@@ -900,7 +1017,7 @@ body.dark-mode h1,
 body.dark-mode h2,
 body.dark-mode h3,
 body.dark-mode p {
-  color: #e0e0e0;
+  color: #f5f5f5;
 }
 
 body.dark-mode h1 {
@@ -911,7 +1028,7 @@ body.dark-mode h1 {
 /* Dashboard specific */
 body.dark-mode .stat-card {
   background: linear-gradient(145deg, #2d2d44 0%, #252540 100%);
-  color: #e0e0e0;
+  color: #f5f5f5;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
@@ -946,12 +1063,12 @@ body.dark-mode .search-input,
 body.dark-mode .filter-select {
   background: #1a1a2e;
   border-color: #444;
-  color: #e0e0e0;
+  color: #f5f5f5;
 }
 
 body.dark-mode .search-input:focus,
 body.dark-mode .filter-select:focus {
-  border-color: #ff6b35;
+  border-color: var(--primary, #ff6b35);
   background: #252540;
 }
 
@@ -962,8 +1079,8 @@ body.dark-mode .analysis-card {
 }
 
 body.dark-mode .analysis-card:hover {
-  border-color: #ff6b35;
-  box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3);
+  border-color: var(--primary, #ff6b35);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 /* Button hover states in dark mode */
@@ -1724,3 +1841,248 @@ canvas {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================== */
+/* APP SETTINGS PAGE STYLES                    */
+/* =========================================== */
+
+.appsettings-section {
+  transition: box-shadow 0.3s ease;
+}
+
+.appsettings-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary, #ff6b35);
+  margin-bottom: 0.35rem;
+}
+
+.appsettings-section-desc {
+  font-size: 0.88rem;
+  color: #888;
+  margin-bottom: 1.2rem;
+}
+
+/* ---- Theme Grid ---- */
+.appsettings-theme-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.appsettings-theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.9rem 0.7rem;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 90px;
+  flex: 1 1 80px;
+  position: relative;
+}
+
+.appsettings-theme-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.appsettings-theme-card.active {
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.appsettings-theme-preview {
+  width: 60px;
+  height: 36px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  margin-bottom: 0.2rem;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px;
+}
+
+.appsettings-theme-preview-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.appsettings-theme-preview-dot {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.appsettings-theme-emoji {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.appsettings-theme-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.appsettings-theme-desc {
+  font-size: 0.72rem;
+  color: #aaa;
+}
+
+.appsettings-check {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary, #ff6b35);
+}
+
+/* ---- Option Row (font size, language, page, units) ---- */
+.appsettings-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.appsettings-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 14px;
+  border: 2px solid #e0e0e0;
+  background: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 110px;
+  flex: 1 1 100px;
+}
+
+.appsettings-option-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-color: var(--primary, #ff6b35);
+}
+
+.appsettings-option-btn.active {
+  border-color: var(--primary, #ff6b35);
+  background: white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+}
+
+.appsettings-option-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.appsettings-option-sub {
+  font-size: 0.72rem;
+  color: #aaa;
+  text-align: center;
+}
+
+/* ---- Dark Mode Toggle ---- */
+.appsettings-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border-radius: 14px;
+  border: 2px solid #e0e0e0;
+  background: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: left;
+}
+
+.appsettings-toggle-btn:hover {
+  border-color: var(--primary, #ff6b35);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.appsettings-toggle-btn.active {
+  border-color: #666;
+  background: #1a1a2e;
+  color: #f5f5f5;
+}
+
+.appsettings-toggle-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.appsettings-toggle-text {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.appsettings-toggle-switch {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: #ccc;
+  position: relative;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+
+.appsettings-toggle-switch.on {
+  background: #555;
+}
+
+.appsettings-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  transition: left 0.3s ease;
+}
+
+.appsettings-toggle-switch.on .appsettings-toggle-knob {
+  left: 25px;
+}
+
+/* Dark mode overrides for settings */
+body.dark-mode .appsettings-theme-card,
+body.dark-mode .appsettings-option-btn,
+body.dark-mode .appsettings-toggle-btn:not(.active) {
+  background: #2a2a40;
+  border-color: #444;
+}
+
+body.dark-mode .appsettings-theme-name,
+body.dark-mode .appsettings-option-label {
+  color: #f5f5f5;
+}
+
+body.dark-mode .appsettings-theme-card.active,
+body.dark-mode .appsettings-option-btn.active {
+  background: #252540;
+}
+
+body.dark-mode .appsettings-section-title {
+  color: var(--primary, #ff8c42);
+}
+

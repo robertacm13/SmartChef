@@ -8,7 +8,13 @@ from typing import Optional
 from app.auth import register_user, login_user
 from app.model import get_model
 from app.nutrition import get_nutrition_info, format_nutrition_response
-from app.database import food_analyses_collection, user_profiles_collection, users_collection
+from app.database import (
+    food_analyses_collection, 
+    user_profiles_collection, 
+    users_collection,
+    user_goals_collection,
+    weight_history_collection
+)
 from passlib.hash import pbkdf2_sha256
 
 
@@ -420,6 +426,398 @@ async def update_account_settings(email: str, settings_data: AccountSettingsData
             "message": "Account settings updated successfully",
             "new_email": new_email_value
         }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating account settings: {str(e)}")
+
+
+# ============================================
+# GOALS & TRACKING SYSTEM
+# ============================================
+
+def calculate_bmr(weight_kg, height_cm, age, sex):
+    """
+    Calculate Basal Metabolic Rate using Mifflin-St Jeor Equation.
+    
+    Args:
+        weight_kg: Weight in kilograms
+        height_cm: Height in centimeters
+        age: Age in years
+        sex: "male" or "female"
+        
+    Returns:
+        BMR in calories per day
+    """
+    if sex.lower() == "male":
+        bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + 5
+    else:  # female
+        bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age - 161
+    return round(bmr, 1)
+
+
+def calculate_tdee(bmr, activity_level):
+    """
+    Calculate Total Daily Energy Expenditure.
+    
+    Args:
+        bmr: Basal Metabolic Rate
+        activity_level: One of: sedentary, light, moderate, active, very_active
+        
+    Returns:
+        TDEE in calories per day
+    """
+    multipliers = {
+        "sedentary": 1.2,      # Little to no exercise
+        "light": 1.375,         # Light exercise 1-3 days/week
+        "moderate": 1.55,       # Moderate exercise 3-5 days/week
+        "active": 1.725,        # Hard exercise 6-7 days/week
+        "very_active": 1.9      # Very hard exercise, physical job
+    }
+    multiplier = multipliers.get(activity_level, 1.2)
+    return round(bmr * multiplier, 1)
+
+
+class UserGoalsData(BaseModel):
+    goal_type: str  # "lose_weight", "maintain", "gain_weight", "build_muscle"
+    activity_level: str  # "sedentary", "light", "moderate", "active", "very_active"
+    target_calories: Optional[int] = None
+    target_protein: Optional[int] = None
+    target_carbs: Optional[int] = None
+    target_fat: Optional[int] = None
+    target_weight: Optional[float] = None  # Goal weight in kg
+    weekly_goal: Optional[float] = None  # kg per week (e.g., -0.5 for loss, +0.3 for gain)
+
+
+@app.get("/user_goals/{email}")
+async def get_user_goals(email: str):
+    """
+    Get user's nutrition goals and calculate BMR/TDEE if profile exists.
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        User goals with calculated BMR/TDEE
+    """
+    try:
+        # Get user goals
+        goals = user_goals_collection.find_one({"email": email})
+        
+        # Get user profile for BMR/TDEE calculation
+        profile = user_profiles_collection.find_one({"email": email})
+        
+        calculated_data = {}
+        
+        # Calculate BMR and TDEE if profile has required data
+        if profile and all(k in profile and profile[k] for k in ["weight", "height", "age", "sex"]):
+            bmr = calculate_bmr(
+                profile["weight"],
+                profile["height"],
+                profile["age"],
+                profile["sex"]
+            )
+            calculated_data["bmr"] = bmr
+            
+            # Calculate TDEE if activity level is set
+            if goals and "activity_level" in goals:
+                tdee = calculate_tdee(bmr, goals["activity_level"])
+                calculated_data["tdee"] = tdee
+                calculated_data["maintenance_calories"] = tdee
+        
+        if not goals:
+            # Return defaults if no goals set
+            return {
+                "status": "success",
+                "goals": {
+                    "email": email,
+                    "goal_type": "maintain",
+                    "activity_level": "moderate",
+                    "target_calories": calculated_data.get("tdee", 2000),
+                    "target_protein": 150,
+                    "target_carbs": 200,
+                    "target_fat": 65
+                },
+                "calculated": calculated_data,
+                "has_goals": False
+            }
+        
+        # Remove MongoDB _id from response
+        if "_id" in goals:
+            del goals["_id"]
+        
+        return {
+            "status": "success",
+            "goals": goals,
+            "calculated": calculated_data,
+            "has_goals": True
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching goals: {str(e)}")
+
+
+@app.put("/user_goals/{email}")
+async def update_user_goals(email: str, goals_data: UserGoalsData):
+    """
+    Update or create user's nutrition goals.
+    
+    Args:
+        email: User's email address
+        goals_data: Goals data to update
+        
+    Returns:
+        Updated goals with calculated recommendations
+    """
+    try:
+        # Prepare update data
+        update_data = {
+            "email": email,
+            "goal_type": goals_data.goal_type,
+            "activity_level": goals_data.activity_level,
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Add optional fields if provided
+        if goals_data.target_calories is not None:
+            update_data["target_calories"] = goals_data.target_calories
+        if goals_data.target_protein is not None:
+            update_data["target_protein"] = goals_data.target_protein
+        if goals_data.target_carbs is not None:
+            update_data["target_carbs"] = goals_data.target_carbs
+        if goals_data.target_fat is not None:
+            update_data["target_fat"] = goals_data.target_fat
+        if goals_data.target_weight is not None:
+            update_data["target_weight"] = goals_data.target_weight
+        if goals_data.weekly_goal is not None:
+            update_data["weekly_goal"] = goals_data.weekly_goal
+        
+        # Upsert goals
+        user_goals_collection.update_one(
+            {"email": email},
+            {"$set": update_data},
+            upsert=True
+        )
+        
+        # Fetch and return updated goals
+        updated_goals = user_goals_collection.find_one({"email": email})
+        if "_id" in updated_goals:
+            del updated_goals["_id"]
+        
+        # Calculate BMR/TDEE for recommendations
+        profile = user_profiles_collection.find_one({"email": email})
+        calculated_data = {}
+        
+        if profile and all(k in profile and profile[k] for k in ["weight", "height", "age", "sex"]):
+            bmr = calculate_bmr(
+                profile["weight"],
+                profile["height"],
+                profile["age"],
+                profile["sex"]
+            )
+            tdee = calculate_tdee(bmr, goals_data.activity_level)
+            calculated_data = {
+                "bmr": bmr,
+                "tdee": tdee,
+                "maintenance_calories": tdee
+            }
+        
+        return {
+            "status": "success",
+            "message": "Goals updated successfully",
+            "goals": updated_goals,
+            "calculated": calculated_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating goals: {str(e)}")
+
+
+class WeightEntry(BaseModel):
+    weight: float  # in kg
+    date: Optional[str] = None  # ISO date string, defaults to today
+    notes: Optional[str] = None
+
+
+@app.post("/weight_history/{email}")
+async def add_weight_entry(email: str, entry: WeightEntry):
+    """
+    Add a weight measurement to history.
+    
+    Args:
+        email: User's email address
+        entry: Weight entry data
+        
+    Returns:
+        Created entry with ID
+    """
+    try:
+        # Use provided date or current date
+        entry_date = entry.date if entry.date else datetime.utcnow().isoformat()
+        
+        weight_document = {
+            "email": email,
+            "weight": entry.weight,
+            "date": entry_date,
+            "notes": entry.notes,
+            "created_at": datetime.utcnow()
+        }
+        
+        result = weight_history_collection.insert_one(weight_document)
+        
+        # Also update current weight in user profile
+        user_profiles_collection.update_one(
+            {"email": email},
+            {"$set": {"weight": entry.weight, "last_weight_update": datetime.utcnow()}},
+            upsert=True
+        )
+        
+        return {
+            "status": "success",
+            "message": "Weight entry added successfully",
+            "entry_id": str(result.inserted_id),
+            "weight": entry.weight,
+            "date": entry_date
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding weight entry: {str(e)}")
+
+
+@app.get("/weight_history/{email}")
+async def get_weight_history(email: str, limit: int = 100):
+    """
+    Get weight history for a user.
+    
+    Args:
+        email: User's email address
+        limit: Maximum number of entries to return
+        
+    Returns:
+        List of weight entries sorted by date
+    """
+    try:
+        entries = list(weight_history_collection.find(
+            {"email": email}
+        ).sort("date", -1).limit(limit))
+        
+        # Convert ObjectId to string
+        for entry in entries:
+            if "_id" in entry:
+                entry["_id"] = str(entry["_id"])
+            if "created_at" in entry and hasattr(entry["created_at"], "isoformat"):
+                entry["created_at"] = entry["created_at"].isoformat()
+        
+        return {
+            "status": "success",
+            "count": len(entries),
+            "entries": entries
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching weight history: {str(e)}")
+
+
+@app.delete("/weight_history/{entry_id}")
+async def delete_weight_entry(entry_id: str, email: Optional[str] = Header(None, alias="X-User-Email")):
+    """
+    Delete a weight history entry.
+    
+    Args:
+        entry_id: The ID of the entry to delete
+        email: User's email (from header)
+        
+    Returns:
+        Success message
+    """
+    try:
+        from bson.objectid import ObjectId
+        
+        if not email:
+            raise HTTPException(status_code=401, detail="User email required")
+        
+        result = weight_history_collection.delete_one({
+            "_id": ObjectId(entry_id),
+            "email": email
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Entry not found or unauthorized")
+        
+        return {
+            "status": "success",
+            "message": "Weight entry deleted successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting entry: {str(e)}")
+
+
+@app.get("/streak/{email}")
+async def get_user_streak(email: str):
+    """
+    Calculate user's meal tracking streak (consecutive days with analyses).
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        Current streak and longest streak
+    """
+    try:
+        # Get all analyses sorted by date
+        analyses = list(food_analyses_collection.find(
+            {"user_email": email}
+        ).sort("timestamp", -1))
+        
+        if not analyses:
+            return {
+                "status": "success",
+                "current_streak": 0,
+                "longest_streak": 0,
+                "last_activity": None
+            }
+        
+        # Extract unique dates
+        dates_set = set()
+        for analysis in analyses:
+            if "timestamp" in analysis:
+                date_str = analysis["timestamp"].date() if hasattr(analysis["timestamp"], "date") else analysis["timestamp"][:10]
+                dates_set.add(str(date_str))
+        
+        dates_list = sorted(list(dates_set), reverse=True)
+        
+        # Calculate current streak
+        current_streak = 0
+        today = datetime.utcnow().date()
+        
+        for i, date_str in enumerate(dates_list):
+            expected_date = today - datetime.timedelta(days=i)
+            if str(expected_date) == date_str or str(expected_date)[:10] == date_str[:10]:
+                current_streak += 1
+            else:
+                break
+        
+        # Calculate longest streak
+        longest_streak = 1
+        temp_streak = 1
+        
+        for i in range(1, len(dates_list)):
+            prev_date = datetime.fromisoformat(dates_list[i-1][:10])
+            curr_date = datetime.fromisoformat(dates_list[i][:10])
+            diff = (prev_date - curr_date).days
+            
+            if diff == 1:
+                temp_streak += 1
+                longest_streak = max(longest_streak, temp_streak)
+            else:
+                temp_streak = 1
+        
+        return {
+            "status": "success",
+            "current_streak": current_streak,
+            "longest_streak": longest_streak,
+            "last_activity": dates_list[0] if dates_list else None,
+            "total_days_active": len(dates_list)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating streak: {str(e)}")
+
     except HTTPException:
         raise
     except Exception as e:

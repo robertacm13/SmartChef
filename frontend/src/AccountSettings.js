@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { ShortcutsHelp } from "./utils/keyboardShortcuts";
+import "./utils/keyboardShortcuts.css";
 import "./App.css";
 
 export default function AccountSettings({ userEmail, onBack, onEmailChange, onLogout, onNavigate }) {
@@ -26,6 +28,8 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
   const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
   const [passwordValidationTimeout, setPasswordValidationTimeout] = useState(null);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   
   // Vizibilitate parole
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -50,6 +54,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   const handleUserMouseLeave = () => {
     const timeout = setTimeout(() => setShowUserDropdown(false), 200);
     setUserDropdownTimeout(timeout);
+  };
+
+  const handleSettings = () => {
+    onNavigate("app-settings");
+  };
+
+  const handleHelp = () => {
+    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
   };
 
   const validateCurrentPassword = async (password) => {
@@ -346,8 +358,16 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                       onNavigate('account-settings');
                       setShowUserDropdown(false);
                     }} style={{ fontWeight: "600", background: "rgba(255, 107, 53, 0.1)" }}>
-                      <span className="dropdown-icon">⚙️</span>
+                      <span className="dropdown-icon">🔑</span>
                       Setările contului
+                    </button>
+
+                    <button className="user-dropdown-item" onClick={() => {
+                      onNavigate('app-settings');
+                      setShowUserDropdown(false);
+                    }}>
+                      <span className="dropdown-icon">⚙️</span>
+                      Setări aplicație
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -1008,6 +1028,57 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
           </p>
         </div>
       </div>
+
+      {/* Floating Action Button Menu */}
+      <div className="fab-container">
+        {/* Menu Items (appear when expanded) */}
+        <button
+          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
+          onClick={() => {
+            alert('🌙 Dark Mode toggle - funcționalitate viitoare!');
+          }}
+          title="Dark Mode"
+        >
+          🌙
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleSettings}
+          title="Settings"
+        >
+          ⚙️
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
+          onClick={handleHelp}
+          title="Help & Support"
+        >
+          ❓
+        </button>
+        <button
+          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
+          onClick={() => setShowShortcuts(true)}
+          title="Keyboard Shortcuts (apasă ?)"
+        >
+          ⌨️
+        </button>
+        
+        {/* Main FAB Button */}
+        <button
+          className={`fab-main ${showFabMenu ? 'active' : ''}`}
+          onClick={() => setShowFabMenu(!showFabMenu)}
+          title="Menu"
+        >
+          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
+        </button>
+      </div>
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showShortcuts && (
+        <ShortcutsHelp 
+          onClose={() => setShowShortcuts(false)}
+        />
+      )}
     </div>
   );
 }

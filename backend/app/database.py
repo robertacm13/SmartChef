@@ -29,6 +29,8 @@ try:
     users_collection = db["users"]
     food_analyses_collection = db["food_analyses"]
     user_profiles_collection = db["user_profiles"]
+    user_goals_collection = db["user_goals"]
+    weight_history_collection = db["weight_history"]
     
     # Create indexes for better performance
     # Unique index on email to prevent duplicates
@@ -41,10 +43,17 @@ try:
     # Index on email for user_profiles (for fast profile queries)
     user_profiles_collection.create_index([("email", ASCENDING)], unique=True)
     
+    # Index on email for user_goals (unique per user)
+    user_goals_collection.create_index([("email", ASCENDING)], unique=True)
+    
+    # Index on email and date for weight_history
+    weight_history_collection.create_index([("email", ASCENDING)])
+    weight_history_collection.create_index([("date", ASCENDING)])
+    
     # Test connection
     client.admin.command('ping')
     print("✅ MongoDB Atlas connection successful!")
-    print("✅ Indexes created: email (unique), user_email, timestamp")
+    print("✅ Indexes created: email (unique), user_email, timestamp, goals, weight_history")
 except Exception as e:
     print(f"❌ MongoDB Atlas connection failed: {e}")
     print("⚠️ Falling back to MockCollection for testing...")
@@ -53,6 +62,8 @@ except Exception as e:
     users_storage = []
     analyses_storage = []
     profiles_storage = []
+    goals_storage = []
+    weight_history_storage = []
 
     class MockCollection:
         def __init__(self, storage):
@@ -95,5 +106,7 @@ except Exception as e:
     users_collection = MockCollection(users_storage)
     food_analyses_collection = MockCollection(analyses_storage)
     user_profiles_collection = MockCollection(profiles_storage)
+    user_goals_collection = MockCollection(goals_storage)
+    weight_history_collection = MockCollection(weight_history_storage)
 
 

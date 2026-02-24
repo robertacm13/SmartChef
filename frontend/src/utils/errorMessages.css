@@ -1,0 +1,171 @@
+/* Error Display Styles - Nielsen Heuristic #9 */
+
+.error-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin: 16px 0;
+  border-left: 4px solid;
+  animation: errorSlideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Severity colors */
+.error-error {
+  background: #fee;
+  border-left-color: #d32f2f;
+}
+
+.error-warning {
+  background: #fff3cd;
+  border-left-color: #ff6b35;
+}
+
+.error-info {
+  background: #e3f2fd;
+  border-left-color: #1976d2;
+}
+
+/* Dark mode */
+body.dark-mode .error-error {
+  background: rgba(211, 47, 47, 0.1);
+  border-left-color: #ef5350;
+}
+
+body.dark-mode .error-warning {
+  background: rgba(255, 107, 53, 0.1);
+  border-left-color: #ff8c42;
+}
+
+body.dark-mode .error-info {
+  background: rgba(25, 118, 210, 0.1);
+  border-left-color: #42a5f5;
+}
+
+.error-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+body.dark-mode .error-title {
+  color: #f5f5f5;
+}
+
+.error-message {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+}
+
+body.dark-mode .error-message {
+  color: #e0e0e0;
+}
+
+.error-tips {
+  margin: 12px 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: #666;
+  list-style: none;
+}
+
+body.dark-mode .error-tips {
+  color: #ccc;
+}
+
+.error-tips li {
+  margin: 6px 0;
+  padding-left: 8px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.error-action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.error-action-btn.primary {
+  background: var(--primary, #ff6b35);
+  color: white;
+}
+
+.error-action-btn.primary:hover {
+  background: var(--accent, #ff8c42);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+}
+
+.error-action-btn.secondary {
+  background: transparent;
+  color: var(--primary, #ff6b35);
+  border: 1px solid var(--primary, #ff6b35);
+}
+
+.error-action-btn.secondary:hover {
+  background: rgba(255, 107, 53, 0.1);
+}
+
+/* Inline error (pentru formulare) */
+.inline-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fee;
+  color: #d32f2f;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 6px;
+  animation: errorShake 0.3s ease;
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+body.dark-mode .inline-error {
+  background: rgba(211, 47, 47, 0.1);
+  color: #ef5350;
+}
+
+.inline-error-icon {
+  font-size: 16px;
+}
