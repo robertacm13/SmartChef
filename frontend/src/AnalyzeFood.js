@@ -102,7 +102,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
         headers['X-User-Email'] = userEmail;
       }
       
-      const res = await fetch("http://127.0.0.1:8001/analyze_food/", {
+      const res = await fetch("http://127.0.0.1:8000/analyze_food/", {
         method: "POST",
         headers: headers,
         body: formData,
@@ -165,6 +165,22 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     
     doc.setTextColor(0, 0, 0);
     let yPos = 50;
+    
+    // Food Name
+    if (results.food_name && results.food_name !== "unknown") {
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 107, 53);
+      doc.text('🍽️ ' + results.food_name.replace(/_/g, ' ').toUpperCase(), 15, yPos);
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      if (results.confidence) {
+        doc.text('Confidence: ' + results.confidence + '%', 15, yPos + 7);
+      }
+      yPos += 15;
+      doc.setTextColor(0, 0, 0);
+    }
     
     // Ingrediente
     doc.setFontSize(16);
@@ -530,6 +546,31 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 }}>
                   💾 Analiza a fost salvată în istoric!
                 </p>
+              )}
+
+              {results.food_name && results.food_name !== "unknown" && (
+                <div style={{ 
+                  textAlign: "center", 
+                  backgroundColor: "#fff3e0", 
+                  padding: "1rem", 
+                  borderRadius: "12px", 
+                  marginBottom: "1.5rem",
+                  border: "2px solid #ff9800"
+                }}>
+                  <h2 style={{ 
+                    fontSize: "1.8rem", 
+                    margin: "0", 
+                    color: "#ff6b35",
+                    textTransform: "capitalize"
+                  }}>
+                    🍽️ {results.food_name.replace(/_/g, ' ')}
+                  </h2>
+                  {results.confidence && (
+                    <p style={{ margin: "0.5rem 0 0 0", color: "#666", fontSize: "0.95rem" }}>
+                      Confidence: {results.confidence}%
+                    </p>
+                  )}
+                </div>
               )}
 
               <div style={{ marginBottom: "2rem" }}>

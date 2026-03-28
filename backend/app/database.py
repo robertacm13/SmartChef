@@ -15,15 +15,16 @@ try:
     # Add retryWrites=true&w=majority&tlsAllowInvalidCertificates=true if not already in URI
     connection_uri = MONGODB_URI
     if "?" not in connection_uri:
-        connection_uri += "?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true"
+        connection_uri += "?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true&directConnection=false"
     elif "tlsAllowInvalidCertificates" not in connection_uri:
-        connection_uri += "&tlsAllowInvalidCertificates=true"
+        connection_uri += "&tlsAllowInvalidCertificates=true&directConnection=false"
     
     client = MongoClient(
         connection_uri,
         tls=True,
-        serverSelectionTimeoutMS=5000,
-        connectTimeoutMS=10000
+        serverSelectionTimeoutMS=15000,
+        connectTimeoutMS=20000,
+        socketTimeoutMS=20000
     )
     db = client[DATABASE_NAME]
     users_collection = db["users"]

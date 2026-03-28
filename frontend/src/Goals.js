@@ -54,7 +54,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
   const fetchGoals = async () => {
     try {
-      const res = await fetch(`http://localhost:8001/user_goals/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/user_goals/${userEmail}`);
       const data = await res.json();
       
       if (data.status === "success") {
@@ -135,7 +135,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         weekly_goal: weeklyGoal ? parseFloat(weeklyGoal) : null
       };
       
-      const res = await fetch(`http://localhost:8001/user_goals/${userEmail}`, {
+      const res = await fetch(`http://localhost:8000/user_goals/${userEmail}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(goalsData)

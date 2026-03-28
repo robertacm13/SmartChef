@@ -133,7 +133,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister }) 
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:8001/login", { 
+      const res = await axios.post("http://localhost:8000/login", { 
         email, 
         password, 
         otp_code: otp 

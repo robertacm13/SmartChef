@@ -72,7 +72,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8001/analysis_history/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/analysis_history/${userEmail}`);
       const data = await res.json();
       if (data.status === "success") {
         setAnalyses(data.analyses);
@@ -96,7 +96,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
   const toggleFavorite = async (analysisId, e) => {
     e.stopPropagation();
     try {
-      const res = await fetch(`http://localhost:8001/analysis/${analysisId}/favorite`, {
+      const res = await fetch(`http://localhost:8000/analysis/${analysisId}/favorite`, {
         method: 'PUT',
         headers: {
           'X-User-Email': userEmail
@@ -125,7 +125,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
 
   const handleDelete = async (analysisId) => {
     try {
-      const res = await fetch(`http://localhost:8001/analysis/${analysisId}`, {
+      const res = await fetch(`http://localhost:8000/analysis/${analysisId}`, {
         method: 'DELETE',
         headers: {
           'X-User-Email': userEmail

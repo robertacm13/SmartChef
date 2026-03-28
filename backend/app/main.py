@@ -21,6 +21,19 @@ from passlib.hash import pbkdf2_sha256
 # Load environment variables
 load_dotenv()
 
+
+def _read_model_threshold() -> float:
+    raw_threshold = os.getenv("MODEL_THRESHOLD", "0.3")
+    try:
+        value = float(raw_threshold)
+    except ValueError:
+        print(f"Warning: invalid MODEL_THRESHOLD '{raw_threshold}', fallback to 0.3")
+        value = 0.3
+    return max(0.01, min(value, 0.99))
+
+
+MODEL_THRESHOLD = _read_model_threshold()
+
 app = FastAPI()
 
 # Allow CORS for frontend (React)
@@ -65,9 +78,13 @@ async def analyze_food(
         # Read image bytes
         image_bytes = await file.read()
         
-        # Get ML model and predict ingredients
+        # Get ML model and predict food + ingredients
         model = get_model()
-        detected_ingredients = model.predict(image_bytes, threshold=0.3)
+        prediction_result = model.predict(image_bytes, threshold=MODEL_THRESHOLD)
+        
+        food_name = prediction_result.get("food_name", "unknown")
+        detected_ingredients = prediction_result.get("ingredients", [])
+        confidence = prediction_result.get("confidence", 0.0)
         
         # Get nutritional information
         nutrition_data = get_nutrition_info(detected_ingredients)
@@ -80,6 +97,8 @@ async def analyze_food(
                 analysis_document = {
                     "user_email": user_email,
                     "timestamp": datetime.utcnow(),
+                    "food_name": food_name,
+                    "confidence": confidence,
                     "ingredients": detected_ingredients,
                     "nutrition": nutrition_data,
                     "image_name": file.filename,
@@ -92,6 +111,8 @@ async def analyze_food(
                 print(f"⚠️ Warning: Could not save analysis to database: {db_error}")
         
         return {
+            "food_name": food_name,
+            "confidence": round(confidence * 100, 2),
             "ingredients": detected_ingredients,
             "nutrition": nutrition_data,
             "formatted_text": formatted_nutrition,

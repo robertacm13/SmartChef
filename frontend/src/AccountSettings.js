@@ -72,7 +72,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
 
     setValidatingPassword(true);
     try {
-      const res = await fetch(`http://localhost:8001/account_settings/${userEmail}`, {
+      const res = await fetch(`http://localhost:8000/account_settings/${userEmail}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -215,7 +215,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
         new_password: showPasswordFields ? newPassword : null
       };
 
-      const res = await fetch(`http://localhost:8001/account_settings/${userEmail}`, {
+      const res = await fetch(`http://localhost:8000/account_settings/${userEmail}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"

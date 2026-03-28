@@ -84,7 +84,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
   const fetchAnalyses = async () => {
     try {
-      const res = await fetch(`http://localhost:8001/analysis_history/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/analysis_history/${userEmail}`);
       const data = await res.json();
       if (data.status === "success") {
         setAnalyses(data.analyses);
@@ -101,7 +101,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
   const fetchStreak = async () => {
     try {
-      const res = await fetch(`http://localhost:8001/streak/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/streak/${userEmail}`);
       const data = await res.json();
       if (data.status === "success") {
         setStreak(data);

@@ -148,15 +148,16 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
     if (!validateForm()) return;
 
     try {
-      const res = await axios.post("http://localhost:8001/register", { email, password });
+      const res = await axios.post("http://localhost:8000/register", { email, password });
       if (res.data.otp_uri) {
         setQr(res.data.otp_uri);
         setError("");
-      }
-      if (res.data.error) {
+      } else if (res.data.error) {
+        setQr("");
         setError(res.data.error);
       }
     } catch (err) {
+      setQr("");
       setError("Eroare la înregistrare. Verifică conexiunea!");
     }
   };
