@@ -40,6 +40,26 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [userFriendlyError, setUserFriendlyError] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread notifications on component mount
+  React.useEffect(() => {
+    if (userEmail) {
+      fetchUnreadNotifications();
+    }
+  }, [authToken, userEmail]);
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setUnreadCount(data.unread_count);
+      }
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -337,6 +357,41 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     background: "rgba(255,255,255,0.3)",
                     margin: "0 0.5rem"
                   }}></div>
+
+                  {/* Notifications Bell */}
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => onNavigate('notifications')}
+                    style={{ 
+                      padding: "0.7rem 1.2rem", 
+                      fontSize: "1.5rem", 
+                      background: "rgba(255,255,255,0.2)",
+                      position: "relative"
+                    }}
+                    title="Notificări"
+                  >
+                    🔔
+                    {unreadCount > 0 && (
+                      <span style={{
+                        position: "absolute",
+                        top: "-5px",
+                        right: "-5px",
+                        background: "#ff6b35",
+                        color: "white",
+                        borderRadius: "50%",
+                        width: "24px",
+                        height: "24px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        fontWeight: "700",
+                        border: "2px solid white"
+                      }}>
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
                   
                   {/* User Dropdown */}
                   <div 

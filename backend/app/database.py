@@ -32,6 +32,9 @@ try:
     user_profiles_collection = db["user_profiles"]
     user_goals_collection = db["user_goals"]
     weight_history_collection = db["weight_history"]
+    password_reset_tokens_collection = db["password_reset_tokens"]
+    notifications_collection = db["notifications"]
+    notification_preferences_collection = db["notification_preferences"]
     
     # Create indexes for better performance
     # Unique index on email to prevent duplicates
@@ -51,10 +54,21 @@ try:
     weight_history_collection.create_index([("email", ASCENDING)])
     weight_history_collection.create_index([("date", ASCENDING)])
     
+    # Index on token and expiration for password reset tokens
+    password_reset_tokens_collection.create_index([("token", ASCENDING)], unique=True)
+    password_reset_tokens_collection.create_index([("expires_at", ASCENDING)], expireAfterSeconds=0)  # TTL index
+    
+    # Index on user_email for notifications (for fast notification queries)
+    notifications_collection.create_index([("user_email", ASCENDING)])
+    notifications_collection.create_index([("timestamp", ASCENDING)])
+    
+    # Index on email for notification preferences
+    notification_preferences_collection.create_index([("email", ASCENDING)], unique=True)
+    
     # Test connection
     client.admin.command('ping')
     print("✅ MongoDB Atlas connection successful!")
-    print("✅ Indexes created: email (unique), user_email, timestamp, goals, weight_history")
+    print("✅ Indexes created: email (unique), user_email, timestamp, goals, weight_history, notifications")
 except Exception as e:
     print(f"❌ MongoDB Atlas connection failed: {e}")
     print("⚠️ Falling back to MockCollection for testing...")
@@ -65,6 +79,9 @@ except Exception as e:
     profiles_storage = []
     goals_storage = []
     weight_history_storage = []
+    password_reset_tokens_storage = []
+    notifications_storage = []
+    notification_preferences_storage = []
 
     class MockCollection:
         def __init__(self, storage):
@@ -86,11 +103,11 @@ except Exception as e:
                 if all(item.get(key) == value for key, value in query.items()):
                     if "$set" in update_doc:
                         item.update(update_doc["$set"])
-                    return type('obj', (object,), {'modified_count': 1})()
+                    return type('obj', (object,), {'modified_count': 1, 'matched_count': 1})()
             if upsert:
                 new_doc = {**query, **update_doc.get("$set", {})}
                 return self.insert_one(new_doc)
-            return type('obj', (object,), {'modified_count': 0})()
+            return type('obj', (object,), {'modified_count': 0, 'matched_count': 0})()
         
         def find(self, query=None, sort=None):
             if query is None:
@@ -101,7 +118,7 @@ except Exception as e:
                     results.append(item)
             return results
         
-        def create_index(self, keys, unique=False):
+        def create_index(self, keys, unique=False, expireAfterSeconds=None):
             pass  # Mock implementation
 
     users_collection = MockCollection(users_storage)
@@ -109,5 +126,8 @@ except Exception as e:
     user_profiles_collection = MockCollection(profiles_storage)
     user_goals_collection = MockCollection(goals_storage)
     weight_history_collection = MockCollection(weight_history_storage)
+    password_reset_tokens_collection = MockCollection(password_reset_tokens_storage)
+    notifications_collection = MockCollection(notifications_storage)
+    notification_preferences_collection = MockCollection(notification_preferences_storage)
 
 

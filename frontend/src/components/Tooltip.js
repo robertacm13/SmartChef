@@ -62,13 +62,13 @@ export function InfoIcon({ text, size = '16px' }) {
           width: size,
           height: size,
           borderRadius: '50%',
-          background: 'rgba(255, 107, 53, 0.1)',
+          background: 'var(--bg)',
           color: 'var(--primary, #ff6b35)',
           fontSize: '12px',
           fontWeight: 'bold',
           cursor: 'help',
           marginLeft: '6px',
-          border: '1px solid rgba(255, 107, 53, 0.3)'
+          border: '1px solid var(--accent, rgba(255, 107, 53, 0.5))'
         }}
         aria-label="Informații suplimentare"
         tabIndex="0"

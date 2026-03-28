@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
-from app.auth import register_user, login_user
+from app.auth import register_user, login_user, request_password_reset, verify_reset_token, reset_password
 from app.model import get_model
 from app.nutrition import get_nutrition_info, format_nutrition_response
 from app.database import (
@@ -13,9 +13,17 @@ from app.database import (
     user_profiles_collection, 
     users_collection,
     user_goals_collection,
-    weight_history_collection
+    weight_history_collection,
+    notifications_collection,
+    notification_preferences_collection
 )
 from passlib.hash import pbkdf2_sha256
+from PIL import Image
+import io
+import base64
+from bson import ObjectId
+from app.scheduler import start_scheduler, stop_scheduler
+from app.email_service import email_service
 
 
 # Load environment variables
@@ -46,12 +54,66 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    """Load ML model on startup"""
+    """Load ML model and start scheduler on startup"""
     try:
         model = get_model()
         print("✅ Food recognition model loaded successfully")
     except Exception as e:
         print(f"⚠️ Warning: Model loading issue - {e}")
+    
+    # Start background scheduler for reminders
+    try:
+        start_scheduler()
+        print("✅ Background scheduler started")
+    except Exception as e:
+        print(f"⚠️ Warning: Scheduler startup issue - {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up on shutdown"""
+    try:
+        stop_scheduler()
+        print("✅ Background scheduler stopped")
+    except Exception as e:
+        print(f"⚠️ Warning: Scheduler shutdown issue - {e}")
+
+
+def create_thumbnail(image_bytes: bytes, size: tuple = (150, 150)) -> str:
+    """
+    Create a Base64-encoded thumbnail from image bytes.
+    
+    Args:
+        image_bytes: Raw image bytes
+        size: Thumbnail size (width, height)
+        
+    Returns:
+        Base64-encoded thumbnail or empty string if conversion fails
+    """
+    try:
+        # Open image from bytes
+        img = Image.open(io.BytesIO(image_bytes))
+        
+        # Convert RGBA to RGB if needed
+        if img.mode in ('RGBA', 'LA', 'P'):
+            rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+            rgb_img.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+            img = rgb_img
+        
+        # Create thumbnail
+        img.thumbnail(size, Image.Resampling.LANCZOS)
+        
+        # Convert to bytes
+        thumb_bytes = io.BytesIO()
+        img.save(thumb_bytes, format='JPEG', quality=70)
+        thumb_bytes.seek(0)
+        
+        # Encode to Base64
+        thumb_base64 = base64.b64encode(thumb_bytes.getvalue()).decode('utf-8')
+        return f"data:image/jpeg;base64,{thumb_base64}"
+    except Exception as e:
+        print(f"⚠️ Warning: Thumbnail creation failed - {e}")
+        return ""
 
 
 @app.post("/analyze_food/")
@@ -94,6 +156,9 @@ async def analyze_food(
         analysis_id = None
         if user_email:
             try:
+                # Create thumbnail for preview
+                thumbnail = create_thumbnail(image_bytes, size=(150, 150))
+                
                 analysis_document = {
                     "user_email": user_email,
                     "timestamp": datetime.utcnow(),
@@ -102,11 +167,47 @@ async def analyze_food(
                     "ingredients": detected_ingredients,
                     "nutrition": nutrition_data,
                     "image_name": file.filename,
-                    "image_size": len(image_bytes)
+                    "image_size": len(image_bytes),
+                    "image_thumbnail": thumbnail
                 }
                 result = food_analyses_collection.insert_one(analysis_document)
                 analysis_id = str(result.inserted_id)
                 print(f"✅ Analysis saved to database for user: {user_email}")
+                
+                # Create notification for analysis completion
+                try:
+                    notification_data = {
+                        "user_email": user_email,
+                        "type": "analysis_complete",
+                        "title": "Analiza completă! 🎉",
+                        "message": f"Am detectat {len(detected_ingredients)} ingrediente în {file.filename}",
+                        "data": {
+                            "analysis_id": analysis_id,
+                            "food_name": food_name,
+                            "ingredients_count": len(detected_ingredients)
+                        },
+                        "timestamp": datetime.utcnow(),
+                        "is_read": False
+                    }
+                    notifications_collection.insert_one(notification_data)
+                    print(f"✅ Notification created for user: {user_email}")
+                    
+                    # Send email notification if enabled in preferences
+                    try:
+                        from app.notifications import should_notify
+                        if should_notify(user_email, "analysis_complete"):
+                            email_service.send_analysis_complete_email(
+                                recipient_email=user_email,
+                                food_name=food_name,
+                                ingredients=detected_ingredients,
+                                ingredients_count=len(detected_ingredients)
+                            )
+                            print(f"✅ Email sent to user: {user_email}")
+                    except Exception as email_error:
+                        print(f"⚠️ Warning: Could not send email: {email_error}")
+                        
+                except Exception as notif_error:
+                    print(f"⚠️ Warning: Could not create notification: {notif_error}")
             except Exception as db_error:
                 print(f"⚠️ Warning: Could not save analysis to database: {db_error}")
         
@@ -133,6 +234,13 @@ class LoginRequest(BaseModel):
     password: str
     otp_code: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 @app.post("/register")
 def register(data: RegisterRequest):
     # accesezi câmpurile: data.email, data.password
@@ -141,6 +249,46 @@ def register(data: RegisterRequest):
 @app.post("/login")
 def login(data: LoginRequest):
     return login_user(data.email, data.password, data.otp_code)
+
+@app.post("/forgot-password")
+def forgot_password(data: ForgotPasswordRequest):
+    """
+    Request a password reset email.
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        Status message (doesn't reveal if email exists for security)
+    """
+    return request_password_reset(data.email)
+
+@app.get("/verify-reset-token/{token}")
+def verify_token(token: str):
+    """
+    Verify if a password reset token is valid.
+    
+    Args:
+        token: Reset token to verify
+        
+    Returns:
+        Token validity status
+    """
+    return verify_reset_token(token)
+
+@app.post("/reset-password")
+def reset_pwd(data: ResetPasswordRequest):
+    """
+    Reset password using a valid reset token.
+    
+    Args:
+        token: Valid password reset token
+        new_password: New password
+        
+    Returns:
+        Status of password reset
+    """
+    return reset_password(data.token, data.new_password)
 
 @app.get("/analysis_history/{user_email}")
 def get_analysis_history(user_email: str, limit: int = 100):
@@ -843,4 +991,209 @@ async def get_user_streak(email: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating account settings: {str(e)}")
+
+
+# ==================== NOTIFICATION ENDPOINTS ====================
+
+@app.get("/notifications/{user_email}")
+def get_notifications(user_email: str, limit: int = 50, unread_only: bool = False):
+    """
+    Get notifications for a user.
+    
+    Args:
+        user_email: User's email address
+        limit: Maximum number of notifications to return
+        unread_only: If True, only return unread notifications
+        
+    Returns:
+        List of notifications with unread count
+    """
+    try:
+        # Get notifications
+        notifications = list(notifications_collection.find(
+            {"user_email": user_email} if not unread_only else {"user_email": user_email, "is_read": False}
+        ).sort("timestamp", -1).limit(limit))
+        
+        # Convert ObjectId to string for JSON serialization
+        for notification in notifications:
+            if "_id" in notification:
+                notification["_id"] = str(notification["_id"])
+            if "timestamp" in notification:
+                notification["timestamp"] = notification["timestamp"].isoformat()
+        
+        # Get unread count
+        unread_count = len(list(notifications_collection.find(
+            {"user_email": user_email, "is_read": False}
+        )))
+        
+        return {
+            "status": "success",
+            "notifications": notifications,
+            "unread_count": unread_count,
+            "total_count": len(notifications)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching notifications: {str(e)}")
+
+
+@app.post("/notifications/{user_email}")
+def create_notification_endpoint(
+    user_email: str,
+    notification_type: str,
+    title: str,
+    message: str
+):
+    """
+    Create a new notification for a user.
+    
+    Args:
+        user_email: User's email address
+        notification_type: Type of notification
+        title: Notification title
+        message: Notification message
+        
+    Returns:
+        Created notification details
+    """
+    try:
+        notification_data = {
+            "user_email": user_email,
+            "type": notification_type,
+            "title": title,
+            "message": message,
+            "timestamp": datetime.utcnow(),
+            "is_read": False
+        }
+        
+        result = notifications_collection.insert_one(notification_data)
+        
+        return {
+            "status": "success",
+            "notification_id": str(result.inserted_id),
+            "message": "Notification created successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating notification: {str(e)}")
+
+
+@app.put("/notifications/{notification_id}/read")
+def mark_notification_read(notification_id: str):
+    """
+    Mark a notification as read.
+    
+    Args:
+        notification_id: ID of the notification to mark as read
+        
+    Returns:
+        Success status
+    """
+    try:
+        result = notifications_collection.update_one(
+            {"_id": ObjectId(notification_id)},
+            {"$set": {"is_read": True}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        
+        return {
+            "status": "success",
+            "message": "Notification marked as read"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating notification: {str(e)}")
+
+
+@app.delete("/notifications/{notification_id}")
+def delete_notification_endpoint(notification_id: str):
+    """
+    Delete a notification.
+    
+    Args:
+        notification_id: ID of the notification to delete
+        
+    Returns:
+        Success status
+    """
+    try:
+        result = notifications_collection.delete_one({"_id": ObjectId(notification_id)})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        
+        return {
+            "status": "success",
+            "message": "Notification deleted successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting notification: {str(e)}")
+
+
+@app.get("/notification_preferences/{email}")
+def get_notification_preferences_endpoint(email: str):
+    """
+    Get notification preferences for a user.
+    
+    Args:
+        email: User's email address
+        
+    Returns:
+        User's notification preferences
+    """
+    try:
+        prefs = notification_preferences_collection.find_one({"email": email})
+        
+        if not prefs:
+            # Return default preferences
+            default_prefs = {
+                "analysis_complete": True,
+                "goal_achieved": True,
+                "daily_reminder": True,
+                "weight_reminder": True
+            }
+            return {
+                "status": "success",
+                "preferences": default_prefs
+            }
+        
+        return {
+            "status": "success",
+            "preferences": prefs.get("preferences", {})
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching preferences: {str(e)}")
+
+
+@app.post("/notification_preferences/{email}")
+def set_notification_preferences_endpoint(email: str, preferences: dict):
+    """
+    Set notification preferences for a user.
+    
+    Args:
+        email: User's email address
+        preferences: Dictionary of notification preferences
+        
+    Returns:
+        Success status
+    """
+    try:
+        result = notification_preferences_collection.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "email": email,
+                    "preferences": preferences,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        return {
+            "status": "success",
+            "message": "Notification preferences updated successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating preferences: {str(e)}")
+
 

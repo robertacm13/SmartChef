@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShortcutsHelp } from "./utils/keyboardShortcuts";
 import "./utils/keyboardShortcuts.css";
 import "./App.css";
@@ -30,11 +30,41 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   const [passwordValidationTimeout, setPasswordValidationTimeout] = useState(null);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   // Vizibilitate parole
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Notification preferences
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    analysis_complete: true,
+    goal_achieved: true,
+    daily_reminder: true,
+    weight_reminder: true
+  });
+  const [loadingPrefs, setLoadingPrefs] = useState(true);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+
+  // Fetch unread notifications on component mount
+  useEffect(() => {
+    if (userEmail) {
+      fetchUnreadNotifications();
+    }
+  }, [userEmail]);
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setUnreadCount(data.unread_count);
+      }
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    }
+  };
 
   const handleNavMouseEnter = () => {
     if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
@@ -54,6 +84,61 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   const handleUserMouseLeave = () => {
     const timeout = setTimeout(() => setShowUserDropdown(false), 200);
     setUserDropdownTimeout(timeout);
+  };
+
+  // Fetch notification preferences on mount
+  useEffect(() => {
+    fetchNotificationPreferences();
+  }, []);
+
+  const fetchNotificationPreferences = async () => {
+    setLoadingPrefs(true);
+    try {
+      const res = await fetch(`http://localhost:8000/notification_preferences/${userEmail}`);
+      const data = await res.json();
+      
+      if (data.status === "success") {
+        setNotificationPrefs(data.preferences);
+      }
+    } catch (err) {
+      console.error("Error fetching notification preferences:", err);
+    } finally {
+      setLoadingPrefs(false);
+    }
+  };
+
+  const handleNotificationPrefChange = (key) => {
+    const updated = {
+      ...notificationPrefs,
+      [key]: !notificationPrefs[key]
+    };
+    setNotificationPrefs(updated);
+    saveNotificationPreferences(updated);
+  };
+
+  const saveNotificationPreferences = async (prefs) => {
+    setSavingPrefs(true);
+    try {
+      const res = await fetch(`http://localhost:8000/notification_preferences/${userEmail}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(prefs)
+      });
+
+      const data = await res.json();
+      
+      if (data.status === "success") {
+        setSuccess("✅ Preferințele de notificări au fost actualizate");
+        setTimeout(() => setSuccess(""), 3000);
+      }
+    } catch (err) {
+      console.error("Error saving notification preferences:", err);
+      setError("❌ Eroare la salvarea preferințelor");
+    } finally {
+      setSavingPrefs(false);
+    }
   };
 
   const handleSettings = () => {
@@ -316,6 +401,41 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 background: "rgba(255,255,255,0.3)",
                 margin: "0 0.5rem"
               }}></div>
+
+              {/* Notifications Bell */}
+              <button
+                className="btn btn-outline"
+                onClick={() => onNavigate('notifications')}
+                style={{ 
+                  padding: "0.7rem 1.2rem", 
+                  fontSize: "1.5rem", 
+                  background: "rgba(255,255,255,0.2)",
+                  position: "relative"
+                }}
+                title="Notificări"
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                    background: "#ff6b35",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: "24px",
+                    height: "24px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.75rem",
+                    fontWeight: "700",
+                    border: "2px solid white"
+                  }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
               
               {/* User Dropdown */}
               <div 
@@ -357,7 +477,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     <button className="user-dropdown-item" onClick={() => {
                       onNavigate('account-settings');
                       setShowUserDropdown(false);
-                    }} style={{ fontWeight: "600", background: "rgba(255, 107, 53, 0.1)" }}>
+                    }} style={{ fontWeight: "600" }}>
                       <span className="dropdown-icon">🔑</span>
                       Setările contului
                     </button>
@@ -1014,6 +1134,160 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
               {saving ? "Se salvează..." : "💾 Salvează modificările"}
             </button>
           </form>
+        </div>
+
+        {/* Notification Preferences Section */}
+        <div style={{
+          marginTop: "2rem",
+          padding: "1.5rem",
+          background: "white",
+          borderRadius: "15px",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+        }}>
+          <h3 style={{ 
+            fontSize: "1.2rem", 
+            fontWeight: "700", 
+            color: "#333",
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem"
+          }}>
+            🔔 Preferințe Notificări
+          </h3>
+          <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+            Alege ce tip de notificări dorești să primești
+          </p>
+
+          {loadingPrefs ? (
+            <p style={{ color: "#999", textAlign: "center" }}>Se încarcă preferințele...</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* Analysis Complete */}
+              <label style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.8rem",
+                padding: "1rem",
+                background: "#f9f9f9",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+              onMouseLeave={(e) => e.target.style.background = "#f9f9f9"}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={notificationPrefs.analysis_complete}
+                  onChange={() => handleNotificationPrefChange('analysis_complete')}
+                  disabled={savingPrefs}
+                  style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                />
+                <div>
+                  <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
+                    ✅ Analiză completă
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
+                    Primești notificare când analiza unei imagini este finalizată
+                  </p>
+                </div>
+              </label>
+
+              {/* Goal Achieved */}
+              <label style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.8rem",
+                padding: "1rem",
+                background: "#f9f9f9",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+              onMouseLeave={(e) => e.target.style.background = "#f9f9f9"}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={notificationPrefs.goal_achieved}
+                  onChange={() => handleNotificationPrefChange('goal_achieved')}
+                  disabled={savingPrefs}
+                  style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                />
+                <div>
+                  <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
+                    🎉 Obiectiv atins
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
+                    Primești felicitări când atingi obiectivele tale nutri ționale
+                  </p>
+                </div>
+              </label>
+
+              {/* Daily Reminder */}
+              <label style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.8rem",
+                padding: "1rem",
+                background: "#f9f9f9",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+              onMouseLeave={(e) => e.target.style.background = "#f9f9f9"}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={notificationPrefs.daily_reminder}
+                  onChange={() => handleNotificationPrefChange('daily_reminder')}
+                  disabled={savingPrefs}
+                  style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                />
+                <div>
+                  <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
+                    📅 Memento zilnic
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
+                    Primești memento zilnic să-ți înregistrezi mâncarea
+                  </p>
+                </div>
+              </label>
+
+              {/* Weight Reminder */}
+              <label style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.8rem",
+                padding: "1rem",
+                background: "#f9f9f9",
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#f0f0f0"}
+              onMouseLeave={(e) => e.target.style.background = "#f9f9f9"}
+              >
+                <input 
+                  type="checkbox" 
+                  checked={notificationPrefs.weight_reminder}
+                  onChange={() => handleNotificationPrefChange('weight_reminder')}
+                  disabled={savingPrefs}
+                  style={{ width: "20px", height: "20px", cursor: "pointer" }}
+                />
+                <div>
+                  <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
+                    ⚖️ Memento cântărire
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
+                    Primești memento să-ți introduci greutatea
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
         </div>
 
         <div style={{

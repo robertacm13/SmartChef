@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import axios from "axios";
 import "./App.css";
 
-export default function Login({ onBack, onLoginSuccess, onNavigateToRegister }) {
+export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, onNavigate }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -324,6 +324,23 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister }) 
               ⚠️ {passwordError}
             </p>
           )}
+          <div style={{ marginTop: "0.5rem", textAlign: "right" }}>
+            <span
+              onClick={() => onNavigate && onNavigate("forgot-password")}
+              style={{ 
+                color: "#ff6b35", 
+                fontSize: "0.85rem", 
+                fontWeight: "600", 
+                cursor: "pointer", 
+                textDecoration: "underline",
+                transition: "color 0.2s ease"
+              }}
+              onMouseEnter={(e) => e.target.style.color = "var(--primary, #ff6b35)"}
+              onMouseLeave={(e) => e.target.style.color = "#ff6b35"}
+            >
+              Ai uitat parola?
+            </span>
+          </div>
         </div>
 
         <div className="form-group">

@@ -43,6 +43,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
   const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [userFriendlyError, setUserFriendlyError] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -79,6 +80,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     fetchAnalyses();
     fetchStreak();
     fetchGoals();
+    fetchUnreadNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -120,6 +122,18 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
       }
     } catch (err) {
       console.error("Error fetching goals:", err);
+    }
+  };
+
+  const fetchUnreadNotifications = async () => {
+    try {
+      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setUnreadCount(data.unread_count);
+      }
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
     }
   };
 
@@ -256,6 +270,41 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
           <div className="nav-buttons">
             {/* Right side - Menu & User */}
               <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
+              {/* Notifications Bell */}
+              <button
+                className="btn btn-outline"
+                onClick={() => onNavigate('notifications')}
+                style={{ 
+                  padding: "0.7rem 1.2rem", 
+                  fontSize: "1.5rem", 
+                  background: "rgba(255,255,255,0.2)",
+                  position: "relative"
+                }}
+                title="Notificări"
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                    background: "#ff6b35",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: "24px",
+                    height: "24px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.75rem",
+                    fontWeight: "700",
+                    border: "2px solid white"
+                  }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              
               {/* Navigation Dropdown */}
               <div 
                 style={{ position: "relative" }}
@@ -276,7 +325,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         onNavigate('dashboard');
                         setShowNavDropdown(false);
                       }}
-                      style={{ fontWeight: "600", background: "rgba(255, 107, 53, 0.1)" }}
+                      style={{ fontWeight: "600" }}
                     >
                       📈 Dashboard
                     </button>

@@ -5,7 +5,10 @@ import "./App.css";
 
 const Login = lazy(() => import("./Login"));
 const Register = lazy(() => import("./Register"));
+const ForgotPassword = lazy(() => import("./ForgotPassword"));
+const ResetPassword = lazy(() => import("./ResetPassword"));
 const History = lazy(() => import("./History"));
+const Notifications = lazy(() => import("./Notifications"));
 const PersonalData = lazy(() => import("./PersonalData"));
 const AccountSettings = lazy(() => import("./AccountSettings"));
 const AppSettings = lazy(() => import("./AppSettings"));
@@ -52,6 +55,16 @@ function App() {
     document.documentElement.lang = savedLang;
   }, []);
 
+  // Check for password reset token in URL on mount
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const resetToken = params.get("token");
+    
+    if (resetToken) {
+      setCurrentPage("reset-password");
+    }
+  }, []);
+
   const handleLoginSuccess = (token, email) => {
     setAuthToken(token);
     setUserEmail(email);
@@ -88,11 +101,17 @@ function App() {
   const renderPage = () => {
     switch (currentPage) {
       case "login":
-        return <Login onBack={() => setCurrentPage("main")} onLoginSuccess={handleLoginSuccess} onNavigateToRegister={() => setCurrentPage("register")} />;
+        return <Login onBack={() => setCurrentPage("main")} onLoginSuccess={handleLoginSuccess} onNavigateToRegister={() => setCurrentPage("register")} onNavigate={(page) => setCurrentPage(page)} />;
       case "register":
         return <Register onBack={() => setCurrentPage("main")} onRegisterSuccess={() => setCurrentPage("login")} onNavigateToLogin={() => setCurrentPage("login")} />;
+      case "forgot-password":
+        return <ForgotPassword onBack={() => setCurrentPage("login")} onNavigate={(page) => setCurrentPage(page)} />;
+      case "reset-password":
+        return <ResetPassword onBack={() => setCurrentPage("login")} onLoginSuccess={handleLoginSuccess} />;
       case "history":
         return <History userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleSettings={handleSettings} handleHelp={handleHelp} />;
+      case "notifications":
+        return <Notifications userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleSettings={handleSettings} handleHelp={handleHelp} />;
       case "dashboard":
         return <Dashboard userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleSettings={handleSettings} handleHelp={handleHelp} />;
       case "personal-data":
