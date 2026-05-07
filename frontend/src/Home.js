@@ -9,6 +9,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
   const [userDropdownTimeout, setUserDropdownTimeout] = React.useState(null);
   const [showFabMenu, setShowFabMenu] = React.useState(false);
   const [showShortcuts, setShowShortcuts] = React.useState(false);
+  const [showHelpModal, setShowHelpModal] = React.useState(false);
   const [showTutorial, setShowTutorial] = React.useState(false);
   const [unreadCount, setUnreadCount] = React.useState(0);
 
@@ -21,22 +22,22 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
     }
     
     // Fetch unread notifications
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
   }, [authToken, userEmail]);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
 
   const handleUserMouseEnter = () => {
     if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
@@ -53,7 +54,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
   };
 
   const handleHelp = () => {
-    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
+    setShowHelpModal(true);
   };
 
   return (
@@ -99,7 +100,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                             setShowNavDropdown(false);
                           }}
                         >
-                          📊 Istoric
+                          📊 History
                         </button>
                         <button
                           className="nav-dropdown-item"
@@ -108,7 +109,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                             setShowNavDropdown(false);
                           }}
                         >
-                          🎯 Obiective
+                          🎯 Goals
                         </button>
                       </div>
                     )}
@@ -131,7 +132,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                       background: "rgba(255,255,255,0.2)",
                       position: "relative"
                     }}
-                    title="Notificări"
+                    title="Notifications"
                   >
                     🔔
                     {unreadCount > 0 && (
@@ -180,9 +181,9 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                     </button>
                     {showUserDropdown && (
                       <div className="user-dropdown">
-                        <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                        <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
                           <span className="dropdown-icon">👤</span>
-                          Profil
+                          Profile
                         </button>
                         
                         <button className="user-dropdown-item" onClick={() => {
@@ -190,7 +191,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">📊</span>
-                          Date personale
+                          Personal Data
                         </button>
                         
                         <button className="user-dropdown-item" onClick={() => {
@@ -198,7 +199,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">🔑</span>
-                          Setările contului
+                          Account Settings
                         </button>
 
                         <button className="user-dropdown-item" onClick={() => {
@@ -206,7 +207,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">⚙️</span>
-                          Setări aplicație
+                          App Settings
                         </button>
                         
                         <button className="user-dropdown-item" onClick={() => {
@@ -214,7 +215,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">🎓</span>
-                          Revedere Tutorial
+                          Replay Tutorial
                         </button>
                         
                         <div className="user-dropdown-divider"></div>
@@ -258,7 +259,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
             marginBottom: "1rem",
             textShadow: "2px 2px 4px rgba(0,0,0,0.1)"
           }}>
-            ✨ Bine ai venit la SmartChef! ✨
+            ✨ Welcome to SmartChef! ✨
           </h1>
           <p style={{ 
             fontSize: "1.3rem", 
@@ -267,7 +268,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
             maxWidth: "800px",
             margin: "0 auto"
           }}>
-            Analiză inteligentă a alimentelor cu AI și valori nutriționale
+            Intelligent food analysis with AI and nutritional values
           </p>
         </div>
 
@@ -301,7 +302,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 marginBottom: "1rem",
                 fontWeight: "700"
               }}>
-                Recunoaștere AI Inteligentă
+                Intelligent AI Recognition
               </h2>
               <p style={{ 
                 fontSize: "1.1rem", 
@@ -309,8 +310,8 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 lineHeight: "1.8",
                 marginBottom: "1rem"
               }}>
-                Tehnologie avansată de deep learning care identifică automat ingredientele din fotografiile tale. 
-                Suportă sute de alimente și mâncăruri diferite cu precizie ridicată.
+                Advanced deep learning technology that automatically identifies ingredients from your food photos. 
+                Supports hundreds of foods and dishes with high accuracy.
               </p>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <span style={{
@@ -320,7 +321,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                   borderRadius: "20px",
                   fontSize: "0.9rem",
                   fontWeight: "600"
-                }}>✓ Precizie ridicată</span>
+                }}>✓ High accuracy</span>
                 <span style={{
                   background: "#fff3ef",
                   color: "#ff6b35",
@@ -346,7 +347,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
               flex: "1", 
               minWidth: "300px",
               padding: "2rem",
-              background: "linear-gradient(135deg, rgba(33,150,243,0.1) 0%, rgba(33,150,243,0.05) 100%)",
+              background: "linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,107,53,0.05) 100%)",
               borderRadius: "20px",
               display: "flex",
               alignItems: "center",
@@ -358,11 +359,11 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
             <div style={{ flex: "1.5", minWidth: "300px" }}>
               <h2 style={{ 
                 fontSize: "2rem", 
-                color: "#2196F3", 
+                color: "#ff6b35", 
                 marginBottom: "1rem",
                 fontWeight: "700"
               }}>
-                Valori Nutriționale Complete
+                Complete Nutritional Values
               </h2>
               <p style={{ 
                 fontSize: "1.1rem", 
@@ -370,26 +371,26 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 lineHeight: "1.8",
                 marginBottom: "1rem"
               }}>
-                Calculează instant macro și micronutrienții pentru fiecare ingredient. 
-                Obții calorii, proteine, carbohidrați, grăsimi, fibre și multe altele.
+                Instantly calculate macros and micronutrients for each ingredient. 
+                Get calories, protein, carbs, fat, fiber and much more.
               </p>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <span style={{
-                  background: "#e3f2fd",
-                  color: "#2196F3",
+                  background: "#fff3ef",
+                  color: "#ff6b35",
                   padding: "0.5rem 1rem",
                   borderRadius: "20px",
                   fontSize: "0.9rem",
                   fontWeight: "600"
-                }}>✓ Date precise</span>
+                }}>✓ Accurate data</span>
                 <span style={{
-                  background: "#e3f2fd",
-                  color: "#2196F3",
+                  background: "#fff3ef",
+                  color: "#ff6b35",
                   padding: "0.5rem 1rem",
                   borderRadius: "20px",
                   fontSize: "0.9rem",
                   fontWeight: "600"
-                }}>✓ Export PDF</span>
+                }}>✓ PDF Export</span>
               </div>
             </div>
           </div>
@@ -406,7 +407,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
               flex: "1", 
               minWidth: "300px",
               padding: "2rem",
-              background: "linear-gradient(135deg, rgba(76,175,80,0.1) 0%, rgba(76,175,80,0.05) 100%)",
+              background: "linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,107,53,0.05) 100%)",
               borderRadius: "20px",
               display: "flex",
               alignItems: "center",
@@ -418,11 +419,11 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
             <div style={{ flex: "1.5", minWidth: "300px" }}>
               <h2 style={{ 
                 fontSize: "2rem", 
-                color: "#4CAF50", 
+                color: "#ff6b35", 
                 marginBottom: "1rem",
                 fontWeight: "700"
               }}>
-                Tracking & Obiective Personalizate
+                Tracking & Personalized Objectives
               </h2>
               <p style={{ 
                 fontSize: "1.1rem", 
@@ -430,21 +431,21 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 lineHeight: "1.8",
                 marginBottom: "1rem"
               }}>
-                Setează-ți obiective nutriționale cu calculator BMR/TDEE, tracking greutate, 
-                streak counter și dashboard cu statistici detaliate pentru progresul tău.
+                Set nutritional objectives with BMR/TDEE calculator, weight tracking, 
+                streak counter and dashboard with detailed statistics for your progress.
               </p>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                 <span style={{
-                  background: "#e8f5e9",
-                  color: "#4CAF50",
+                  background: "#fff3ef",
+                  color: "#ff6b35",
                   padding: "0.5rem 1rem",
                   borderRadius: "20px",
                   fontSize: "0.9rem",
                   fontWeight: "600"
                 }}>✓ BMR/TDEE</span>
                 <span style={{
-                  background: "#e8f5e9",
-                  color: "#4CAF50",
+                  background: "#fff3ef",
+                  color: "#ff6b35",
                   padding: "0.5rem 1rem",
                   borderRadius: "20px",
                   fontSize: "0.9rem",
@@ -457,7 +458,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
 
         {/* Additional Benefits */}
         <div style={{ 
-          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+          background: "linear-gradient(135deg, #fff3ef 0%, #ffe0b3 100%)",
           borderRadius: "20px",
           padding: "3rem",
           marginBottom: "4rem"
@@ -465,11 +466,11 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
           <h2 style={{ 
             textAlign: "center", 
             fontSize: "2.2rem", 
-            color: "#333", 
+            color: "#ff6b35", 
             marginBottom: "3rem",
             fontWeight: "700"
           }}>
-            🌟 Și multe altele...
+            🌟 And much more...
           </h2>
           <div style={{ 
             display: "grid", 
@@ -480,10 +481,10 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
               <div style={{ fontSize: "2.5rem", flexShrink: 0 }}>🔒</div>
               <div>
                 <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem", color: "#333", fontWeight: "600" }}>
-                  Securitate 2FA
+                  2FA Security
                 </h3>
                 <p style={{ color: "#555", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                  Protecție avansată cu autentificare în doi pași
+                  Advanced protection with two-factor authentication
                 </p>
               </div>
             </div>
@@ -495,7 +496,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                   Dashboard Interactiv
                 </h3>
                 <p style={{ color: "#555", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                  Vizualizează statistici și evoluția ta zilnică
+                  Visualize statistics and your daily progress
                 </p>
               </div>
             </div>
@@ -507,7 +508,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                   Streak System
                 </h3>
                 <p style={{ color: "#555", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                  Motivație prin zile consecutive de activitate
+                  Motivation through consecutive activity streaks
                 </p>
               </div>
             </div>
@@ -516,10 +517,10 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
               <div style={{ fontSize: "2.5rem", flexShrink: 0 }}>🎨</div>
               <div>
                 <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem", color: "#333", fontWeight: "600" }}>
-                  Personalizare Totală
+                  Complete Customization
                 </h3>
                 <p style={{ color: "#555", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                  5 teme, control font, limbă și unități măsură
+                  5 themes, font control, language and measurement units
                 </p>
               </div>
             </div>
@@ -528,10 +529,10 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
               <div style={{ fontSize: "2.5rem", flexShrink: 0 }}>📜</div>
               <div>
                 <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem", color: "#333", fontWeight: "600" }}>
-                  Istoric Complet
+                  Complete History
                 </h3>
                 <p style={{ color: "#555", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                  Păstrează toate analizele cu filtre avansate
+                  Keep all analyses with advanced filters
                 </p>
               </div>
             </div>
@@ -543,7 +544,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                   Weight Tracking
                 </h3>
                 <p style={{ color: "#555", fontSize: "0.95rem", lineHeight: "1.6" }}>
-                  Monitorizează greutatea cu grafice timeline
+                  Monitor weight with timeline charts
                 </p>
               </div>
             </div>
@@ -559,23 +560,34 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
             padding: "3rem"
           }}>
             <h2 style={{ fontSize: "2rem", color: "#ff6b35", marginBottom: "1rem" }}>
-              🚀 Începe Acum
+              🚀 Start Now
             </h2>
             <p style={{ fontSize: "1.1rem", color: "#666", marginBottom: "2rem" }}>
-              Creează un cont gratuit pentru a accesa toate funcționalitățile SmartChef
+              Create a free account to access all SmartChef features
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
               <button
                 className="btn btn-primary"
                 onClick={() => onNavigate("register")}
-                style={{ padding: "1rem 2.5rem", fontSize: "1.1rem" }}
+                style={{ 
+                  padding: "1rem 2.5rem", 
+                  fontSize: "1.1rem",
+                  background: "linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%)",
+                  color: "white"
+                }}
               >
-                📝 Înregistrare Gratuită
+                📝 Free Registration
               </button>
               <button
                 className="btn btn-outline"
                 onClick={() => onNavigate("login")}
-                style={{ padding: "1rem 2.5rem", fontSize: "1.1rem" }}
+                style={{ 
+                  padding: "1rem 2.5rem", 
+                  fontSize: "1.1rem",
+                  background: "white",
+                  color: "#ff6b35",
+                  border: "2px solid #ff6b35"
+                }}
               >
                 🔐 Login
               </button>
@@ -591,10 +603,10 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
               boxShadow: "0 10px 30px rgba(255, 107, 53, 0.3)"
             }}>
               <h2 style={{ fontSize: "2.5rem", marginBottom: "1rem", fontWeight: "700" }}>
-                🍽️ Gata să analizezi mâncarea ta?
+                🍽️ Ready to analyze your meal?
               </h2>
               <p style={{ fontSize: "1.2rem", marginBottom: "2rem", opacity: 0.95 }}>
-                Încarcă o imagine și descoperă instant valorile nutriționale
+                Upload an image and instantly discover nutritional values
               </p>
               <button
                 className="btn"
@@ -609,7 +621,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                   boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
                 }}
               >
-                📸 Analizează Acum
+                📸 Analyze Now
               </button>
             </div>
           </div>
@@ -643,7 +655,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
         <button
           className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
           onClick={() => setShowShortcuts(true)}
-          title="Keyboard Shortcuts (apasă ?)"
+          title="Keyboard Shortcuts (press ?)"
         >
           ⌨️
         </button>
@@ -666,6 +678,121 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
             'h': { description: 'Mergi la Home (acum)', action: 'navigate-home' }
           }}
         />
+      )}
+
+      {/* Help & Support Modal */}
+      {showHelpModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10000
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "20px",
+            padding: "2rem",
+            maxWidth: "500px",
+            width: "90%",
+            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.3)",
+            position: "relative"
+          }}>
+            {/* Close Button (X) */}
+            <button
+              onClick={() => setShowHelpModal(false)}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                fontSize: "2rem",
+                cursor: "pointer",
+                color: "#666",
+                width: "40px",
+                height: "40px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.2s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = "#ff6b35";
+                e.target.style.transform = "scale(1.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = "#666";
+                e.target.style.transform = "scale(1)";
+              }}
+            >
+              ×
+            </button>
+
+            {/* Modal Content */}
+            <h2 style={{ 
+              fontSize: "1.8rem", 
+              color: "#ff6b35", 
+              marginBottom: "1.5rem",
+              paddingRight: "2rem"
+            }}>
+              ❓ Help & Support
+            </h2>
+
+            <div style={{ color: "#333", lineHeight: "1.8" }}>
+              <p style={{ marginBottom: "1rem", fontWeight: "600", color: "#666" }}>
+                For assistance:
+              </p>
+              <ul style={{ marginBottom: "1.5rem", paddingLeft: "1.5rem" }}>
+                <li style={{ marginBottom: "0.5rem" }}>📧 <strong>Email:</strong> support@smartchef.ro</li>
+                <li style={{ marginBottom: "0.5rem" }}>🐛 <strong>Report bugs</strong> on GitHub</li>
+              </ul>
+
+              <p style={{ marginBottom: "1rem", fontWeight: "600", color: "#666" }}>
+                Quick Tips:
+              </p>
+              <ul style={{ paddingLeft: "1.5rem" }}>
+                <li style={{ marginBottom: "0.5rem" }}>📸 Upload clear food images</li>
+                <li style={{ marginBottom: "0.5rem" }}>🌙 Use dark mode for better viewing</li>
+                <li style={{ marginBottom: "0.5rem" }}>📄 Export analyses as PDF</li>
+                <li>⭐ Mark favorites with stars</li>
+              </ul>
+            </div>
+
+            {/* OK Button */}
+            <button
+              onClick={() => setShowHelpModal(false)}
+              style={{
+                marginTop: "2rem",
+                width: "100%",
+                padding: "1rem",
+                background: "linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "12px",
+                fontSize: "1rem",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 6px 20px rgba(255, 107, 53, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "none";
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Onboarding Tutorial */}

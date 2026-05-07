@@ -2,18 +2,18 @@ import { useState, useEffect } from "react";
 import "./App.css";
 
 const GOAL_TYPES = [
-  { id: "lose_weight", name: "Pierdere greutate", emoji: "📉", description: "Deficit caloric pentru scădere în greutate" },
-  { id: "maintain", name: "Menținere", emoji: "⚖️", description: "Menține greutatea actuală" },
-  { id: "gain_weight", name: "Creștere greutate", emoji: "📈", description: "Surplus caloric pentru mușchi" },
-  { id: "build_muscle", name: "Construire mușchi", emoji: "💪", description: "Surplus cu focus pe proteine" }
+  { id: "lose_weight", name: "Weight Loss", emoji: "📉", description: "Caloric deficit for weight loss" },
+  { id: "maintain", name: "Maintenance", emoji: "⚖️", description: "Maintain current weight" },
+  { id: "gain_weight", name: "Weight Gain", emoji: "📈", description: "Caloric surplus for muscle" },
+  { id: "build_muscle", name: "Muscle Building", emoji: "💪", description: "Surplus with focus on protein" }
 ];
 
 const ACTIVITY_LEVELS = [
-  { id: "sedentary", name: "Sedentar", description: "Puțină sau deloc mișcare", multiplier: 1.2 },
-  { id: "light", name: "Ușor activ", description: "Exercițiu ușor 1-3 zile/săptămână", multiplier: 1.375 },
-  { id: "moderate", name: "Moderat activ", description: "Exercițiu moderat 3-5 zile/săptămână", multiplier: 1.55 },
-  { id: "active", name: "Foarte activ", description: "Exercițiu intens 6-7 zile/săptămână", multiplier: 1.725 },
-  { id: "very_active", name: "Extrem de activ", description: "Exercițiu foarte intens + job fizic", multiplier: 1.9 }
+  { id: "sedentary", name: "Sedentary", description: "Little or no movement", multiplier: 1.2 },
+  { id: "light", name: "Lightly Active", description: "Light exercise 1-3 days/week", multiplier: 1.375 },
+  { id: "moderate", name: "Moderately Active", description: "Moderate exercise 3-5 days/week", multiplier: 1.55 },
+  { id: "active", name: "Very Active", description: "Intense exercise 6-7 days/week", multiplier: 1.725 },
+  { id: "very_active", name: "Extremely Active", description: "Very intense exercise + physical job", multiplier: 1.9 }
 ];
 
 export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
@@ -40,22 +40,22 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
   // Fetch unread notifications on component mount
   useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
   }, [userEmail]);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
 
   const handleUserMouseEnter = () => {
     if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
@@ -95,7 +95,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
       }
     } catch (err) {
       console.error("Error fetching goals:", err);
-      setError("Eroare la încărcarea obiectivelor");
+      setError("Error loading goals");
     } finally {
       setLoading(false);
     }
@@ -167,11 +167,11 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         setSuccess("✅ Obiectivele au fost salvate cu succes!");
         setCalculated(data.calculated || {});
       } else {
-        setError("Eroare la salvare");
+        setError("Error saving");
       }
     } catch (err) {
       console.error("Error saving goals:", err);
-      setError("Eroare la salvarea obiectivelor");
+      setError("Error saving goals");
     } finally {
       setSaving(false);
     }
@@ -183,7 +183,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
     return (
       <div className="animated-bg" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="card" style={{ padding: "3rem", textAlign: "center" }}>
-          <h2>Se încarcă obiectivele...</h2>
+          <h2>Loading goals...</h2>
         </div>
       </div>
     );
@@ -208,8 +208,8 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
                 {showNavDropdown && (
                   <div className="nav-dropdown">
                     <button className="nav-dropdown-item" onClick={() => { onNavigate("dashboard"); setShowNavDropdown(false); }}>📈 Dashboard</button>
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("history"); setShowNavDropdown(false); }}>📊 Istoric</button>
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("goals"); setShowNavDropdown(false); }} style={{ fontWeight: "600" }}>🎯 Obiective</button>
+                    <button className="nav-dropdown-item" onClick={() => { onNavigate("history"); setShowNavDropdown(false); }}>📊 History</button>
+                    <button className="nav-dropdown-item" onClick={() => { onNavigate("goals"); setShowNavDropdown(false); }} style={{ fontWeight: "600" }}>🎯 Goals</button>
                   </div>
                 )}
               </div>
@@ -258,9 +258,9 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
                 </button>
                 {showUserDropdown && (
                   <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => onNavigate("personal-data")}><span className="dropdown-icon">📊</span> Date personale</button>
-                    <button className="user-dropdown-item" onClick={() => onNavigate("account-settings")}><span className="dropdown-icon">🔑</span> Setările contului</button>
-                    <button className="user-dropdown-item" onClick={() => onNavigate("app-settings")}><span className="dropdown-icon">⚙️</span> Setări aplicație</button>
+                    <button className="user-dropdown-item" onClick={() => onNavigate("personal-data")}><span className="dropdown-icon">📊</span> Personal Data</button>
+                    <button className="user-dropdown-item" onClick={() => onNavigate("account-settings")}><span className="dropdown-icon">🔑</span> Account Settings</button>
+                    <button className="user-dropdown-item" onClick={() => onNavigate("app-settings")}><span className="dropdown-icon">⚙️</span> App Settings</button>
                     <div className="user-dropdown-divider"></div>
                     <button className="user-dropdown-item logout-item" onClick={onLogout}><span className="dropdown-icon">🚪</span> Logout</button>
                   </div>
@@ -273,17 +273,17 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
       {/* Main Content */}
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem" }}>
-        <button className="btn btn-secondary" onClick={onBack} style={{ marginBottom: "2rem" }}>← Înapoi</button>
+<button class Name="btn btn-secondary" onClick={onBack} style={{ marginBottom: "2rem" }}>← Back</button>
 
         <div className="card" style={{ padding: "2rem", marginBottom: "1.5rem", textAlign: "center" }}>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>🎯 Obiectivele Tale</h1>
-          <p style={{ color: "#666", fontSize: "1rem" }}>Setează obiective nutriționale personalizate bazate pe profilul tău</p>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>🎯 Your Goals</h1>
+          <p style={{ color: "#666", fontSize: "1rem" }}>Set personalized nutritional goals based on your profile</p>
         </div>
 
         {!hasProfile && (
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(255, 193, 7, 0.1)", border: "1px solid rgba(255, 193, 7, 0.4)" }}>
-            <h3 style={{ marginBottom: "0.5rem", color: "#f57c00" }}>⚠️ Date personale lipsă</h3>
-            <p style={{ marginBottom: "1rem", color: "#666" }}>Pentru a calcula BMR și TDEE, completează datele personale (greutate, înălțime, vârstă, sex).</p>
+            <h3 style={{ marginBottom: "0.5rem", color: "#f57c00" }}>⚠️ Missing personal data</h3>
+            <p style={{ marginBottom: "1rem", color: "#666" }}>To calculate BMR and TDEE, complete your personal data (weight, height, age, gender).</p>
             <button className="btn btn-primary" onClick={() => onNavigate("personal-data")}>📝 Completează datele personale</button>
           </div>
         )}
@@ -291,26 +291,26 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         {/* BMR & TDEE Display */}
         {hasProfile && (
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>📊 Calculatorul Tău Metabolic</h3>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>📊 Your Metabolic Calculator</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <div style={{ padding: "1rem", background: "rgba(33, 150, 243, 0.08)", borderRadius: "12px", border: "2px solid rgba(33, 150, 243, 0.3)" }}>
-                <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>BMR (Metabolism de bază)</div>
+                <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>BMR (Basal Metabolic Rate)</div>
                 <div style={{ fontSize: "2rem", fontWeight: "800", color: "#1976d2" }}>{calculated.bmr || "—"}</div>
-                <div style={{ fontSize: "0.8rem", color: "#888" }}>kcal/zi în repaus</div>
+                <div style={{ fontSize: "0.8rem", color: "#888" }}>kcal/day at rest</div>
               </div>
               <div style={{ padding: "1rem", background: "rgba(76, 175, 80, 0.08)", borderRadius: "12px", border: "2px solid rgba(76, 175, 80, 0.3)" }}>
-                <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>TDEE (Consum total)</div>
+                <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>TDEE (Total Daily Energy Expenditure)</div>
                 <div style={{ fontSize: "2rem", fontWeight: "800", color: "#388e3c" }}>{calculated.tdee || "—"}</div>
-                <div style={{ fontSize: "0.8rem", color: "#888" }}>kcal/zi cu activitate</div>
+                <div style={{ fontSize: "0.8rem", color: "#888" }}>kcal/day with activity</div>
               </div>
             </div>
-            <p style={{ marginTop: "1rem", fontSize: "0.9rem", color: "#666", fontStyle: "italic" }}>💡 BMR = calorii arse în repaus | TDEE = calorii totale cu activitatea fizică</p>
+            <p style={{ marginTop: "1rem", fontSize: "0.9rem", color: "#666", fontStyle: "italic" }}>💡 BMR = calories burned at rest | TDEE = total calories with activity</p>
           </div>
         )}
 
         {/* Goal Type Selection */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>🎯 Tipul obiectivului</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>🎯 Goal type</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.8rem" }}>
             {GOAL_TYPES.map(goal => (
               <button
@@ -329,7 +329,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Activity Level */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>🏃 Nivelul de activitate</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>🏃 Activity level</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             {ACTIVITY_LEVELS.map(level => (
               <button
@@ -351,8 +351,8 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         {/* Recommended Macros */}
         {recommended && (
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(76, 175, 80, 0.05)" }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#388e3c", marginBottom: "0.5rem" }}>🎖️ Macronutrienți recomandați</h3>
-            <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Bazat pe obiectivul și nivelul de activitate</p>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#388e3c", marginBottom: "0.5rem" }}>🎖️ Recommended macronutrients</h3>
+            <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Based on your goal and activity level</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "0.8rem" }}>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #4caf50" }}>
                 <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Calorii</div>
@@ -360,7 +360,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
                 <div style={{ fontSize: "0.7rem", color: "#888" }}>kcal/zi</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #2196f3" }}>
-                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Proteine</div>
+                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Protein (g)</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#2196f3" }}>{recommended.protein}g</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #ff9800" }}>
@@ -368,7 +368,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#ff9800" }}>{recommended.carbs}g</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #f44336" }}>
-                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Grăsimi</div>
+                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Fats (g)</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#f44336" }}>{recommended.fat}g</div>
               </div>
             </div>
@@ -408,15 +408,15 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
               <input type="number" step="0.1" className="form-input" value={targetWeight} onChange={(e) => setTargetWeight(e.target.value)} placeholder="Ex: 75.0" />
             </div>
             <div>
-              <label className="form-label">Ritm săptămânal (kg/săptămână)</label>
+              <label className="form-label">Weekly rate (kg/week)</label>
               <select className="form-input" value={weeklyGoal} onChange={(e) => setWeeklyGoal(e.target.value)}>
-                <option value="-1">-1.0 kg (pierdere rapidă)</option>
+                <option value="-1">-1.0 kg (rapid weight loss)</option>
                 <option value="-0.75">-0.75 kg</option>
-                <option value="-0.5">-0.5 kg (recomandat pentru pierdere)</option>
+                <option value="-0.5">-0.5 kg (recommended for weight loss)</option>
                 <option value="-0.25">-0.25 kg</option>
-                <option value="0">0 kg (menținere)</option>
+                <option value="0">0 kg (maintenance)</option>
                 <option value="0.25">+0.25 kg</option>
-                <option value="0.5">+0.5 kg (recomandat pentru creștere)</option>
+                <option value="0.5">+0.5 kg (recommended for gain)</option>
               </select>
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         {/* Save Button */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving} style={{ padding: "1rem 3rem", fontSize: "1.1rem", fontWeight: "700" }}>
-            {saving ? "Se salvează..." : "💾 Salvează obiectivele"}
+            {saving ? "Saving..." : "💾 Save goals"}
           </button>
         </div>
 

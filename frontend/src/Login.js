@@ -10,21 +10,21 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // Erori individuale pentru fiecare câmp
+  // Individual errors for each field
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [otpError, setOtpError] = useState("");
   
-  // Refs pentru focus management
+  // Refs for focus management
   const passwordRef = useRef(null);
   const otpRef = useRef(null);
   
-  // Validare în timp real
+  // Real-time validation
   const [emailValid, setEmailValid] = useState(false);
   const [passwordValid, setPasswordValid] = useState(false);
   const [otpValid, setOtpValid] = useState(false);
   
-  // Vizibilitate parolă
+  // Password visibility
   const [showPassword, setShowPassword] = useState(false);
   
   const validateEmailField = (value) => {
@@ -45,7 +45,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
     setOtpValid(value.length > 0 && otpRegex.test(value));
   };
   
-  // Validare la blur (când părăsește câmpul)
+  // Validation on blur (when field loses focus)
   const handleEmailBlur = () => {
     if (email.length === 0) {
       setEmailError("");
@@ -53,7 +53,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Adresa de email nu este validă!");
+      setEmailError("Email address is not valid!");
     } else {
       setEmailError("");
     }
@@ -65,7 +65,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
       return;
     }
     if (password.length < 8) {
-      setPasswordError("Parola trebuie să aibă minim 8 caractere!");
+      setPasswordError("Password must have at least 8 characters!");
       return;
     }
     const hasUpperCase = /[A-Z]/.test(password);
@@ -73,11 +73,11 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
     if (!hasUpperCase) {
-      setPasswordError("Parola trebuie să conțină cel puțin o literă mare!");
+      setPasswordError("Password must contain at least one uppercase letter!");
     } else if (!hasNumber) {
-      setPasswordError("Parola trebuie să conțină cel puțin o cifră!");
+      setPasswordError("Password must contain at least one digit!");
     } else if (!hasSpecialChar) {
-      setPasswordError("Parola trebuie să conțină cel puțin un caracter special!");
+      setPasswordError("Password must contain at least one special character!");
     } else {
       setPasswordError("");
     }
@@ -90,7 +90,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
     }
     const otpRegex = /^[0-9]{6}$/;
     if (!otpRegex.test(otp)) {
-      setOtpError("Codul 2FA trebuie să fie format din 6 cifre!");
+      setOtpError("2FA code must be 6 digits!");
     } else {
       setOtpError("");
     }
@@ -98,27 +98,27 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
 
   const validateLogin = () => {
     if (!email || !password || !otp) {
-      setError("Te rog completează toate câmpurile!");
+      setError("Please fill in all fields!");
       return false;
     }
     
-    // Validare format email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Adresa de email nu este validă!");
+      setError("Email address is not valid!");
       return false;
     }
     
-    // Validare lungime minimă parolă
+    // Validate minimum password length
     if (password.length < 8) {
-      setError("Parola trebuie să aibă minim 8 caractere!");
+      setError("Password must have at least 8 characters!");
       return false;
     }
     
-    // Validare format OTP (exact 6 cifre)
+    // Validate OTP format (exactly 6 digits)
     const otpRegex = /^[0-9]{6}$/;
     if (!otpRegex.test(otp)) {
-      setError("Codul 2FA trebuie să fie format din 6 cifre!");
+      setError("2FA code must be 6 digits!");
       return false;
     }
     
@@ -150,7 +150,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
         setError(res.data.error);
       }
     } catch (err) {
-      setError("Eroare la autentificare. Verifică datele introduse!");
+      setError("Authentication error. Check your credentials!");
     } finally {
       setLoading(false);
     }
@@ -173,7 +173,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
             Login
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
-            Intră în contul tău SmartChef
+            Sign in to your SmartChef account
           </p>
         </div>
 
@@ -201,10 +201,10 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
             textAlign: "center"
           }}>
             <p style={{ color: "#2e7d32", fontWeight: "600", fontSize: "1.2rem", marginBottom: "0.8rem" }}>
-              ✅ Autentificare reușită!
+              ✅ Successfully authenticated!
             </p>
             <p style={{ color: "#2e7d32", fontSize: "0.95rem", fontWeight: "600" }}>
-              ⏳ Redirecționare în 2 secunde...
+              ⏳ Redirecting in 2 seconds...
             </p>
           </div>
         )}
@@ -215,7 +215,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
             <input
               className="form-input"
               type="email"
-              placeholder="exemplu@email.com"
+              placeholder="example@email.com"
               value={email}
               onChange={e => {
                 setEmail(e.target.value);
@@ -253,13 +253,13 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
         </div>
 
         <div className="form-group">
-          <label className="form-label">Parolă</label>
+          <label className="form-label">Password</label>
           <div style={{ position: "relative" }}>
             <input
               ref={passwordRef}
               className="form-input"
               type={showPassword ? "text" : "password"}
-              placeholder="Introdu parola"
+              placeholder="Enter password"
               value={password}
               onChange={e => {
                 setPassword(e.target.value);
@@ -338,19 +338,19 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
               onMouseEnter={(e) => e.target.style.color = "var(--primary, #ff6b35)"}
               onMouseLeave={(e) => e.target.style.color = "#ff6b35"}
             >
-              Ai uitat parola?
+              Forgot password?
             </span>
           </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Cod 2FA</label>
+          <label className="form-label">2FA Code</label>
           <div style={{ position: "relative" }}>
             <input
               ref={otpRef}
               className="form-input"
               type="text"
-              placeholder="Codul din Google Authenticator"
+              placeholder="Code from Google Authenticator"
               value={otp}
               onChange={e => {
                 setOtp(e.target.value);
@@ -387,7 +387,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
             </p>
           )}
           <p style={{ fontSize: "0.85rem", color: "#999", marginTop: "0.3rem" }}>
-            📱 Introdu codul din aplicația ta de autentificare
+            📱 Enter the code from your authentication app
           </p>
         </div>
 
@@ -404,7 +404,7 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
             cursor: loading ? "not-allowed" : "pointer"
           }}
         >
-          {loading ? "🔄 Se verifică..." : "🔐 Login"}
+          {loading ? "🔄 Verifying..." : "🔐 Sign In"}
         </button>
 
         <button
@@ -412,16 +412,16 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
           onClick={onBack}
           style={{ width: "100%", padding: "1rem", fontSize: "1.1rem", marginTop: "1rem" }}
         >
-          ← Înapoi
+          ← Back
         </button>
 
         <p style={{ textAlign: "center", marginTop: "2rem", color: "#666" }}>
-          Nu ai cont?{" "}
+          Don't have an account?{" "}
           <span
             onClick={onNavigateToRegister}
             style={{ color: "#ff6b35", fontWeight: "600", cursor: "pointer", textDecoration: "underline" }}
           >
-            Înregistrează-te aici
+            Sign up here
           </span>
         </p>
 
@@ -433,12 +433,12 @@ export default function Login({ onBack, onLoginSuccess, onNavigateToRegister, on
           border: "2px solid #e0e0e0"
         }}>
           <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.8rem", fontWeight: "600" }}>
-            💡 Cum folosesc 2FA?
+            💡 How do I use 2FA?
           </p>
           <ol style={{ fontSize: "0.85rem", color: "#666", paddingLeft: "1.2rem", lineHeight: "1.6" }}>
-            <li>Deschide Google Authenticator</li>
-            <li>Găsește codul pentru SmartChef</li>
-            <li>Introdu codul de 6 cifre mai sus</li>
+            <li>Open Google Authenticator</li>
+            <li>Find the code for SmartChef</li>
+            <li>Enter the 6-digit code above</li>
           </ol>
         </div>
       </div>

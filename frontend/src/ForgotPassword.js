@@ -53,12 +53,12 @@ export default function ForgotPassword({ onBack, onNavigate }) {
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔐</div>
             <h1 style={{ fontSize: "2rem", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>
-              Recuperare parolă
+              Password Recovery
             </h1>
             <p style={{ color: "#666", fontSize: "0.95rem" }}>
               {submitted
-                ? "Verifică-ți email-ul pentru instrucțiuni de resetare"
-                : "Introdu adresa de email asociată contului tău"}
+                ? "Check your email for reset instructions"
+                : "Enter the email address associated with your account"}
             </p>
           </div>
 
@@ -75,10 +75,10 @@ export default function ForgotPassword({ onBack, onNavigate }) {
               >
                 <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>✅</div>
                 <p style={{ color: "#2e7d32", fontWeight: "600", marginBottom: "0.5rem" }}>
-                  Email trimis cu succes!
+                  Email sent successfully!
                 </p>
                 <p style={{ color: "#555", fontSize: "0.9rem" }}>
-                  Verifică inbox-ul și folder-ul de spam. Link-ul de resetare va expira în 1 oră.
+                  Check your inbox and spam folder. The reset link will expire in 1 hour.
                 </p>
               </div>
 
@@ -87,7 +87,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
                 onClick={onBack}
                 style={{ marginTop: "1rem" }}
               >
-                ← Înapoi la login
+                ← Back to Sign In
               </button>
             </div>
           ) : (
@@ -129,7 +129,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
                 <input
                   type="email"
                   className="form-input"
-                  placeholder="tine@example.com"
+                  placeholder="your@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -146,7 +146,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
                 }}
                 disabled={loading}
               >
-                {loading ? "Se trimite..." : "📧 Trimite email de resetare"}
+                {loading ? "Sending..." : "📧 Send reset email"}
               </button>
             </form>
           )}
@@ -154,7 +154,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
 
         <div style={{ textAlign: "center", marginTop: "2rem", color: "#666", fontSize: "0.85rem" }}>
           <p>
-            Informații sigure: Nu vei primi vreun email dacă adresa nu este asociată unui cont SmartChef.
+            Security notice: You won't receive any email if the address is not associated with a SmartChef account.
           </p>
         </div>
       </div>

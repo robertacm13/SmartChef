@@ -40,22 +40,22 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
 
   // Fetch unread notifications on component mount
   useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
   }, [userEmail]);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
 
   const handleUserMouseEnter = () => {
     if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
@@ -77,7 +77,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
 
   const fetchWeightHistory = async () => {
     try {
-      const res = await fetch(`http://localhost:8001/weight_history/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/weight_history/${userEmail}`);
       const data = await res.json();
       
       if (data.status === "success") {
@@ -85,7 +85,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
       }
     } catch (err) {
       console.error("Error fetching weight history:", err);
-      setError("Eroare la încărcarea istoricului");
+      setError("Error loading history");
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
     setSuccess("");
     
     try {
-      const res = await fetch(`http://localhost:8001/weight_history/${userEmail}`, {
+      const res = await fetch(`http://localhost:8000/weight_history/${userEmail}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -132,7 +132,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
 
   const handleDelete = async (entryId) => {
     try {
-      const res = await fetch(`http://localhost:8001/weight_history/${entryId}`, {
+      const res = await fetch(`http://localhost:8000/weight_history/${entryId}`, {
         method: "DELETE",
         headers: { "X-User-Email": userEmail }
       });
@@ -249,8 +249,8 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
                 {showNavDropdown && (
                   <div className="nav-dropdown">
                     <button className="nav-dropdown-item" onClick={() => { onNavigate("dashboard"); setShowNavDropdown(false); }}>📈 Dashboard</button>
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("history"); setShowNavDropdown(false); }}>📊 Istoric</button>
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("goals"); setShowNavDropdown(false); }}>🎯 Obiective</button>
+                    <button className="nav-dropdown-item" onClick={() => { onNavigate("history"); setShowNavDropdown(false); }}>📊 History</button>
+                    <button className="nav-dropdown-item" onClick={() => { onNavigate("goals"); setShowNavDropdown(false); }}>🎯 Goals</button>
                   </div>
                 )}
               </div>
@@ -299,9 +299,9 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
                 </button>
                 {showUserDropdown && (
                   <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => onNavigate("personal-data")}><span className="dropdown-icon">📊</span> Date personale</button>
-                    <button className="user-dropdown-item" onClick={() => onNavigate("account-settings")}><span className="dropdown-icon">🔑</span> Setările contului</button>
-                    <button className="user-dropdown-item" onClick={() => onNavigate("app-settings")}><span className="dropdown-icon">⚙️</span> Setări aplicație</button>
+                    <button className="user-dropdown-item" onClick={() => onNavigate("personal-data")}><span className="dropdown-icon">📊</span> Personal Data</button>
+                    <button className="user-dropdown-item" onClick={() => onNavigate("account-settings")}><span className="dropdown-icon">🔑</span> Account Settings</button>
+                    <button className="user-dropdown-item" onClick={() => onNavigate("app-settings")}><span className="dropdown-icon">⚙️</span> App Settings</button>
                     <div className="user-dropdown-divider"></div>
                     <button className="user-dropdown-item logout-item" onClick={onLogout}><span className="dropdown-icon">🚪</span> Logout</button>
                   </div>

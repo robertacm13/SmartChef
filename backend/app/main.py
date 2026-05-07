@@ -179,8 +179,8 @@ async def analyze_food(
                     notification_data = {
                         "user_email": user_email,
                         "type": "analysis_complete",
-                        "title": "Analiza completă! 🎉",
-                        "message": f"Am detectat {len(detected_ingredients)} ingrediente în {file.filename}",
+                        "title": "Analysis complete! 🎉",
+                        "message": f"Detected {len(detected_ingredients)} ingredients in {file.filename}",
                         "data": {
                             "analysis_id": analysis_id,
                             "food_name": food_name,
@@ -223,6 +223,33 @@ async def analyze_food(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+
+
+@app.post("/calculate_nutrition/")
+async def calculate_nutrition(data: dict):
+    """
+    Calculate nutritional information for a list of ingredients.
+    Used for recalculating nutrition when ingredients are added/removed.
+    
+    Args:
+        data: Dictionary containing 'ingredients' list
+        
+    Returns:
+        JSON with nutritional information
+    """
+    try:
+        ingredients = data.get("ingredients", [])
+        
+        if not ingredients:
+            raise HTTPException(status_code=400, detail="No ingredients provided")
+        
+        # Get nutritional information
+        nutrition_data = get_nutrition_info(ingredients)
+        
+        return nutrition_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating nutrition: {str(e)}")
 
 
 class RegisterRequest(BaseModel):

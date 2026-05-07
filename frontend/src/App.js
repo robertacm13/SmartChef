@@ -47,13 +47,19 @@ function App() {
 
   // Apply saved theme and font size on mount
   React.useEffect(() => {
-    const savedTheme = localStorage.getItem('appTheme') || 'orange';
+    // Force orange theme for pre-login pages (Home, Register, Login)
+    if (!authToken) {
+      applyTheme('orange');
+    } else {
+      // Allow saved theme only after login
+      const savedTheme = localStorage.getItem('appTheme') || 'orange';
+      applyTheme(savedTheme);
+    }
     const savedFontSize = localStorage.getItem('appFontSize') || 'medium';
     const savedLang = localStorage.getItem('appLanguage') || 'ro';
-    applyTheme(savedTheme);
     applyFontSize(savedFontSize);
     document.documentElement.lang = savedLang;
-  }, []);
+  }, [authToken]);
 
   // Check for password reset token in URL on mount
   React.useEffect(() => {
@@ -142,7 +148,7 @@ function App() {
         fallback={
           <div className="container" style={{ textAlign: "center", padding: "3rem" }}>
             <div className="spinner"></div>
-            <p style={{ marginTop: "1rem", color: "#666" }}>Se încarcă pagina...</p>
+            <p style={{ marginTop: "1rem", color: "#666" }}>Loading page...</p>
           </div>
         }
       >

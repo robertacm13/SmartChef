@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -76,32 +76,24 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     setUserDropdownTimeout(timeout);
   };
 
-  useEffect(() => {
-    fetchAnalyses();
-    fetchStreak();
-    fetchGoals();
-    fetchUnreadNotifications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchAnalyses = async () => {
+  const fetchAnalyses = useCallback(async () => {
     try {
       const res = await fetch(`http://localhost:8000/analysis_history/${userEmail}`);
       const data = await res.json();
       if (data.status === "success") {
         setAnalyses(data.analyses);
       } else {
-        setError("Nu am putut încărca datele");
+        setError("Could not load data");
       }
     } catch (err) {
-      setError("Eroare la încărcarea datelor");
+      setError("Error loading data");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userEmail]);
 
-  const fetchStreak = async () => {
+  const fetchStreak = useCallback(async () => {
     try {
       const res = await fetch(`http://localhost:8000/streak/${userEmail}`);
       const data = await res.json();
@@ -111,11 +103,11 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     } catch (err) {
       console.error("Error fetching streak:", err);
     }
-  };
+  }, [userEmail]);
 
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:8001/user_goals/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/user_goals/${userEmail}`);
       const data = await res.json();
       if (data.status === "success") {
         setGoals(data.goals);
@@ -123,19 +115,26 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     } catch (err) {
       console.error("Error fetching goals:", err);
     }
-  };
+  }, [userEmail]);
 
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
+  useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
       }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
+    };
+
+    fetchAnalyses();
+    fetchStreak();
+    fetchGoals();
+    fetchUnreadNotifications();
+  }, [userEmail, fetchAnalyses, fetchStreak, fetchGoals]);
 
   // Calculează statistici
   const getStats = () => {
@@ -152,7 +151,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
       return sum + (a.nutrition?.total_nutrition?.calories || 0);
     }, 0);
 
-    // Top ingrediente
+    // Top ingredients
     const ingredientCount = {};
     recentAnalyses.forEach(a => {
       a.ingredients.forEach(ing => {
@@ -336,7 +335,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         setShowNavDropdown(false);
                       }}
                     >
-                      📊 Istoric
+                      📊 History
                     </button>
                   </div>
                 )}
@@ -373,9 +372,9 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                 </button>
                 {showUserDropdown && (
                   <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
                       <span className="dropdown-icon">👤</span>
-                      Profil
+                      Profile
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -383,7 +382,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">📊</span>
-                      Date personale
+                      Personal Data
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -391,7 +390,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">🔑</span>
-                      Setările contului
+                      Account Settings
                     </button>
 
                     <button className="user-dropdown-item" onClick={() => {
@@ -399,7 +398,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">⚙️</span>
-                      Setări aplicație
+                      App Settings
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -796,7 +795,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
               {/* Bar Chart - Top Ingrediente */}
               <div className="nutrition-box" style={{ padding: "1.5rem" }}>
                 <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem", color: "#333" }}>
-                  🏆 Top 5 Ingrediente Detectate
+                  🏆 Top 5 Detected Ingredients
                 </h3>
                 {stats.topIngredients.length > 0 ? (
                   <Bar 
@@ -882,7 +881,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
           className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
           onClick={handleSettings}
           aria-label="Settings"
-          title="Setări aplicație"
+          title="App Settings"
         >
           ⚙️
         </button>

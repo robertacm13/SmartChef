@@ -37,8 +37,8 @@ def send_daily_reminders():
                     create_notification(
                         user_email=email,
                         notification_type='daily_reminder',
-                        title='📅 Memento zilnic',
-                        message='Nu uita să-ți înregistrezi mâncarea de azi!',
+                        title='📅 Daily Reminder',
+                        message="Don't forget to log your meal today!",
                         data={'type': 'daily_reminder'}
                     )
                     reminder_count += 1
@@ -71,8 +71,8 @@ def send_weight_reminders():
                     create_notification(
                         user_email=email,
                         notification_type='weight_reminder',
-                        title='⚖️ Memento cântărire',
-                        message='Este o bună oportunitate pentru a-ți înregistra greutatea.',
+                        title='⚖️ Weight Tracking Reminder',
+                        message='It\'s a good time to log your weight.',
                         data={'type': 'weight_reminder'}
                     )
                     reminder_count += 1

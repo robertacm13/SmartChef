@@ -3,28 +3,28 @@ import './Tutorial.css';
 
 const tutorialSteps = [
   {
-    title: "Bine ai venit la SmartChef! 👋",
-    content: "Aplicația ta pentru analiza nutrițională cu AI",
+    title: "Welcome to SmartChef! 👋",
+    content: "Your AI food nutrition analysis app",
     emoji: "🍽️",
-    description: "Descoperă informații nutriționale detaliate despre alimentele tale folosind inteligența artificială."
+    description: "Discover detailed nutritional information about your foods using artificial intelligence."
   },
   {
-    title: "Analizează alimentele 📸",
-    content: "Încarcă o imagine cu mâncarea ta și AI-ul va detecta ingredientele",
+    title: "Analyze Foods 📸",
+    content: "Upload a photo of your meal and AI detects ingredients",
     emoji: "📷",
-    description: "Fă o fotografie sau încarcă o imagine existentă. AI-ul nostru va identifica automat ingredientele și va calcula valorile nutriționale."
+    description: "Take a photo or upload an existing image. Our AI will automatically identify ingredients and calculate nutritional values."
   },
   {
-    title: "Vezi istoricul 📊",
-    content: "Toate analizele tale sunt salvate și poți urmări progresul",
+    title: "View History 📊",
+    content: "All your analyses are saved and you can track progress",
     emoji: "📈",
-    description: "Vizualizează istoric complet, statistici detaliate și monitorizează-ți evoluția în timp. Poți sorta, filtra și marca analizele ca favorite."
+    description: "View complete history, detailed statistics and monitor your evolution over time. You can sort, filter and mark analyses as favorites."
   },
   {
-    title: "Setează obiective 🎯",
-    content: "Stabilește obiective nutriționale personalizate",
+    title: "Set Goals 🎯",
+    content: "Establish personalized nutritional objectives",
     emoji: "⚖️",
-    description: "Configurează profilul tău personal, setează obiective calorice zilnice și urmărește-ți greutatea pentru rezultate optime."
+    description: "Configure your personal profile, set daily calorie targets and track your weight for optimal results."
   }
 ];
 
@@ -57,9 +57,9 @@ export default function Tutorial({ onComplete }) {
         <button 
           className="tutorial-skip-btn" 
           onClick={skipTutorial}
-          aria-label="Omite tutorial"
+          aria-label="Skip tutorial"
         >
-          Omite tutorial ✕
+          Skip tutorial ✗
         </button>
         
         <div className="tutorial-content">
@@ -86,7 +86,7 @@ export default function Tutorial({ onComplete }) {
               key={i}
               className={`tutorial-dot ${i === step ? 'active' : ''} ${i < step ? 'completed' : ''}`}
               onClick={() => setStep(i)}
-              aria-label={`Pasul ${i + 1}`}
+              aria-label={`Step ${i + 1}`}
               aria-current={i === step ? 'step' : undefined}
             />
           ))}
@@ -97,9 +97,9 @@ export default function Tutorial({ onComplete }) {
             <button 
               onClick={prevStep} 
               className="tutorial-btn tutorial-btn-secondary"
-              aria-label="Pasul anterior"
+              aria-label="Previous step"
             >
-              ← Înapoi
+              ← Back
             </button>
           )}
           
@@ -107,9 +107,9 @@ export default function Tutorial({ onComplete }) {
             onClick={nextStep} 
             className="tutorial-btn tutorial-btn-primary"
             style={{ marginLeft: step === 0 ? 'auto' : '0' }}
-            aria-label={step < tutorialSteps.length - 1 ? 'Pasul următor' : 'Începe aplicația'}
+            aria-label={step < tutorialSteps.length - 1 ? 'Next step' : 'Start app'}
           >
-            {step < tutorialSteps.length - 1 ? 'Următorul →' : 'Începe! 🚀'}
+            {step < tutorialSteps.length - 1 ? 'Next →' : 'Start! 🚀'}
           </button>
         </div>
       </div>

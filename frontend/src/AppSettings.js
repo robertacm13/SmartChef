@@ -8,7 +8,7 @@ const THEMES = [
     id: "orange",
     name: "Orange",
     emoji: "🟠",
-    description: "Tema implicită",
+    description: "Default theme",
     primary: "#ff6b35",
     accent: "#ff8c42",
     bg: "#ffecd1",
@@ -20,7 +20,7 @@ const THEMES = [
     id: "forest",
     name: "Forest",
     emoji: "🌿",
-    description: "Verde natural",
+    description: "Natural green",
     primary: "#2e7d32",
     accent: "#43a047",
     bg: "#e8f5e9",
@@ -32,7 +32,7 @@ const THEMES = [
     id: "ocean",
     name: "Ocean",
     emoji: "🌊",
-    description: "Albastru oceanic",
+    description: "Ocean blue",
     primary: "#1565c0",
     accent: "#1976d2",
     bg: "#e3f2fd",
@@ -44,7 +44,7 @@ const THEMES = [
     id: "lavender",
     name: "Lavender",
     emoji: "💜",
-    description: "Violet delicat",
+    description: "Delicate purple",
     primary: "#7b1fa2",
     accent: "#9c27b0",
     bg: "#f3e5f5",
@@ -56,7 +56,7 @@ const THEMES = [
     id: "rose",
     name: "Rose",
     emoji: "🌹",
-    description: "Roșu romantic",
+    description: "Romantic red",
     primary: "#c62828",
     accent: "#e53935",
     bg: "#fce4ec",
@@ -67,9 +67,9 @@ const THEMES = [
 ];
 
 const FONT_SIZES = [
-  { id: "small", name: "Mic", size: "14px", description: "Potrivit pentru ecrane mici" },
-  { id: "medium", name: "Mediu", size: "16px", description: "Dimensiunea implicită" },
-  { id: "large", name: "Mare", size: "18px", description: "Mai ușor de citit" },
+  { id: "small", name: "Small", size: "14px", description: "Suitable for small screens" },
+  { id: "medium", name: "Medium", size: "16px", description: "Default size" },
+  { id: "large", name: "Large", size: "18px", description: "Easier to read" },
 ];
 
 const LANGUAGES = [
@@ -78,14 +78,14 @@ const LANGUAGES = [
 ];
 
 const DEFAULT_PAGES = [
-  { id: "main", name: "Analiză", emoji: "🍳", description: "Pagina principală de upload" },
-  { id: "dashboard", name: "Dashboard", emoji: "📈", description: "Statistici și grafice" },
-  { id: "history", name: "Istoric", emoji: "📋", description: "Istoricul analizelor" },
+  { id: "main", name: "Analyze", emoji: "🍳", description: "Main upload page" },
+  { id: "dashboard", name: "Dashboard", emoji: "📈", description: "Statistics and charts" },
+  { id: "history", name: "History", emoji: "📋", description: "Analysis history" },
 ];
 
 const UNITS = [
-  { id: "kcal", name: "kcal", description: "Kilocalorii (standard)" },
-  { id: "kj", name: "kJ", description: "Kilojouli (1 kcal = 4.184 kJ)" },
+  { id: "kcal", name: "kcal", description: "Kilocalories (standard)" },
+  { id: "kj", name: "kJ", description: "Kilojoules (1 kcal = 4.184 kJ)" },
 ];
 
 export function applyTheme(themeId) {
@@ -138,24 +138,24 @@ export default function AppSettings({
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
-
   // Fetch unread notifications on component mount
   useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
-  }, [userEmail, fetchUnreadNotifications]);
+  }, [userEmail]);
 
   const handleUserMouseEnter = () => {
     if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
@@ -216,7 +216,7 @@ export default function AppSettings({
   };
 
   const handleResetAll = () => {
-    if (window.confirm("Resetezi toate setările la valorile implicite?")) {
+    if (window.confirm("Reset all settings to default values?")) {
       handleThemeChange("orange");
       handleFontSizeChange("medium");
       handleLanguageChange("ro");
@@ -279,7 +279,7 @@ export default function AppSettings({
                           setShowNavDropdown(false);
                         }}
                       >
-                        📊 Istoric
+                        📊 History
                       </button>
                     </div>
                   )}
@@ -361,10 +361,10 @@ export default function AppSettings({
                     <div className="user-dropdown">
                       <button
                         className="user-dropdown-item"
-                        onClick={() => alert("🚧 Profil - Coming soon!")}
+                        onClick={() => alert("🚧 Profile - Coming soon!")}
                       >
                         <span className="dropdown-icon">👤</span>
-                        Profil
+                        Profile
                       </button>
                       <button
                         className="user-dropdown-item"
@@ -374,7 +374,7 @@ export default function AppSettings({
                         }}
                       >
                         <span className="dropdown-icon">📊</span>
-                        Date personale
+                        Personal Data
                       </button>
                       <button
                         className="user-dropdown-item"
@@ -384,7 +384,7 @@ export default function AppSettings({
                         }}
                       >
                         <span className="dropdown-icon">🔑</span>
-                        Setările contului
+                        Account Settings
                       </button>
                       <button
                         className="user-dropdown-item"
@@ -397,7 +397,7 @@ export default function AppSettings({
                         }}
                       >
                         <span className="dropdown-icon">⚙️</span>
-                        Setări aplicație
+                        App Settings
                       </button>
                       <div className="user-dropdown-divider"></div>
                       <button
@@ -423,7 +423,7 @@ export default function AppSettings({
           onClick={onBack}
           style={{ marginBottom: "2rem" }}
         >
-          ← Înapoi
+          ← Back
         </button>
 
         {/* Title Card */}
@@ -439,10 +439,10 @@ export default function AppSettings({
               marginBottom: "0.5rem",
             }}
           >
-            ⚙️ Setări Aplicație
+            ⚙️ App Settings
           </h2>
           <p style={{ color: "#666", fontSize: "0.95rem" }}>
-            Personalizează aspectul și comportamentul SmartChef
+            Customize the appearance and behavior of SmartChef
           </p>
           {saved && (
             <div
@@ -458,15 +458,15 @@ export default function AppSettings({
                 display: "inline-block",
               }}
             >
-              ✅ Setare salvată automat
+              ✅ Setting saved automatically
             </div>
           )}
         </div>
 
         {/* ===== SECTION: Color Theme ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🎨 Temă de culori</h3>
-          <p className="appsettings-section-desc">Alege paleta de culori a interfeței</p>
+          <h3 className="appsettings-section-title">🎨 Color Theme</h3>
+          <p className="appsettings-section-desc">Choose the interface color palette</p>
           <div className="appsettings-theme-grid">
             {THEMES.map((theme) => (
               <button
@@ -503,15 +503,15 @@ export default function AppSettings({
 
         {/* ===== SECTION: Dark Mode ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🌙 Mod întunecat</h3>
-          <p className="appsettings-section-desc">Activează modul dark pentru confort vizual</p>
+          <h3 className="appsettings-section-title">🌙 Dark Mode</h3>
+          <p className="appsettings-section-desc">Enable dark mode for visual comfort</p>
           <button
             className={`appsettings-toggle-btn ${darkMode ? "active" : ""}`}
             onClick={toggleDarkMode}
           >
             <span className="appsettings-toggle-icon">{darkMode ? "☀️" : "🌙"}</span>
             <span className="appsettings-toggle-text">
-              {darkMode ? "Mod întunecat activat — apasă pentru Light" : "Mod deschis activat — apasă pentru Dark"}
+              {darkMode ? "Dark mode enabled — press for Light" : "Light mode enabled — press for Dark"}
             </span>
             <span className={`appsettings-toggle-switch ${darkMode ? "on" : ""}`}>
               <span className="appsettings-toggle-knob" />
@@ -521,11 +521,11 @@ export default function AppSettings({
 
         {/* ===== SECTION: Font Size ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🔤 Dimensiune text</h3>
+          <h3 className="appsettings-section-title">🔤 Text Size</h3>
           <p className="appsettings-section-desc">
-            Ajustează mărimea fontului din toată aplicația
+            Adjust the font size across the entire app
             {" "}<span style={{ fontStyle: "italic", color: "#aaa" }}>
-              (activ: {FONT_SIZES.find(f => f.id === activeFontSize)?.name})
+              (current: {FONT_SIZES.find(f => f.id === activeFontSize)?.name})
             </span>
           </p>
           <div className="appsettings-option-row">
@@ -545,9 +545,9 @@ export default function AppSettings({
 
         {/* ===== SECTION: Language ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🌍 Limbă</h3>
+          <h3 className="appsettings-section-title">🌍 Language</h3>
           <p className="appsettings-section-desc">
-            Setează limba interfeței
+            Set the interface language
           </p>
           {langBanner && (
             <div style={{
@@ -559,7 +559,7 @@ export default function AppSettings({
               fontSize: "0.85rem",
               marginBottom: "1rem"
             }}>
-              ℹ️ <strong>English</strong> — traducerea completă a interfeței este în lucru. Unele texte vor rămâne în română momentan.
+              ℹ️ <strong>English</strong> — Complete interface translation is in progress. Some texts may remain in Romanian for now.
             </div>
           )}
           <div className="appsettings-option-row">
@@ -578,8 +578,8 @@ export default function AppSettings({
 
         {/* ===== SECTION: Default Page ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🏠 Pagină implicită după login</h3>
-          <p className="appsettings-section-desc">Ce pagină se deschide primul după autentificare</p>
+          <h3 className="appsettings-section-title">🏠 Home Page after Sign In</h3>
+          <p className="appsettings-section-desc">Which page opens first after authentication</p>
           <div className="appsettings-option-row">
             {DEFAULT_PAGES.map((page) => (
               <button
@@ -597,8 +597,8 @@ export default function AppSettings({
 
         {/* ===== SECTION: Nutritional Units ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🔥 Unități nutriționale</h3>
-          <p className="appsettings-section-desc">Cum sunt afișate caloriile în aplicație</p>
+          <h3 className="appsettings-section-title">🔥 Nutritional Units</h3>
+          <p className="appsettings-section-desc">How calories are displayed in the app</p>
           <div className="appsettings-option-row">
             {UNITS.map((unit) => (
               <button
@@ -622,7 +622,7 @@ export default function AppSettings({
             onClick={handleResetAll}
             style={{ color: "#e53935", borderColor: "#e53935" }}
           >
-            🔄 Resetează toate setările
+            🔄 Reset all settings
           </button>
         </div>
       </div>
@@ -641,26 +641,26 @@ export default function AppSettings({
           className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
           onClick={() => {
             // Already on settings page
-            alert('⚙️ Sunteți deja pe pagina de setări!');
-          }}
-          title="Settings"
-        >
-          ⚙️
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleHelp}
-          title="Help & Support"
-        >
-          ❓
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => setShowShortcuts(true)}
-          title="Keyboard Shortcuts (apasă ?)"
-        >
-          ⌨️
-        </button>
+              alert('⚙️ You are already on the settings page!');
+            }}
+            title="Settings"
+          >
+            ⚙️
+          </button>
+          <button
+            className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
+            onClick={handleHelp}
+            title="Help & Support"
+          >
+            ❓
+          </button>
+          <button
+            className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
+            onClick={() => setShowShortcuts(true)}
+            title="Keyboard Shortcuts (press ?)"
+          >
+            ⌨️
+          </button>
         
         {/* Main FAB Button */}
         <button

@@ -22,7 +22,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
       verifyToken(urlToken);
     } else {
       setValidating(false);
-      setError("Token de resetare lipsă. Verifică link-ul din email.");
+      setError("Reset token missing. Check the link in your email.");
     }
   }, []);
 
@@ -44,10 +44,10 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
       if (data.valid) {
         setTokenValid(true);
       } else {
-        setError(data.error || "Token invalid sau expirat.");
+        setError(data.error || "Invalid or expired token.");
       }
     } catch (err) {
-      setError("Eroare la verificare token. Încearcă din nou.");
+      setError("Error verifying token. Try again.");
       console.error(err);
     } finally {
       setValidating(false);
@@ -56,17 +56,17 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
 
   const validatePasswords = () => {
     if (!newPassword || !confirmPassword) {
-      setError("Completează ambele câmpuri cu parola.");
+      setError("Fill in both password fields.");
       return false;
     }
 
     if (newPassword.length < 8) {
-      setError("Parola trebuie să aibă cel puțin 8 caractere.");
+      setError("Password must have at least 8 characters.");
       return false;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Parolele nu se potrivesc.");
+      setError("Passwords do not match.");
       return false;
     }
 
@@ -100,10 +100,10 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        setError(data.message || "Eroare la resetarea parolei.");
+        setError(data.message || "Error resetting password.");
       }
     } catch (err) {
-      setError("Eroare de rețea. Încearcă din nou.");
+      setError("Network error. Try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -125,17 +125,17 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔑</div>
             <h1 style={{ fontSize: "2rem", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>
-              Resetare parolă
+              Reset Password
             </h1>
             <p style={{ color: "#666", fontSize: "0.95rem" }}>
-              Creează o nouă parolă pentru contul tău
+              Create a new password for your account
             </p>
           </div>
 
           {validating && (
             <div style={{ textAlign: "center", padding: "2rem" }}>
               <div className="spinner"></div>
-              <p style={{ marginTop: "1rem", color: "#666" }}>Se verifică token-ul...</p>
+              <p style={{ marginTop: "1rem", color: "#666" }}>Verifying token...</p>
             </div>
           )}
 
@@ -152,15 +152,15 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
               >
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>✅</div>
                 <p style={{ color: "#2e7d32", fontWeight: "600", marginBottom: "0.5rem" }}>
-                  Parolă resetată cu succes!
+                  Password reset successfully!
                 </p>
                 <p style={{ color: "#555", fontSize: "0.9rem" }}>
-                  Poți acum să te conectezi cu noua parolă.
+                  You can now sign in with your new password.
                 </p>
               </div>
 
               <button className="btn btn-primary" onClick={onBack} style={{ width: "100%" }}>
-                🔐 Mergi la login
+                🔐 Go to Sign In
               </button>
             </div>
           )}
@@ -184,12 +184,12 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
               )}
 
               <div className="form-group">
-                <label className="form-label">Parolă nouă</label>
+                <label className="form-label">New Password</label>
                 <div style={{ position: "relative" }}>
                   <input
                     type={showPassword ? "text" : "password"}
                     className="form-input"
-                    placeholder="Introdu noua parolă"
+                    placeholder="Enter new password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -214,11 +214,11 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Confirmă parola</label>
+                <label className="form-label">Confirm Password</label>
                 <input
                   type={showPassword ? "text" : "password"}
                   className="form-input"
-                  placeholder="Confirmă noua parolă"
+                  placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -235,10 +235,10 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
                   color: "#666",
                 }}
               >
-                <p style={{ marginBottom: "0.5rem", fontWeight: "600" }}>Cerințe pentru parolă:</p>
+                <p style={{ marginBottom: "0.5rem", fontWeight: "600" }}>Password requirements:</p>
                 <ul style={{ marginLeft: "1.5rem", marginTop: "0.5rem" }}>
-                  <li>Minim 8 caractere</li>
-                  <li>Recomandare: combin cifre și simboluri</li>
+                  <li>Minimum 8 characters</li>
+                  <li>Recommendation: mix digits and symbols</li>
                 </ul>
               </div>
 
@@ -252,7 +252,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
                 }}
                 disabled={loading}
               >
-                {loading ? "Se resetează..." : "🔓 Resetează parola"}
+                {loading ? "Resetting..." : "🔓 Reset Password"}
               </button>
             </form>
           )}
@@ -270,10 +270,10 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
               >
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>❌</div>
                 <p style={{ color: "#c62828", fontWeight: "600", marginBottom: "0.5rem" }}>
-                  Token invalid sau expirat
+                  Invalid or expired token
                 </p>
                 <p style={{ color: "#555", fontSize: "0.9rem" }}>
-                  {error || "Link-ul de resetare a parolei nu mai este valid."}
+                  {error || "The password reset link is no longer valid."}}
                 </p>
               </div>
 
@@ -282,7 +282,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
                 onClick={onBack}
                 style={{ marginRight: "1rem" }}
               >
-                ← Înapoi
+                ← Back
               </button>
               <button
                 className="btn btn-primary"
@@ -290,7 +290,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
                   window.location.href = "/";
                 }}
               >
-                Solicită link nou 🔐
+                Request new link 🔐
               </button>
             </div>
           )}

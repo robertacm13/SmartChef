@@ -19,22 +19,22 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
 
   // Fetch unread notifications on component mount
   useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
   }, [userEmail]);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
 
   const handleNavMouseEnter = () => {
     if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
@@ -80,7 +80,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`http://localhost:8001/user_profile/${userEmail}`);
+      const res = await fetch(`http://localhost:8000/user_profile/${userEmail}`);
       
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -101,7 +101,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
         setError("Eroare la încărcarea datelor");
       }
     } catch (err) {
-      setError(`Eroare la conectarea cu serverul. Asigură-te că backend-ul rulează pe portul 8001.`);
+      setError(`Eroare la conectarea cu serverul. Asigură-te că backend-ul rulează pe portul 8000.`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -135,7 +135,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
         sex: formData.sex || null
       };
 
-      const res = await fetch(`http://localhost:8001/user_profile/${userEmail}`, {
+      const res = await fetch(`http://localhost:8000/user_profile/${userEmail}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -219,7 +219,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                         setShowNavDropdown(false);
                       }}
                     >
-                      📊 Istoric
+                      📊 History
                     </button>
                   </div>
                 )}
@@ -293,7 +293,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   <div className="user-dropdown">
                     <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
                       <span className="dropdown-icon">👤</span>
-                      Profil
+                      Profile
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -301,7 +301,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                       setShowUserDropdown(false);
                     }} style={{ fontWeight: "600" }}>
                       <span className="dropdown-icon">📊</span>
-                      Date personale
+                      Personal Data
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -309,7 +309,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">🔑</span>
-                      Setările contului
+                      Account Settings
                     </button>
 
                     <button className="user-dropdown-item" onClick={() => {
@@ -317,7 +317,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">⚙️</span>
-                      Setări aplicație
+                      App Settings
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -339,7 +339,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
           onClick={onBack}
           style={{ marginBottom: "2rem" }}
         >
-          ← Înapoi
+          ← Back
         </button>
 
         <div className="card" style={{ padding: "2rem" }}>
@@ -350,7 +350,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
             marginBottom: "0.5rem",
             textAlign: "center"
           }}>
-            📊 Date Personale
+            📊 Personal Data
           </h2>
           <p style={{ 
             color: "#666", 
@@ -358,7 +358,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
             textAlign: "center",
             marginBottom: "2rem"
           }}>
-            Completează informațiile tale personale
+            Complete your personal information
           </p>
 
           {error && (
@@ -396,14 +396,14 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   marginBottom: "0.5rem",
                   color: "#333"
                 }}>
-                  Prenume
+                  First Name
                 </label>
                 <input
                   type="text"
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
-                  placeholder="ex: Ion"
+                  placeholder="e.g. John"
                   style={{
                     width: "100%",
                     padding: "0.75rem",
@@ -425,14 +425,14 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   marginBottom: "0.5rem",
                   color: "#333"
                 }}>
-                  Nume
+                  Last Name
                 </label>
                 <input
                   type="text"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  placeholder="ex: Popescu"
+                  placeholder="e.g. Smith"
                   style={{
                     width: "100%",
                     padding: "0.75rem",
@@ -455,14 +455,14 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                 marginBottom: "0.5rem",
                 color: "#333"
               }}>
-                Vârstă (ani)
+                Age (years)
               </label>
               <input
                 type="number"
                 name="age"
                 value={formData.age}
                 onChange={handleChange}
-                placeholder="ex: 25"
+                placeholder="e.g. 25"
                 min="1"
                 max="120"
                 style={{
@@ -487,14 +487,14 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   marginBottom: "0.5rem",
                   color: "#333"
                 }}>
-                  Înălțime (cm)
+                  Height (cm)
                 </label>
                 <input
                   type="number"
                   name="height"
                   value={formData.height}
                   onChange={handleChange}
-                  placeholder="ex: 175"
+                  placeholder="e.g. 175"
                   min="50"
                   max="250"
                   step="0.1"
@@ -519,14 +519,14 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   marginBottom: "0.5rem",
                   color: "#333"
                 }}>
-                  Greutate (kg)
+                  Weight (kg)
                 </label>
                 <input
                   type="number"
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
-                  placeholder="ex: 70"
+                  placeholder="e.g. 70"
                   min="20"
                   max="300"
                   step="0.1"
@@ -552,7 +552,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                 marginBottom: "0.5rem",
                 color: "#333"
               }}>
-                Sex
+                Gender
               </label>
               <select
                 name="sex"
@@ -572,10 +572,10 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                 onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
                 onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
               >
-                <option value="">Selectează</option>
-                <option value="male">Masculin</option>
-                <option value="female">Feminin</option>
-                <option value="other">Altul</option>
+                <option value="">Select</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
               </select>
             </div>
 
@@ -591,7 +591,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                 fontWeight: "600"
               }}
             >
-              {saving ? "Se salvează..." : "💾 Salvează datele"}
+              {saving ? "Saving..." : "💾 Save Data"}
             </button>
           </form>
         </div>
@@ -604,7 +604,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
           border: "1px solid rgba(33, 150, 243, 0.2)"
         }}>
           <p style={{ fontSize: "0.9rem", color: "#666", margin: 0 }}>
-            💡 <strong>Sfat:</strong> Aceste informații ne ajută să îți oferim recomandări nutriționale personalizate și să calculăm mai precis necesarul tău caloric zilnic.
+            💡 <strong>Tip:</strong> This information helps us provide you with personalized nutritional recommendations and calculate your daily caloric needs more accurately.
           </p>
         </div>
       </div>

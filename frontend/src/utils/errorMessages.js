@@ -2,148 +2,148 @@ import React from 'react';
 
 /**
  * User-friendly error messages - Nielsen Heuristic #9
- * Transformă erori tehnice în mesaje clare, acționabile
+ * Transform technical errors into clear, actionable messages
  */
 
 export const ERROR_MESSAGES = {
   // Network & Server Errors
   'NetworkError': {
-    title: "Problemă de conexiune 📡",
-    message: "Nu ne putem conecta la server. Verifică conexiunea la internet și încearcă din nou.",
-    action: "Reîncearcă",
+    title: "Connection problem 📡",
+    message: "We cannot connect to the server. Check your internet connection and try again.",
+    action: "Retry",
     severity: "error",
     icon: "📡"
   },
   'Failed to fetch': {
-    title: "Server indisponibil 🔌",
-    message: "Backend-ul nu răspunde. Asigură-te că serverul rulează pe http://localhost:8001",
-    action: "Verifică serverul",
+    title: "Server unavailable 🔌",
+    message: "Backend is not responding. Make sure the server is running on http://localhost:8000",
+    action: "Check server",
     severity: "error",
     icon: "🔌"
   },
   'timeout': {
-    title: "Procesare prea lungă ⏱️",
-    message: "Cererea a durat prea mult. Serverul poate fi suprasolicitat. Încearcă din nou.",
-    action: "Reîncearcă",
+    title: "Processing too long ⏱️",
+    message: "The request took too long. The server may be overloaded. Try again.",
+    action: "Retry",
     severity: "warning",
     icon: "⏱️"
   },
 
   // Authentication Errors
   'Invalid 2FA code': {
-    title: "Cod 2FA incorrect 🔐",
-    message: "Codul din Google Authenticator nu este corect. Verifică că ai introdus cele 6 cifre și că nu a expirat.",
-    action: "Încearcă din nou",
+    title: "Incorrect 2FA code 🔐",
+    message: "The code from Google Authenticator is not correct. Check that you entered all 6 digits and it hasn't expired.",
+    action: "Try again",
     severity: "warning",
     icon: "🔐",
     tips: [
-      "Așteaptă câteva secunde pentru un cod nou",
-      "Verifică că ora pe telefon este corectă",
-      "Codul se schimbă la fiecare 30 de secunde"
+      "Wait a few seconds for a new code",
+      "Check that your phone time is correct",
+      "The code changes every 30 seconds"
     ]
   },
   'User not found': {
-    title: "Cont inexistent ❌",
-    message: "Nu există un cont cu această adresă de email.",
-    action: "Înregistrare",
+    title: "Account does not exist ❌",
+    message: "There is no account with this email address.",
+    action: "Sign up",
     severity: "info",
     icon: "❌",
-    tips: ["Verifică dacă ai scris corect email-ul", "Dorești să creezi un cont nou?"]
+    tips: ["Check if you spelled the email correctly", "Want to create a new account?"]
   },
   'Wrong password': {
-    title: "Parolă incorectă 🔒",
-    message: "Parola introdusă nu este corectă pentru acest cont.",
-    action: "Încearcă din nou",
+    title: "Incorrect password 🔒",
+    message: "The password entered is not correct for this account.",
+    action: "Try again",
     severity: "warning",
     icon: "🔒",
     tips: [
-      "Verifică Caps Lock",
-      "Parola este case-sensitive (A ≠ a)"
+      "Check Caps Lock",
+      "Password is case-sensitive (A ≠ a)"
     ]
   },
   'Email already exists': {
-    title: "Email deja înregistrat 📧",
-    message: "Acest email are deja un cont. Vrei să te autentifici?",
-    action: "Autentifică-te",
+    title: "Email already registered 📧",
+    message: "This email already has an account. Do you want to sign in?",
+    action: "Sign in",
     severity: "info",
     icon: "📧"
   },
 
   // File Upload Errors
   'File too large': {
-    title: "Fișier prea mare 📁",
-    message: "Imaginea încărcată depășește limita de 10MB. Compresia ei sau alege o altă imagine.",
-    action: "Alege alt fișier",
+    title: "File too large 📁",
+    message: "The uploaded image exceeds the 10MB limit. Compress it or choose another image.",
+    action: "Choose another file",
     severity: "warning",
     icon: "📁",
     tips: [
-      "Încearcă să comprimi imaginea cu TinyPNG",
-      "Redimensionează imaginea la rezoluție mai mică"
+      "Try compressing the image with TinyPNG",
+      "Resize the image to a lower resolution"
     ]
   },
   'Invalid file type': {
-    title: "Tip fișier invalid 🖼️",
-    message: "Poți încărca doar imagini (JPG, PNG, WEBP, HEIC).",
-    action: "Alege o imagine",
+    title: "Invalid file type 🖼️",
+    message: "You can only upload images (JPG, PNG, WEBP, HEIC).",
+    action: "Choose an image",
     severity: "warning",
     icon: "🖼️"
   },
   'No file selected': {
-    title: "Niciun fișier selectat 📷",
-    message: "Te rugăm să selectezi o imagine cu mâncare pentru analiză.",
-    action: "Selectează imagine",
+    title: "No file selected 📷",
+    message: "Please select a food image for analysis.",
+    action: "Select image",
     severity: "info",
     icon: "📷"
   },
 
   // API Errors
   'Error processing image': {
-    title: "Eroare la procesare 🔧",
-    message: "Nu am putut analiza imaginea. Poate fi prea întunecată sau neclară.",
-    action: "Încearcă altă imagine",
+    title: "Processing error 🔧",
+    message: "Could not analyze the image. It may be too dark or blurry.",
+    action: "Try another image",
     severity: "error",
     icon: "🔧",
     tips: [
-      "Fă poza în lumină bună",
-      "Asigură-te că mâncarea este vizibilă",
-      "Evită obiectele din fundal"
+      "Take the photo in good lighting",
+      "Make sure the food is visible",
+      "Avoid objects in the background"
     ]
   },
   'Rate limit exceeded': {
-    title: "Prea multe încercări ⚠️",
-    message: "Ai efectuat prea multe cereri. Te rugăm să aștepți câteva minute.",
-    action: "Așteaptă",
+    title: "Too many attempts ⚠️",
+    message: "You have made too many requests. Please wait a few minutes.",
+    action: "Wait",
     severity: "warning",
     icon: "⚠️"
   },
 
   // Validation Errors
   'Invalid email format': {
-    title: "Email invalid 📮",
-    message: "Adresa de email nu este în format corect (exemplu: nume@domeniu.ro).",
-    action: "Corectează email-ul",
+    title: "Invalid email 📮",
+    message: "The email address is not in the correct format (example: name@domain.com).",
+    action: "Correct the email",
     severity: "warning",
     icon: "📮"
   },
   'Password too weak': {
-    title: "Parolă prea slabă 🔓",
-    message: "Parola trebuie să aibă minim 8 caractere, o literă mare, o cifră și un caracter special.",
-    action: "Alege o parolă mai sigură",
+    title: "Password too weak 🔓",
+    message: "Password must have at least 8 characters, one uppercase letter, one digit, and one special character.",
+    action: "Choose a stronger password",
     severity: "warning",
     icon: "🔓",
     tips: [
-      "Exemplu parolă bună: MyPass123!",
-      "Evită parole comune precum '12345678'",
-      "Folosește o combinație de litere, cifre și simboluri"
+      "Example of good password: MyPass123!",
+      "Avoid common passwords like '12345678'",
+      "Use a combination of letters, digits, and symbols"
     ]
   }
 };
 
 /**
- * Transformă o eroare tehnică într-un mesaj user-friendly
+ * Transform a technical error into a user-friendly message
  */
 export function getUserFriendlyError(error, fallback = null) {
-  // Încearcă să găsească mesajul în obiectul error
+  // Try to find the message in the error object
   let errorKey = null;
   
   if (typeof error === 'string') {
@@ -156,17 +156,17 @@ export function getUserFriendlyError(error, fallback = null) {
     errorKey = error.error;
   }
 
-  // Caută în dicționarul de erori
+  // Search in the errors dictionary
   for (const [key, value] of Object.entries(ERROR_MESSAGES)) {
     if (errorKey && errorKey.toLowerCase().includes(key.toLowerCase())) {
       return value;
     }
   }
 
-  // Fallback pentru erori necunoscute
+  // Fallback for unknown errors
   return fallback || {
-    title: "A apărut o eroare ⚠️",
-    message: errorKey || "Ceva nu a funcționat corect. Te rugăm să încerci din nou.",
+    title: "An error occurred ⚠️",
+    message: errorKey || "Something went wrong. Please try again.",
     action: "OK",
     severity: "error",
     icon: "⚠️"
@@ -174,7 +174,7 @@ export function getUserFriendlyError(error, fallback = null) {
 }
 
 /**
- * Componenta ErrorDisplay pentru afișare user-friendly
+ * ErrorDisplay component for user-friendly display
  */
 export function ErrorDisplay({ error, onAction, onDismiss }) {
   const errorInfo = getUserFriendlyError(error);
@@ -209,7 +209,7 @@ export function ErrorDisplay({ error, onAction, onDismiss }) {
               className="error-action-btn secondary"
               onClick={onDismiss}
             >
-              Închide
+              Close
             </button>
           )}
         </div>
@@ -219,7 +219,7 @@ export function ErrorDisplay({ error, onAction, onDismiss }) {
 }
 
 /**
- * Hook pentru gestionarea erorilor
+ * Hook for error handling
  */
 export function useErrorHandler() {
   const [error, setError] = React.useState(null);
@@ -228,7 +228,7 @@ export function useErrorHandler() {
     const friendlyError = getUserFriendlyError(err);
     setError(friendlyError);
     
-    // Auto-dismiss după 10 secunde pentru info/warning
+    // Auto-dismiss after 10 seconds for info/warning
     if (friendlyError.severity !== 'error') {
       setTimeout(() => setError(null), 10000);
     }

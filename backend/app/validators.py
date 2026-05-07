@@ -82,37 +82,37 @@ class PasswordValidator:
         if not password or len(password) < 8:
             raise HTTPException(
                 status_code=400,
-                detail="Parola trebuie să aibă minim 8 caractere"
+                detail="Password must have at least 8 characters"
             )
         
         if len(password) > 128:
             raise HTTPException(
                 status_code=400,
-                detail="Parola este prea lungă (maxim 128 caractere)"
+                detail="Password is too long (maximum 128 characters)"
             )
         
         if not re.search(r'[A-Z]', password):
             raise HTTPException(
                 status_code=400,
-                detail="Parola trebuie să conțină cel puțin o literă mare"
+                detail="Password must contain at least one uppercase letter"
             )
         
         if not re.search(r'[a-z]', password):
             raise HTTPException(
                 status_code=400,
-                detail="Parola trebuie să conțină cel puțin o literă mică"
+                detail="Password must contain at least one lowercase letter"
             )
         
         if not re.search(r'[0-9]', password):
             raise HTTPException(
                 status_code=400,
-                detail="Parola trebuie să conțină cel puțin o cifră"
+                detail="Password must contain at least one digit"
             )
         
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
             raise HTTPException(
                 status_code=400,
-                detail="Parola trebuie să conțină cel puțin un caracter special"
+                detail="Password must contain at least one special character"
             )
 
 
@@ -140,7 +140,7 @@ class FileValidator:
         if not file or not file.filename:
             raise HTTPException(
                 status_code=400,
-                detail="Niciun fișier selectat"
+                detail="No file selected"
             )
         
         # Check file extension
@@ -149,7 +149,7 @@ class FileValidator:
         if ext not in ALLOWED_EXTENSIONS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Tip fișier invalid. Sunt permise: {', '.join(ALLOWED_EXTENSIONS)}"
+                detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
             )
         
         # Check MIME type
@@ -167,7 +167,7 @@ class FileValidator:
         if file_size == 0:
             raise HTTPException(
                 status_code=400,
-                detail="Fișierul este gol"
+                detail="File is empty"
             )
         
         if file_size > MAX_FILE_SIZE:
@@ -175,7 +175,7 @@ class FileValidator:
             actual_mb = file_size / (1024 * 1024)
             raise HTTPException(
                 status_code=400,
-                detail=f"Fișierul este prea mare ({actual_mb:.1f}MB). Maxim permis: {max_mb:.1f}MB"
+                detail=f"File is too large ({actual_mb:.1f}MB). Maximum allowed: {max_mb:.1f}MB"
             )
         
         # Reset file pointer for further processing

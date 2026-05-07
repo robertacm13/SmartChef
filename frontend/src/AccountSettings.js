@@ -49,22 +49,22 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
 
   // Fetch unread notifications on component mount
   useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
   }, [userEmail]);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
 
   const handleNavMouseEnter = () => {
     if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
@@ -88,24 +88,24 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
 
   // Fetch notification preferences on mount
   useEffect(() => {
-    fetchNotificationPreferences();
-  }, []);
-
-  const fetchNotificationPreferences = async () => {
-    setLoadingPrefs(true);
-    try {
-      const res = await fetch(`http://localhost:8000/notification_preferences/${userEmail}`);
-      const data = await res.json();
-      
-      if (data.status === "success") {
-        setNotificationPrefs(data.preferences);
+    const fetchNotificationPreferences = async () => {
+      setLoadingPrefs(true);
+      try {
+        const res = await fetch(`http://localhost:8000/notification_preferences/${userEmail}`);
+        const data = await res.json();
+        
+        if (data.status === "success") {
+          setNotificationPrefs(data.preferences);
+        }
+      } catch (err) {
+        console.error("Error fetching notification preferences:", err);
+      } finally {
+        setLoadingPrefs(false);
       }
-    } catch (err) {
-      console.error("Error fetching notification preferences:", err);
-    } finally {
-      setLoadingPrefs(false);
-    }
-  };
+    };
+
+    fetchNotificationPreferences();
+  }, [userEmail]);
 
   const handleNotificationPrefChange = (key) => {
     const updated = {
@@ -130,12 +130,12 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
       const data = await res.json();
       
       if (data.status === "success") {
-        setSuccess("✅ Preferințele de notificări au fost actualizate");
+        setSuccess("✅ Notification preferences updated");
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err) {
       console.error("Error saving notification preferences:", err);
-      setError("❌ Eroare la salvarea preferințelor");
+      setError("❌ Error saving preferences");
     } finally {
       setSavingPrefs(false);
     }
@@ -220,12 +220,12 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
     
     // Validation
     if (!currentPassword) {
-      setError("❌ Introdu parola curentă pentru a verifica identitatea");
+      setError("❌ Enter current password to verify identity");
       return;
     }
 
     if (!showEmailFields && !showPasswordFields) {
-      setError("❌ Selectează ce dorești să modifici (Email sau Parolă)");
+      setError("❌ Select what you want to change (Email or Password)");
       return;
     }
 
@@ -237,11 +237,11 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
       }
       
       if (!newPassword) {
-        setError("❌ Introdu noua parolă");
+        setError("❌ Enter new password");
         return;
       }
       if (newPassword.length < 8) {
-        setError("❌ Parola nouă trebuie să aibă cel puțin 8 caractere");
+        setError("❌ New password must be at least 8 characters");
         return;
       }
       const hasUpperCase = /[A-Z]/.test(newPassword);
@@ -249,42 +249,42 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
       const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
       
       if (!hasUpperCase) {
-        setError("❌ Parola trebuie să conțină cel puțin o literă mare");
+        setError("❌ Password must contain at least one uppercase letter");
         return;
       }
       if (!hasNumber) {
-        setError("❌ Parola trebuie să conțină cel puțin o cifră");
+        setError("❌ Password must contain at least one number");
         return;
       }
       if (!hasSpecialChar) {
-        setError("❌ Parola trebuie să conțină cel puțin un caracter special (!@#$%^&* etc.)");
+        setError("❌ Password must contain at least one special character (!@#$%^&* etc.)");
         return;
       }
       if (newPassword === currentPassword) {
-        setError("❌ Parola nouă nu poate fi identică cu cea curentă");
+        setError("❌ New password cannot be identical to current password");
         return;
       }
       if (!confirmPassword) {
-        setError("❌ Te rog confirmă parola nouă");
+        setError("❌ Please confirm new password");
         return;
       }
       if (newPassword !== confirmPassword) {
-        setError("❌ Parolele noi nu se potrivesc");
+        setError("❌ New passwords do not match");
         return;
       }
     }
 
     if (showEmailFields) {
       if (!newEmail) {
-        setError("❌ Introdu noul email");
+        setError("❌ Enter new email");
         return;
       }
       if (!newEmail.includes("@")) {
-        setError("❌ Email-ul nu este valid");
+        setError("❌ Email is not valid");
         return;
       }
       if (newEmail === userEmail) {
-        setError("❌ Noul email este identic cu cel actual");
+        setError("❌ New email is identical to current email");
         return;
       }
     }
@@ -340,10 +340,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
           }, 2000);
         }
       } else {
-        setError(`❌ ${data.detail || "Eroare la actualizarea setărilor"}`);
+        setError(`❌ ${data.detail || "Error updating settings"}`);
       }
     } catch (err) {
-      setError("❌ Eroare la conectarea cu serverul");
+      setError("❌ Error connecting to server");
       console.error(err);
     } finally {
       setSaving(false);
@@ -461,9 +461,9 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 </button>
                 {showUserDropdown && (
                   <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
                       <span className="dropdown-icon">👤</span>
-                      Profil
+                      Profile
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -471,7 +471,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">📊</span>
-                      Date personale
+                      Personal Data
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -479,7 +479,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                       setShowUserDropdown(false);
                     }} style={{ fontWeight: "600" }}>
                       <span className="dropdown-icon">🔑</span>
-                      Setările contului
+                      Account Settings
                     </button>
 
                     <button className="user-dropdown-item" onClick={() => {
@@ -487,7 +487,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">⚙️</span>
-                      Setări aplicație
+                      App Settings
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -528,7 +528,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
             textAlign: "center",
             marginBottom: "2rem"
           }}>
-            Modifică email-ul sau parola contului tău
+            Change your account email or password
           </p>
 
           {error && (
@@ -579,7 +579,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 marginBottom: "0.8rem",
                 color: "#333"
               }}>
-                Ce dorești să modifici?
+                What do you want to change?
               </label>
               
               <div style={{ display: "flex", gap: "1rem" }}>
@@ -901,7 +901,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     marginBottom: "0.5rem",
                     color: "#333"
                   }}>
-                    🔐 Parolă Nouă
+                    🔐 New Password
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -940,7 +940,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                           document.getElementById('confirmPasswordField')?.focus();
                         }
                       }}
-                      placeholder="Minim 8 caractere, 1 majusculă, 1 cifră, 1 caracter special"
+                      placeholder="Minimum 8 characters, 1 uppercase, 1 number, 1 special character"
                       style={{
                         width: "100%",
                         padding: "0.75rem",
@@ -1012,7 +1012,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                   </div>
                   {newPasswordSameAsCurrent && (
                     <p style={{ fontSize: "0.85rem", color: "#f44336", marginTop: "0.5rem", marginBottom: 0 }}>
-                      ⚠️ Parola nouă nu poate fi identică cu cea curentă
+                      ⚠️ New password cannot be identical to current password
                     </p>
                   )}
                   {!newPasswordSameAsCurrent && (
@@ -1029,7 +1029,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     marginBottom: "0.5rem",
                     color: "#333"
                   }}>
-                    🔐 Confirmă Parola Nouă
+                    🔐 Confirm New Password
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -1056,7 +1056,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                           }
                         }
                       }}
-                      placeholder="Re-introdu parola"
+                      placeholder="Re-enter password"
                       style={{
                         width: "100%",
                         padding: "0.75rem",
@@ -1131,7 +1131,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 opacity: (!showEmailFields && !showPasswordFields) ? 0.5 : 1
               }}
             >
-              {saving ? "Se salvează..." : "💾 Salvează modificările"}
+              {saving ? "Saving..." : "💾 Save changes"}
             </button>
           </form>
         </div>
@@ -1153,14 +1153,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
             alignItems: "center",
             gap: "0.5rem"
           }}>
-            🔔 Preferințe Notificări
+            🔔 Notification Preferences
           </h3>
           <p style={{ color: "#666", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-            Alege ce tip de notificări dorești să primești
+            Choose what notifications you want to receive
           </p>
 
           {loadingPrefs ? (
-            <p style={{ color: "#999", textAlign: "center" }}>Se încarcă preferințele...</p>
+            <p style={{ color: "#999", textAlign: "center" }}>Loading preferences...</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {/* Analysis Complete */}
@@ -1186,10 +1186,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 />
                 <div>
                   <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
-                    ✅ Analiză completă
+                    ✅ Analysis Complete
                   </p>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
-                    Primești notificare când analiza unei imagini este finalizată
+                    You get a notification when an image analysis is complete
                   </p>
                 </div>
               </label>
@@ -1217,10 +1217,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 />
                 <div>
                   <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
-                    🎉 Obiectiv atins
+                    🎉 Goal Achieved
                   </p>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
-                    Primești felicitări când atingi obiectivele tale nutri ționale
+                    You receive congratulations when you reach your nutritional goals
                   </p>
                 </div>
               </label>
@@ -1248,10 +1248,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 />
                 <div>
                   <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
-                    📅 Memento zilnic
+                    📅 Daily Reminder
                   </p>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
-                    Primești memento zilnic să-ți înregistrezi mâncarea
+                    You get a daily reminder to log your meals
                   </p>
                 </div>
               </label>
@@ -1279,10 +1279,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                 />
                 <div>
                   <p style={{ margin: "0 0 0.3rem 0", fontWeight: "600", color: "#333" }}>
-                    ⚖️ Memento cântărire
+                    ⚖️ Weight Reminder
                   </p>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "#666" }}>
-                    Primești memento să-ți introduci greutatea
+                    You get a reminder to enter your weight
                   </p>
                 </div>
               </label>
@@ -1298,7 +1298,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
           border: "1px solid rgba(255, 193, 7, 0.3)"
         }}>
           <p style={{ fontSize: "0.9rem", color: "#666", margin: 0 }}>
-            ⚠️ <strong>Atenție:</strong> Pentru securitatea contului tău, trebuie să introduci parola curentă pentru orice modificare. Dacă modifici email-ul, vei fi delogat automat.
+            ⚠️ <strong>Note:</strong> For your account security, you must enter your current password to make any changes. If you change your email, you will be automatically logged out.
           </p>
         </div>
       </div>

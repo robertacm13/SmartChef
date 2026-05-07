@@ -10,21 +10,21 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
   const [qr, setQr] = useState("");
   const [error, setError] = useState("");
   
-  // Erori individuale pentru fiecare câmp
+  // Individual errors for each field
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   
-  // Refs pentru focus management
+  // Refs for focus management
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   
-  // Validare în timp real
+  // Real-time validation
   const [emailValid, setEmailValid] = useState(false);
   const [passwordValid, setPasswordValid] = useState(false);
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
   
-  // Vizibilitate parole
+  // Password visibility
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -45,7 +45,7 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
     setConfirmPasswordValid(value.length > 0 && passwordValue.length > 0 && value === passwordValue);
   };
   
-  // Validare la blur (când părăsește câmpul)
+  // Validation on blur (when field loses focus)
   const handleEmailBlur = () => {
     if (email.length === 0) {
       setEmailError("");
@@ -53,7 +53,7 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError("Adresa de email nu este validă! (ex: exemplu@email.com)");
+      setEmailError("Email address is not valid! (ex: example@email.com)");
     } else {
       setEmailError("");
     }
@@ -65,7 +65,7 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
       return;
     }
     if (password.length < 8) {
-      setPasswordError("Parola trebuie să aibă minim 8 caractere!");
+      setPasswordError("Password must have at least 8 characters!");
       return;
     }
     const hasUpperCase = /[A-Z]/.test(password);
@@ -73,11 +73,11 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
     if (!hasUpperCase) {
-      setPasswordError("Parola trebuie să conțină cel puțin o literă mare!");
+      setPasswordError("Password must contain at least one uppercase letter!");
     } else if (!hasNumber) {
-      setPasswordError("Parola trebuie să conțină cel puțin o cifră!");
+      setPasswordError("Password must contain at least one digit!");
     } else if (!hasSpecialChar) {
-      setPasswordError("Parola trebuie să conțină cel puțin un caracter special (!@#$%^&* etc.)!");
+      setPasswordError("Password must contain at least one special character (!@#$%^&* etc.)!");
     } else {
       setPasswordError("");
     }
@@ -89,7 +89,7 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
       return;
     }
     if (confirmPassword !== password) {
-      setConfirmPasswordError("Parolele nu se potrivesc!");
+      setConfirmPasswordError("Passwords do not match!");
     } else {
       setConfirmPasswordError("");
     }
@@ -97,46 +97,46 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
 
   const validateForm = () => {
     if (!email || !password || !confirmPassword) {
-      setError("Te rog completează toate câmpurile!");
+      setError("Please fill in all fields!");
       return false;
     }
     
-    // Validare format email
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Adresa de email nu este validă! (ex: exemplu@email.com)");
+      setError("Email address is not valid! (ex: example@email.com)");
       return false;
     }
     
-    // Validare lungime parolă
+    // Validate password length
     if (password.length < 8) {
-      setError("Parola trebuie să aibă minim 8 caractere!");
+      setError("Password must have at least 8 characters!");
       return false;
     }
     
-    // Validare complexitate parolă (cel puțin o literă mare, o cifră și un caracter special)
+    // Validate password complexity (at least uppercase letter, digit and special character)
     const hasUpperCase = /[A-Z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
     if (!hasUpperCase) {
-      setError("Parola trebuie să conțină cel puțin o literă mare!");
+      setError("Password must contain at least one uppercase letter!");
       return false;
     }
     
     if (!hasNumber) {
-      setError("Parola trebuie să conțină cel puțin o cifră!");
+      setError("Password must contain at least one digit!");
       return false;
     }
     
     if (!hasSpecialChar) {
-      setError("Parola trebuie să conțină cel puțin un caracter special (!@#$%^&* etc.)!");
+      setError("Password must contain at least one special character (!@#$%^&* etc.)!");
       return false;
     }
     
-    // Validare confirmare parolă
+    // Validate password confirmation
     if (password !== confirmPassword) {
-      setError("Parolele nu se potrivesc!");
+      setError("Passwords do not match!");
       return false;
     }
     
@@ -158,7 +158,7 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
       }
     } catch (err) {
       setQr("");
-      setError("Eroare la înregistrare. Verifică conexiunea!");
+      setError("Registration error. Check your connection!");
     }
   };
 
@@ -176,10 +176,10 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
       <div className="form-container">
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "2.2rem", fontWeight: "700", color: "#ff6b35", marginBottom: "0.5rem" }}>
-            Înregistrare
+            Sign Up
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
-            Creează un cont nou SmartChef
+            Create a new SmartChef account
           </p>
         </div>
 
@@ -203,7 +203,7 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
             <input
               className="form-input"
               type="email"
-              placeholder="exemplu@email.com"
+              placeholder="example@email.com"
               value={email}
               onChange={e => {
                 setEmail(e.target.value);
@@ -241,13 +241,13 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
         </div>
 
         <div className="form-group">
-          <label className="form-label">Parolă</label>
+          <label className="form-label">Password</label>
           <div style={{ position: "relative" }}>
             <input
               ref={passwordRef}
               className="form-input"
               type={showPassword ? "text" : "password"}
-              placeholder="Minim 8 caractere"
+              placeholder="Minimum 8 characters"
               value={password}
               onChange={e => {
                 setPassword(e.target.value);
@@ -314,18 +314,18 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
             </p>
           )}
           <p style={{ fontSize: "0.85rem", color: "#999", marginTop: "0.3rem" }}>
-            Minim 8 caractere, o literă mare, o cifră, un caracter special
+            Minimum 8 characters, uppercase letter, digit, special character
           </p>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Confirmă Parola</label>
+          <label className="form-label">Confirm Password</label>
           <div style={{ position: "relative" }}>
             <input
               ref={confirmPasswordRef}
               className="form-input"
               type={showConfirmPassword ? "text" : "password"}
-              placeholder="Rescrie parola"
+              placeholder="Re-enter password"
               value={confirmPassword}
               onChange={e => {
                 setConfirmPassword(e.target.value);
@@ -395,56 +395,78 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin 
         <button
           className="btn btn-primary"
           onClick={handleRegister}
-          style={{ width: "100%", padding: "1rem", fontSize: "1.1rem", marginTop: "1rem" }}
+          style={{
+            width: "100%",
+            padding: "1rem",
+            fontSize: "1.1rem",
+            marginTop: "1rem",
+            background: "linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%)",
+            color: "white"
+          }}
         >
-          📝 Înregistrează-te
+          📝 Sign Up
         </button>
 
         <button
           className="btn btn-secondary"
           onClick={onBack}
-          style={{ width: "100%", padding: "1rem", fontSize: "1.1rem", marginTop: "1rem" }}
+          style={{
+            width: "100%",
+            padding: "1rem",
+            fontSize: "1.1rem",
+            marginTop: "1rem",
+            background: "white",
+            color: "#ff6b35",
+            border: "2px solid #ff6b35"
+          }}
         >
-          ← Înapoi
+          ← Back
         </button>
 
         {qr && (
           <div style={{
             marginTop: "2rem",
             padding: "2rem",
-            background: "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)",
+            background: "linear-gradient(135deg, #ffebcc 0%, #ffe0b3 100%)",
             borderRadius: "20px",
-            border: "3px solid #4CAF50"
+            border: "3px solid #ff6b35"
           }}>
-            <h3 style={{ textAlign: "center", color: "#2e7d32", marginBottom: "1rem", fontSize: "1.3rem" }}>
-              ✅ Cont creat cu succes!
+            <h3 style={{ textAlign: "center", color: "#ff6b35", marginBottom: "1rem", fontSize: "1.3rem", fontWeight: "700" }}>
+              ✅ Account created successfully!
             </h3>
             <p style={{ textAlign: "center", marginBottom: "1.5rem", color: "#666" }}>
-              Scanează codul QR cu Google Authenticator:
+              Scan the QR code with Google Authenticator:
             </p>
             <div style={{ display: "flex", justifyContent: "center", background: "white", padding: "1.5rem", borderRadius: "15px" }}>
               <QRCodeSVG value={qr} size={220} />
             </div>
             <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.9rem", color: "#666" }}>
-              💡 Vei avea nevoie de codul din aplicație pentru login
+              💡 You will need the app code to sign in
             </p>
             <button
               className="btn btn-primary"
               onClick={onRegisterSuccess}
-              style={{ width: "100%", padding: "1rem", fontSize: "1.1rem", marginTop: "1.5rem" }}
+              style={{
+                width: "100%",
+                padding: "1rem",
+                fontSize: "1.1rem",
+                marginTop: "1.5rem",
+                background: "linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%)",
+                color: "white"
+              }}
             >
-              ✅ Continuă la Login
+              ✅ Continue to Sign In
             </button>
           </div>
         )}
 
         <p style={{ textAlign: "center", marginTop: "2rem", color: "#666" }}>
-          Ai deja cont?{" "}
+          Already have an account?{" "}
           <span
             onClick={onNavigateToLogin}
             style={{ color: "#ff6b35", fontWeight: "600", cursor: "pointer", textDecoration: "underline" }}
           >
-            Login aici
+            Sign in here
           </span>
         </p>
       </div>

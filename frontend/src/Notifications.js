@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import Toast from "./components/Toast";
-import Tooltip, { InfoIcon } from "./components/Tooltip";
-import { getUserFriendlyError } from "./utils/errorMessages";
+import Tooltip from "./components/Tooltip";
 import "./utils/errorMessages.css";
 import { useKeyboardShortcuts } from "./utils/keyboardShortcuts";
 
@@ -57,32 +56,32 @@ export default function Notifications({
   });
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+
+        if (data.status === "success") {
+          setNotifications(data.notifications);
+          setUnreadCount(data.unread_count);
+          setError("");
+        } else {
+          setError(data.detail || "Error fetching notifications");
+        }
+      } catch (err) {
+        setError("Network error. Please try again.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchNotifications();
     // Poll for new notifications every 10 seconds
     const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotifications = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-
-      if (data.status === "success") {
-        setNotifications(data.notifications);
-        setUnreadCount(data.unread_count);
-        setError("");
-      } else {
-        setError(data.detail || "Error fetching notifications");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [userEmail]);
 
   const markNotificationAsRead = async (notificationId, e) => {
     e.stopPropagation();
@@ -198,7 +197,7 @@ export default function Notifications({
                         setShowNavDropdown(false);
                       }}
                     >
-                      📊 Istoric
+                      📊 History
                     </button>
                   </div>
                 )}
@@ -221,7 +220,7 @@ export default function Notifications({
                   background: "rgba(255,255,255,0.2)",
                   position: "relative"
                 }}
-                title="Notificări"
+                title="Notifications"
               >
                 🔔
                 {unreadCount > 0 && (
@@ -269,9 +268,9 @@ export default function Notifications({
                 </button>
                 {showUserDropdown && (
                   <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
                       <span className="dropdown-icon">👤</span>
-                      Profil
+                      Profile
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -279,7 +278,7 @@ export default function Notifications({
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">📊</span>
-                      Date personale
+                      Personal Data
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -287,7 +286,7 @@ export default function Notifications({
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">🔑</span>
-                      Setările contului
+                      Account Settings
                     </button>
 
                     <button className="user-dropdown-item" onClick={() => {
@@ -295,7 +294,7 @@ export default function Notifications({
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">⚙️</span>
-                      Setări aplicație
+                      App Settings
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -314,10 +313,10 @@ export default function Notifications({
       <main id="main-content" style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#ff6b35", marginBottom: "0.5rem" }}>
-            🔔 Notificări
+            🔔 Notifications
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
-            {unreadCount > 0 ? `${unreadCount} notificări necitite` : "Toate notificările au fost citite"}
+            {unreadCount > 0 ? `${unreadCount} unread notifications` : "All notifications have been read"}
           </p>
         </div>
 
@@ -340,7 +339,7 @@ export default function Notifications({
                 border: filterType === type ? "none" : "2px solid #ddd"
               }}
             >
-              {type === "all" ? "Toate" : type.replace("_", " ")}
+              {type === "all" ? "All" : type.replace("_", " ")}
             </button>
           ))}
         </div>
@@ -364,7 +363,7 @@ export default function Notifications({
         {loading && (
           <div style={{ textAlign: "center", padding: "2rem" }}>
             <div className="spinner"></div>
-            <p style={{ marginTop: "1rem", color: "#666" }}>Se încarcă notificări...</p>
+            <p style={{ marginTop: "1rem", color: "#666" }}>Loading notifications...</p>
           </div>
         )}
 
@@ -379,7 +378,7 @@ export default function Notifications({
           }}>
             <p style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎯</p>
             <p style={{ fontSize: "1.2rem", color: "#666" }}>
-              Nicio notificare în acest moment
+              No notifications at the moment
             </p>
           </div>
         )}
@@ -424,27 +423,29 @@ export default function Notifications({
                       {notification.message}
                     </p>
                     <p style={{ margin: "0.5rem 0 0 0", color: "#999", fontSize: "0.85rem" }}>
-                      📅 {new Date(notification.timestamp).toLocaleString('ro-RO')}
+                      📅 {new Date(notification.timestamp).toLocaleString('en-US')}
                     </p>
                   </div>
 
                   <div style={{ display: "flex", gap: "0.5rem", marginLeft: "1rem" }}>
                     {!notification.is_read && (
-                      <Tooltip text="Marchează ca citit">
+                      <Tooltip text="Mark as read">
                         <button
                           className="btn btn-outline"
                           onClick={(e) => markNotificationAsRead(notification._id, e)}
-                          style={{ padding: "0.4rem 0.8rem", fontSize: "0.9rem" }}
+                          style={{ padding: "0.5rem 0.8rem", fontSize: "1rem", minWidth: "auto" }}
+                          title="Mark as read"
                         >
                           ✓
                         </button>
                       </Tooltip>
                     )}
-                    <Tooltip text="Șterge">
+                    <Tooltip text="Delete">
                       <button
                         className="delete-btn"
                         onClick={(e) => deleteNotification(notification._id, e)}
-                        style={{ padding: "0.4rem 0.8rem" }}
+                        style={{ padding: "0.5rem 0.8rem", fontSize: "1rem" }}
+                        title="Delete"
                       >
                         🗑️
                       </button>

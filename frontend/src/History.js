@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./App.css";
 import Tooltip, { InfoIcon } from "./components/Tooltip";
 import { getUserFriendlyError } from "./utils/errorMessages";
@@ -64,14 +64,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
     }
   });
 
-
-  useEffect(() => {
-    fetchHistory();
-    fetchUnreadNotifications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`http://localhost:8000/analysis_history/${userEmail}`);
@@ -93,19 +86,24 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
     } finally {
       setLoading(false);
     }
-  };
+  }, [userEmail]);
 
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
+  useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
       }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    }
-  };
+    };
+
+    fetchHistory();
+    fetchUnreadNotifications();
+  }, [userEmail, fetchHistory]);
 
   const toggleFavorite = async (analysisId, e) => {
     e.stopPropagation();
@@ -127,7 +125,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             : a
         ));
       } else {
-        const friendlyError = getUserFriendlyError(data.error || "Eroare la actualizarea favorite");
+        const friendlyError = getUserFriendlyError(data.error || "Error updating favorite");
         setUserFriendlyError(friendlyError);
       }
     } catch (err) {
@@ -154,10 +152,10 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
         setDeleteConfirm(null);
         setSelectedAnalysis(null);
       } else {
-        alert("Eroare la ștergere: " + data.detail);
+        alert("Error deleting: " + data.detail);
       }
     } catch (err) {
-      alert("Eroare la ștergerea analizei");
+      alert("Error deleting analysis");
       console.error(err);
     }
   };
@@ -435,7 +433,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                       }}
                       style={{ fontWeight: "600" }}
                     >
-                      📊 Istoric
+                      📊 History
                     </button>
                   </div>
                 )}
@@ -472,9 +470,9 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                 </button>
                 {showUserDropdown && (
                   <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
                       <span className="dropdown-icon">👤</span>
-                      Profil
+                      Profile
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -482,7 +480,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">📊</span>
-                      Date personale
+                      Personal Data
                     </button>
                     
                     <button className="user-dropdown-item" onClick={() => {
@@ -490,7 +488,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">🔑</span>
-                      Setările contului
+                      Account Settings
                     </button>
 
                     <button className="user-dropdown-item" onClick={() => {
@@ -498,7 +496,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                       setShowUserDropdown(false);
                     }}>
                       <span className="dropdown-icon">⚙️</span>
-                      Setări aplicație
+                      App Settings
                     </button>
                     
                     <div className="user-dropdown-divider"></div>
@@ -538,7 +536,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <input
               type="text"
               className="search-input"
-              placeholder="🔍 Caută după nume fişier sau ingredient..."
+              placeholder="🔍 Search by filename or ingredient..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -549,17 +547,17 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                 borderRadius: "10px",
                 fontFamily: "'Poppins', sans-serif"
               }}
-              aria-label="Caută analize"
+              aria-label="Search analyses"
             />
-            <InfoIcon text="Caută după numele fişierului sau după orice ingredient. Shortcut: tasta F" />
+            <InfoIcon text="Search by filename or any ingredient. Shortcut: F key" />
           </div>
 
           {/* Filtre */}
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
             <div style={{ flex: "1", minWidth: "200px" }}>
               <label style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.3rem", display: "flex", alignItems: "center" }}>
-                📏 Număr ingrediente:
-                <InfoIcon text="Filtrează analizele după numărul de ingrediente detectate" />
+                📏 Number of Ingredients:
+                <InfoIcon text="Filter analyses by number of detected ingredients" />
               </label>
               <select
                 value={ingredientFilter}
@@ -573,17 +571,17 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                   fontFamily: "'Poppins', sans-serif"
                 }}
               >
-                <option value="all">Toate</option>
-                <option value="1-3">1-3 ingrediente</option>
-                <option value="4-6">4-6 ingrediente</option>
-                <option value="7+">7+ ingrediente</option>
+                <option value="all">All</option>
+                <option value="1-3">1-3 ingredients</option>
+                <option value="4-6">4-6 ingredients</option>
+                <option value="7+">7+ ingredients</option>
               </select>
             </div>
 
             <div style={{ flex: "1", minWidth: "200px" }}>
               <label style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.3rem", display: "flex", alignItems: "center" }}>
-                ⭐ Favorite:
-                <InfoIcon text="Arată doar analizele marcate ca favorite" />
+                ⭐ Favorites:
+                <InfoIcon text="Show only analyses marked as favorites" />
               </label>
               <button
                 onClick={() => setFavoritesOnly(!favoritesOnly)}
@@ -601,14 +599,14 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                   transition: "all 0.3s ease"
                 }}
               >
-                {favoritesOnly ? "✅ Doar favorite" : "Toate analizele"}
+                {favoritesOnly ? "✅ Favorites only" : "All analyses"}
               </button>
             </div>
 
             <div style={{ flex: "1", minWidth: "200px" }}>
               <label style={{ fontSize: "0.9rem", color: "#666", marginBottom: "0.3rem", display: "flex", alignItems: "center" }}>
-                🔄 Sortare:
-                <InfoIcon text="Sortează rezultatele după criter diverse" />
+                🔄 Sort:
+                <InfoIcon text="Sort results by various criteria" />
               </label>
               <select
                 value={sortBy}
@@ -622,12 +620,12 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                   fontFamily: "'Poppins', sans-serif"
                 }}
               >
-                <option value="date-desc">Data (mai recente)</option>
-                <option value="date-asc">Data (mai vechi)</option>
-                <option value="calories-desc">Calorii (descrescător)</option>
-                <option value="calories-asc">Calorii (crescător)</option>
-                <option value="ingredients-desc">Nr. ingrediente (↓)</option>
-                <option value="ingredients-asc">Nr. ingrediente (↑)</option>
+                <option value="date-desc">Date (newest)</option>
+                <option value="date-asc">Date (oldest)</option>
+                <option value="calories-desc">Calories (high-low)</option>
+                <option value="calories-asc">Calories (low-high)</option>
+                <option value="ingredients-desc">Ingredients count (↓)</option>
+                <option value="ingredients-asc">Ingredients count (↑)</option>
               </select>
             </div>
           </div>
@@ -968,7 +966,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
           className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
           onClick={handleSettings}
           aria-label="Settings"
-          title="Setări aplicație"
+          title="App Settings"
         >
           ⚙️
         </button>

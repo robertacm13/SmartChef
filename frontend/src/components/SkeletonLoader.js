@@ -169,7 +169,7 @@ export function GridSkeleton({ items = 6, columns = 3 }) {
 }
 
 // Loading Spinner with message (alternativă la skeleton)
-export function LoadingSpinner({ message = "Se încarcă..." }) {
+export function LoadingSpinner({ message = "Loading..." }) {
   return (
     <div className="loading-spinner-container">
       <div className="loading-spinner">

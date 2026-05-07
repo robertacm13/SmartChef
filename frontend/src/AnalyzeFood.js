@@ -41,25 +41,36 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [userFriendlyError, setUserFriendlyError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [editedIngredients, setEditedIngredients] = useState([]);
+  const [showAddIngredientModal, setShowAddIngredientModal] = useState(false);
+  const [newIngredientName, setNewIngredientName] = useState("");
 
   // Fetch unread notifications on component mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
+        const data = await res.json();
+        if (data.status === "success") {
+          setUnreadCount(data.unread_count);
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+
     if (userEmail) {
       fetchUnreadNotifications();
     }
   }, [authToken, userEmail]);
 
-  const fetchUnreadNotifications = async () => {
-    try {
-      const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-      const data = await res.json();
-      if (data.status === "success") {
-        setUnreadCount(data.unread_count);
-      }
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
+  // Initialize edited ingredients when results change
+  React.useEffect(() => {
+    if (results && results.ingredients) {
+      setEditedIngredients([...results.ingredients]);
     }
-  };
+  }, [results]);
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -162,6 +173,61 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     setSelectedIngredient(null);
   };
 
+  const deleteIngredient = (ingredientName) => {
+    const updatedIngredients = editedIngredients.filter(ing => ing !== ingredientName);
+    setEditedIngredients(updatedIngredients);
+    recalculateNutrition(updatedIngredients);
+  };
+
+  const handleAddIngredient = () => {
+    if (!newIngredientName.trim()) {
+      alert("⚠️ Please enter an ingredient!");
+      return;
+    }
+
+    if (editedIngredients.includes(newIngredientName.toLowerCase())) {
+      alert("ℹ️ This ingredient is already in the list!");
+      return;
+    }
+
+    const updatedIngredients = [...editedIngredients, newIngredientName.toLowerCase()];
+    setEditedIngredients(updatedIngredients);
+    recalculateNutrition(updatedIngredients);
+    setNewIngredientName("");
+    setShowAddIngredientModal(false);
+  };
+
+  const recalculateNutrition = async (ingredientsList) => {
+    if (!results) return;
+
+    try {
+      // Get nutrition info for new ingredient list
+      const response = await fetch("http://127.0.0.1:8000/calculate_nutrition/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ ingredients: ingredientsList })
+      });
+
+      if (!response.ok) {
+        console.error("Failed to recalculate nutrition");
+        return;
+      }
+
+      const nutritionData = await response.json();
+
+      // Update results with new nutrition data
+      setResults({
+        ...results,
+        ingredients: ingredientsList,
+        nutrition: nutritionData
+      });
+    } catch (error) {
+      console.error("Error recalculating nutrition:", error);
+    }
+  };
+
   const generatePDF = () => {
     if (!results) return;
     
@@ -179,9 +245,9 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     doc.text('SmartChef', pageWidth / 2, 15, { align: 'center' });
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    doc.text('Raport Analiza Alimentara', pageWidth / 2, 25, { align: 'center' });
+    doc.text('Food Analysis Report', pageWidth / 2, 25, { align: 'center' });
     doc.setFontSize(10);
-    doc.text(`Generat: ${now.toLocaleDateString('ro-RO')} ${now.toLocaleTimeString('ro-RO')}`, pageWidth / 2, 33, { align: 'center' });
+    doc.text(`Generated: ${now.toLocaleDateString('en-US')} ${now.toLocaleTimeString('en-US')}`, pageWidth / 2, 33, { align: 'center' });
     
     doc.setTextColor(0, 0, 0);
     let yPos = 50;
@@ -202,10 +268,10 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       doc.setTextColor(0, 0, 0);
     }
     
-    // Ingrediente
+    // Detected Ingredients
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Ingrediente Detectate:', 15, yPos);
+    doc.text('Detected Ingredients:', 15, yPos);
     yPos += 8;
     
     doc.setFontSize(11);
@@ -217,19 +283,19 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     doc.text(splitIngredients, 15, yPos);
     yPos += (splitIngredients.length * 6) + 10;
     
-    // Valori nutritionale totale
+    // Total Nutritional Values
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Valori Nutritionale Totale', 15, yPos);
+    doc.text('Total Nutritional Values', 15, yPos);
     yPos += 7;
     
     const nutritionData = [
-      ['Nutrient', 'Valoare'],
-      ['Calorii', `${Number(results.nutrition.total_nutrition.calories).toFixed(2)} kcal`],
-      ['Proteine', `${Number(results.nutrition.total_nutrition.protein).toFixed(2)} g`],
-      ['Carbohidrati', `${Number(results.nutrition.total_nutrition.carbs).toFixed(2)} g`],
-      ['Grasimi', `${Number(results.nutrition.total_nutrition.fat).toFixed(2)} g`],
-      ['Fibre', `${Number(results.nutrition.total_nutrition.fiber).toFixed(2)} g`]
+      ['Nutrient', 'Value'],
+      ['Calories', `${Number(results.nutrition.total_nutrition.calories).toFixed(2)} kcal`],
+      ['Protein', `${Number(results.nutrition.total_nutrition.protein).toFixed(2)} g`],
+      ['Carbohydrates', `${Number(results.nutrition.total_nutrition.carbs).toFixed(2)} g`],
+      ['Fat', `${Number(results.nutrition.total_nutrition.fat).toFixed(2)} g`],
+      ['Fiber', `${Number(results.nutrition.total_nutrition.fiber).toFixed(2)} g`]
     ];
     
     autoTable(doc, {
@@ -244,11 +310,11 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     
     yPos = doc.lastAutoTable.finalY + 10;
     
-    // Detalii ingrediente individuale
+    // Individual Ingredient Nutritional Values
     if (results.nutrition.individual_nutrition) {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('Valori Nutritionale pe Ingredient (per 100g)', 15, yPos);
+      doc.text('Nutritional Values per Ingredient (per 100g)', 15, yPos);
       yPos += 7;
       
       const individualData = results.ingredients.map(ing => {
@@ -267,7 +333,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       
       autoTable(doc, {
         startY: yPos,
-        head: [['Ingredient', 'Calorii', 'Proteine', 'Carbohidrati', 'Grasimi']],
+        head: [['Ingredient', 'Calories', 'Protein', 'Carbohydrates', 'Fat']],
         body: individualData,
         theme: 'striped',
         headStyles: { fillColor: [255, 107, 53], textColor: 255, font: 'helvetica' },
@@ -284,7 +350,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(150, 150, 150);
       doc.text(
-        `Pagina ${i} din ${pageCount} | SmartChef (c) 2026`,
+        `Page ${i} of ${pageCount} | SmartChef (c) 2026`,
         pageWidth / 2,
         doc.internal.pageSize.getHeight() - 10,
         { align: 'center' }
@@ -336,7 +402,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                             setShowNavDropdown(false);
                           }}
                         >
-                          📊 Istoric
+                          📊 History
                         </button>
                         <button
                           className="nav-dropdown-item"
@@ -345,7 +411,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                             setShowNavDropdown(false);
                           }}
                         >
-                          🎯 Obiective
+                          🎯 Goals
                         </button>
                       </div>
                     )}
@@ -368,7 +434,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                       background: "rgba(255,255,255,0.2)",
                       position: "relative"
                     }}
-                    title="Notificări"
+                    title="Notifications"
                   >
                     🔔
                     {unreadCount > 0 && (
@@ -417,9 +483,9 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     </button>
                     {showUserDropdown && (
                       <div className="user-dropdown">
-                        <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
+                        <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
                           <span className="dropdown-icon">👤</span>
-                          Profil
+                          Profile
                         </button>
                         
                         <button className="user-dropdown-item" onClick={() => {
@@ -427,7 +493,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">📊</span>
-                          Date personale
+                          Personal Data
                         </button>
                         
                         <button className="user-dropdown-item" onClick={() => {
@@ -435,7 +501,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">🔑</span>
-                          Setările contului
+                          Account Settings
                         </button>
 
                         <button className="user-dropdown-item" onClick={() => {
@@ -443,7 +509,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           setShowUserDropdown(false);
                         }}>
                           <span className="dropdown-icon">⚙️</span>
-                          Setări aplicație
+                          App Settings
                         </button>
                         
                         <div className="user-dropdown-divider"></div>
@@ -481,7 +547,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             gap: "0.5rem"
           }}
         >
-          ← Înapoi la pagina principală
+          ← Back to Home
         </button>
 
         <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
@@ -492,7 +558,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             textAlign: "center",
             fontWeight: "700"
           }}>
-            📸 Încarcă o imagine cu mâncare
+            📸 Upload a Food Image
           </h2>
 
           <input
@@ -507,11 +573,11 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             <label htmlFor="file-upload" className="upload-area">
               <div className="upload-icon">📁</div>
               <p style={{ fontSize: "1.1rem", color: "#666", marginBottom: "0.5rem" }}>
-                Click pentru a selecta o imagine
+                Click to select an image
               </p>
               <p style={{ fontSize: "0.9rem", color: "#999", display: "flex", alignItems: "center", gap: "4px", justifyContent: "center" }}>
-                Acceptăm JPG, PNG, JPEG
-                <InfoIcon text="Poți încărca imagini în format JPG, PNG sau JPEG. Dimensiunea maximă recomandată este 10MB. Pentru cele mai bune rezultate, asigură-te că imaginea este luminoasă și ingredientele sunt vizibile." />
+                We accept JPG, PNG, JPEG
+                <InfoIcon text="You can upload images in JPG, PNG or JPEG format. The maximum recommended size is 10MB. For best results, make sure the image is bright and the ingredients are visible." />
               </p>
             </label>
           ) : (
@@ -528,21 +594,21 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   fontWeight: "600",
                   fontSize: "1rem"
                 }}>
-                  🔄 Schimbă imaginea
+                  🔄 Change Image
                 </div>
               </label>
             </div>
           )}
 
           <CustomTooltip 
-            text="Analizează imaginea și obține informații nutriționale detaliate"
+            text="Analyze the image and get detailed nutritional information"
             position="top"
           >
             <button
               className="btn btn-primary"
               onClick={analyzeFood}
               disabled={loading || !selectedFile}
-              aria-label="Analizează alimentul (Enter)"
+              aria-label="Analyze food (Enter)"
               style={{
                 width: "100%",
                 padding: "1.2rem",
@@ -556,9 +622,9 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 gap: "0.5rem"
               }}
             >
-              {loading ? "🔄 Se analizează..." : (
+              {loading ? "🔄 Analyzing..." : (
                 <>
-                  🔍 Analizează Alimentul
+                  🔍 Analyze Food
                   <ShortcutBadge shortcut="Enter" />
                 </>
               )}
@@ -574,7 +640,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             <div style={{ textAlign: "center", padding: "2rem 0" }}>
               <div className="spinner" style={{ margin: "0 auto" }}></div>
               <p style={{ marginTop: "1rem", color: "#666", fontSize: "1rem" }}>
-                Se analizează imaginea...
+                Analyzing image...
               </p>
               <div style={{ marginTop: "2rem" }}>
                 <div className="skeleton skeleton-text" style={{ height: "30px", marginBottom: "1rem" }}></div>
@@ -588,7 +654,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
           {results && results.status === "success" && (
             <div className="results-container" style={{ animation: "fadeIn 0.8s ease-out" }}>
               <div className="results-header">
-                ✅ Rezultate Analiză
+                ✅ Analysis Results
               </div>
 
               {results.analysis_id && (
@@ -599,7 +665,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   marginBottom: "1rem",
                   fontWeight: "600"
                 }}>
-                  💾 Analiza a fost salvată în istoric!
+                  💾 Analysis saved to history!
                 </p>
               )}
 
@@ -630,32 +696,91 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
               <div style={{ marginBottom: "2rem" }}>
                 <h3 style={{ fontSize: "1.3rem", marginBottom: "1rem", color: "#2e7d32" }}>
-                  🥗 Ingrediente Detectate ({results.ingredients.length}):
+                  🥗 Detected Ingredients ({editedIngredients.length}):
                 </h3>
                 <div>
-                  {results.ingredients.map((ingredient, index) => (
-                    <span 
-                      key={index} 
-                      className="ingredient-badge clickable"
-                      onClick={() => handleIngredientClick(ingredient)}
-                      title="Click pentru detalii nutriționale"
+                  {editedIngredients.map((ingredient, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        margin: "0.4rem"
+                      }}
                     >
-                      {ingredient}
-                    </span>
+                      <span 
+                        className="ingredient-badge clickable"
+                        onClick={() => handleIngredientClick(ingredient)}
+                        title="Click for nutritional details"
+                        style={{
+                          display: "inline-block"
+                        }}
+                      >
+                        {ingredient}
+                      </span>
+                      <button
+                        onClick={() => deleteIngredient(ingredient)}
+                        style={{
+                          background: "#ff6b35",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "28px",
+                          height: "28px",
+                          cursor: "pointer",
+                          fontSize: "1rem",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "0",
+                          fontWeight: "bold",
+                          transition: "all 0.3s ease"
+                        }}
+                        onMouseOver={(e) => e.target.style.background = "#e55a24"}
+                        onMouseOut={(e) => e.target.style.background = "#ff6b35"}
+                        title="Delete ingredient"
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))}
                 </div>
+                <button
+                  onClick={() => setShowAddIngredientModal(true)}
+                  style={{
+                    marginTop: "1rem",
+                    background: "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "0.7rem 1.5rem",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    transition: "all 0.3s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem"
+                  }}
+                  onMouseOver={(e) => e.target.style.background = "#45a049"}
+                  onMouseOut={(e) => e.target.style.background = "#4CAF50"}
+                  title="Add ingredient"
+                >
+                  ➕ Add Ingredient
+                </button>
               </div>
 
               {/* Grafice Nutriționale */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem", marginBottom: "2rem" }}>
-                {/* Pie Chart - Macronutrienți */}
+                {/* Pie Chart - Macronutrients */}
                 <div className="nutrition-box" style={{ padding: "1.5rem" }}>
                   <h4 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "#333", textAlign: "center" }}>
-                    🥧 Distribuție Macronutrienți
+                    🥧 Macronutrient Distribution
                   </h4>
                   <Pie 
                     data={{
-                      labels: ['Proteine', 'Carbohidrați', 'Grăsimi'],
+                      labels: ['Protein', 'Carbohydrates', 'Fat'],
                       datasets: [{
                         data: [
                           results.nutrition.total_nutrition.protein,
@@ -696,13 +821,13 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 {/* Bar Chart - Comparație Ingrediente */}
                 <div className="nutrition-box" style={{ padding: "1.5rem" }}>
                   <h4 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "#333", textAlign: "center" }}>
-                    📊 Calorii pe Ingredient
+                    📊 Calories per Ingredient
                   </h4>
                   <Bar 
                     data={{
                       labels: results.ingredients.map(ing => ing.charAt(0).toUpperCase() + ing.slice(1)),
                       datasets: [{
-                        label: 'Calorii (kcal)',
+                        label: 'Calories (kcal)',
                         data: results.ingredients.map(ing => {
                           const indNut = results.nutrition.individual_nutrition?.[ing.toLowerCase()];
                           return indNut?.calories || 0;
@@ -724,7 +849,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           beginAtZero: true,
                           title: {
                             display: true,
-                            text: 'Calorii (kcal)'
+                            text: 'Calories (kcal)'
                           }
                         }
                       }
@@ -735,13 +860,13 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
               <div className="nutrition-box">
                 <h3 style={{ fontSize: "1.3rem", marginBottom: "1.5rem", color: "#ff6b35", textAlign: "center" }}>
-                  📊 Valori Nutriționale Totale
+                  📊 Total Nutritional Values
                 </h3>
 
-                {/* Progress Bars pentru nutriție */}
+                {/* Progress Bars for nutrition */}
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🔥 Calorii</span>
+                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🔥 Calories</span>
                     <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#ff6b35" }}>
                       {Number(results.nutrition.total_nutrition.calories).toFixed(2)} kcal
                     </span>
@@ -765,7 +890,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>💪 Proteine</span>
+                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>💪 Protein</span>
                     <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#4CAF50" }}>
                       {Number(results.nutrition.total_nutrition.protein).toFixed(2)}g
                     </span>
@@ -789,7 +914,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🍞 Carbohidrați</span>
+                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🍞 Carbohydrates</span>
                     <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#2196F3" }}>
                       {Number(results.nutrition.total_nutrition.carbs).toFixed(2)}g
                     </span>
@@ -813,7 +938,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🥑 Grăsimi</span>
+                    <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🥑 Fat</span>
                     <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#FFC107" }}>
                       {Number(results.nutrition.total_nutrition.fat).toFixed(2)}g
                     </span>
@@ -859,27 +984,27 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   </div>
                 </div>
 
-                {/* Butoane Download */}
+                {/* Download Buttons */}
                 <div style={{ display: "flex", gap: "1rem", marginTop: "2rem", justifyContent: "center" }}>
                   <CustomTooltip 
-                    text="Generează un raport PDF detaliat cu analiza nutrițională"
+                    text="Generate a detailed PDF report with nutritional analysis"
                     position="top"
                   >
                     <button
                       className="btn btn-primary"
                       onClick={generatePDF}
-                      aria-label="Descarcă raport PDF"
+                      aria-label="Download PDF report"
                       style={{ 
                         flex: 1,
                         padding: "1rem",
                         fontSize: "1rem"
                       }}
                     >
-                      📝 Descarcă Raport PDF
+                      📝 Download PDF Report
                     </button>
                   </CustomTooltip>
                   <CustomTooltip 
-                    text="Exportă datele brute în format JSON pentru procesare ulterioară"
+                    text="Export raw data in JSON format for further processing"
                     position="top"
                   >
                     <button
@@ -894,7 +1019,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                         link.click();
                         URL.revokeObjectURL(url);
                       }}
-                      aria-label="Descarcă JSON"
+                      aria-label="Download JSON"
                       style={{ 
                         flex: 1,
                         padding: "1rem",
@@ -903,7 +1028,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                         fontWeight: "600"
                       }}
                     >
-                      📊 Descarcă JSON
+                      📊 Download JSON
                     </button>
                   </CustomTooltip>
                 </div>
@@ -923,7 +1048,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             <h2 className="modal-title">
               🥗 {selectedIngredient.name.charAt(0).toUpperCase() + selectedIngredient.name.slice(1)}
             </h2>
-            <div className="modal-subtitle">Valori Nutriționale (per 100g)</div>
+            <div className="modal-subtitle">Nutritional Values (per 100g)</div>
             
             <div className="modal-nutrition-bars">
               <div className="modal-nutrition-item">
@@ -954,7 +1079,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
               <div className="modal-nutrition-item">
                 <div className="modal-nutrition-label">
-                  <span>🍞 Carbohidrați</span>
+                  <span>🍞 Carbohydrates</span>
                   <span className="modal-nutrition-value">{Number(selectedIngredient.nutrition.carbs).toFixed(2)}g</span>
                 </div>
                 <div className="modal-progress-bar">
@@ -995,22 +1120,108 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
         </div>
       )}
 
+      {/* Add Ingredient Modal */}
+      {showAddIngredientModal && (
+        <div className="ingredient-modal-overlay" onClick={() => setShowAddIngredientModal(false)}>
+          <div className="ingredient-modal" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="modal-close" 
+              onClick={() => {
+                setShowAddIngredientModal(false);
+                setNewIngredientName("");
+              }}
+            >
+              ✕
+            </button>
+            <h2 className="modal-title">➕ Add Ingredient</h2>
+            <div className="modal-subtitle">Enter ingredient name</div>
+            
+            <div style={{ padding: "1rem 0" }}>
+              <input
+                type="text"
+                value={newIngredientName}
+                onChange={(e) => setNewIngredientName(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddIngredient();
+                  }
+                }}
+                placeholder="e.g. broccoli, apple, rice..."
+                style={{
+                  width: "100%",
+                  padding: "0.8rem",
+                  fontSize: "1rem",
+                  border: "2px solid #ff6b35",
+                  borderRadius: "8px",
+                  boxSizing: "border-box",
+                  marginBottom: "1rem"
+                }}
+              />
+              
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <button
+                  onClick={handleAddIngredient}
+                  style={{
+                    flex: 1,
+                    background: "#4CAF50",
+                    color: "white",
+                    border: "none",
+                    padding: "0.8rem",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    transition: "all 0.3s ease"
+                  }}
+                  onMouseOver={(e) => e.target.style.background = "#45a049"}
+                  onMouseOut={(e) => e.target.style.background = "#4CAF50"}
+                >
+                  ✓ Add
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddIngredientModal(false);
+                    setNewIngredientName("");
+                  }}
+                  style={{
+                    flex: 1,
+                    background: "#f44336",
+                    color: "white",
+                    border: "none",
+                    padding: "0.8rem",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "1rem",
+                    fontWeight: "600",
+                    transition: "all 0.3s ease"
+                  }}
+                  onMouseOver={(e) => e.target.style.background = "#da190b"}
+                  onMouseOut={(e) => e.target.style.background = "#f44336"}
+                >
+                  ✕ Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Action Button with Expandable Menu */}
       <div className="fab-container">
         {/* Menu Items (appear when expanded) */}
         <button
           className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
           onClick={toggleDarkMode}
-          aria-label={darkMode ? "Mod luminos" : "Mod întunecat"}
-          title={darkMode ? "Comută la Mod Luminos" : "Comută la Mod întunecat"}
+          aria-label={darkMode ? "Light Mode" : "Dark Mode"}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {darkMode ? "☀️" : "🌙"}
         </button>
         <button
           className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
           onClick={handleSettings}
-          aria-label="Setări"
-          title="Setări Aplicație"
+          aria-label="Settings"
+          title="App Settings"
         >
           ⚙️
         </button>
@@ -1036,7 +1247,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
           className={`fab-main ${showFabMenu ? 'active' : ''}`}
           onClick={() => setShowFabMenu(!showFabMenu)}
           aria-label="Menu"
-          title="Meniu acțiuni rapide"
+          title="Quick Actions Menu"
         >
           <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
         </button>
@@ -1047,9 +1258,9 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
         <ShortcutsHelp 
           onClose={() => setShowShortcuts(false)}
           customShortcuts={{
-            'u': { description: 'Declanșează încărcare imagine', action: 'upload-image' },
-            'Enter': { description: 'Analizează imaginea încărcată', action: 'submit' },
-            'Escape': { description: 'Închide modal-uri / Anulează', action: 'cancel' }
+            'u': { description: 'Trigger image upload', action: 'upload-image' },
+            'Enter': { description: 'Analyze the uploaded image', action: 'submit' },
+            'Escape': { description: 'Close modals / Cancel', action: 'cancel' }
           }}
         />
       )}    </div>
