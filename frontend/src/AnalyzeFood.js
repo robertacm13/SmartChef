@@ -236,7 +236,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     const now = new Date();
     
     // Header
-    doc.setFillColor(255, 107, 53);
+    doc.setFillColor(59, 130, 246);
     doc.rect(0, 0, pageWidth, 40, 'F');
     
     doc.setTextColor(255, 255, 255);
@@ -256,7 +256,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     if (results.food_name && results.food_name !== "unknown") {
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(255, 107, 53);
+      doc.setTextColor(59, 130, 246);
       doc.text('🍽️ ' + results.food_name.replace(/_/g, ' ').toUpperCase(), 15, yPos);
       doc.setTextColor(100, 100, 100);
       doc.setFontSize(10);
@@ -303,7 +303,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       head: [nutritionData[0]],
       body: nutritionData.slice(1),
       theme: 'grid',
-      headStyles: { fillColor: [255, 107, 53], textColor: 255, font: 'helvetica' },
+      headStyles: { fillColor: [59, 130, 246], textColor: 255, font: 'helvetica' },
       styles: { fontSize: 10, font: 'helvetica' },
       margin: { left: 15, right: 15 }
     });
@@ -336,7 +336,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
         head: [['Ingredient', 'Calories', 'Protein', 'Carbohydrates', 'Fat']],
         body: individualData,
         theme: 'striped',
-        headStyles: { fillColor: [255, 107, 53], textColor: 255, font: 'helvetica' },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, font: 'helvetica' },
         styles: { fontSize: 9, font: 'helvetica' },
         margin: { left: 15, right: 15 }
       });
@@ -442,7 +442,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                         position: "absolute",
                         top: "-5px",
                         right: "-5px",
-                        background: "#ff6b35",
+                        background: "#3B82F6",
                         color: "white",
                         borderRadius: "50%",
                         width: "24px",
@@ -554,7 +554,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
           <h2 style={{ 
             fontSize: "2rem", 
             marginBottom: "2rem", 
-            color: "#ff6b35",
+            color: "#3B82F6",
             textAlign: "center",
             fontWeight: "700"
           }}>
@@ -590,7 +590,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   textAlign: "center",
                   marginTop: "1rem",
                   cursor: "pointer",
-                  color: "#ff6b35",
+                  color: "#3B82F6",
                   fontWeight: "600",
                   fontSize: "1rem"
                 }}>
@@ -660,7 +660,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
               {results.analysis_id && (
                 <p style={{ 
                   textAlign: "center", 
-                  color: "#4CAF50", 
+                  color: "#3B82F6", 
                   fontSize: "0.9rem",
                   marginBottom: "1rem",
                   fontWeight: "600"
@@ -676,12 +676,12 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   padding: "1rem", 
                   borderRadius: "12px", 
                   marginBottom: "1.5rem",
-                  border: "2px solid #ff9800"
+                  border: "2px solid #3B82F6"
                 }}>
                   <h2 style={{ 
                     fontSize: "1.8rem", 
                     margin: "0", 
-                    color: "#ff6b35",
+                    color: "#3B82F6",
                     textTransform: "capitalize"
                   }}>
                     🍽️ {results.food_name.replace(/_/g, ' ')}
@@ -722,7 +722,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                       <button
                         onClick={() => deleteIngredient(ingredient)}
                         style={{
-                          background: "#ff6b35",
+                          background: "#3B82F6",
                           color: "white",
                           border: "none",
                           borderRadius: "50%",
@@ -738,7 +738,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           transition: "all 0.3s ease"
                         }}
                         onMouseOver={(e) => e.target.style.background = "#e55a24"}
-                        onMouseOut={(e) => e.target.style.background = "#ff6b35"}
+                        onMouseOut={(e) => e.target.style.background = "#3B82F6"}
                         title="Delete ingredient"
                       >
                         ×
@@ -750,7 +750,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   onClick={() => setShowAddIngredientModal(true)}
                   style={{
                     marginTop: "1rem",
-                    background: "#4CAF50",
+                    background: "#3B82F6",
                     color: "white",
                     border: "none",
                     padding: "0.7rem 1.5rem",
@@ -764,7 +764,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     gap: "0.5rem"
                   }}
                   onMouseOver={(e) => e.target.style.background = "#45a049"}
-                  onMouseOut={(e) => e.target.style.background = "#4CAF50"}
+                  onMouseOut={(e) => e.target.style.background = "#3B82F6"}
                   title="Add ingredient"
                 >
                   ➕ Add Ingredient
@@ -832,8 +832,8 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           const indNut = results.nutrition.individual_nutrition?.[ing.toLowerCase()];
                           return indNut?.calories || 0;
                         }),
-                        backgroundColor: 'rgba(255, 107, 53, 0.7)',
-                        borderColor: 'rgba(255, 107, 53, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
                         borderWidth: 2
                       }]
                     }}
@@ -859,7 +859,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
               </div>
 
               <div className="nutrition-box">
-                <h3 style={{ fontSize: "1.3rem", marginBottom: "1.5rem", color: "#ff6b35", textAlign: "center" }}>
+                <h3 style={{ fontSize: "1.3rem", marginBottom: "1.5rem", color: "#3B82F6", textAlign: "center" }}>
                   📊 Total Nutritional Values
                 </h3>
 
@@ -867,7 +867,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🔥 Calories</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#ff6b35" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#3B82F6" }}>
                       {Number(results.nutrition.total_nutrition.calories).toFixed(2)} kcal
                     </span>
                   </div>
@@ -881,7 +881,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.calories / 800) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #ff6b35, #ff8c42)",
+                      background: "linear-gradient(90deg, #3B82F6, #2563EB)",
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -891,7 +891,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>💪 Protein</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#4CAF50" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#3B82F6" }}>
                       {Number(results.nutrition.total_nutrition.protein).toFixed(2)}g
                     </span>
                   </div>
@@ -905,7 +905,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.protein / 50) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #4CAF50, #66BB6A)",
+                      background: "linear-gradient(90deg, #3B82F6, #66BB6A)",
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -939,7 +939,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🥑 Fat</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#FFC107" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#3B82F6" }}>
                       {Number(results.nutrition.total_nutrition.fat).toFixed(2)}g
                     </span>
                   </div>
@@ -953,7 +953,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.fat / 50) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #FFC107, #FFD54F)",
+                      background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -1024,7 +1024,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                         flex: 1,
                         padding: "1rem",
                         fontSize: "1rem",
-                        color: "#ff6b35",
+                        color: "#3B82F6",
                         fontWeight: "600"
                       }}
                     >
@@ -1151,7 +1151,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   width: "100%",
                   padding: "0.8rem",
                   fontSize: "1rem",
-                  border: "2px solid #ff6b35",
+                  border: "2px solid #3B82F6",
                   borderRadius: "8px",
                   boxSizing: "border-box",
                   marginBottom: "1rem"
@@ -1163,7 +1163,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   onClick={handleAddIngredient}
                   style={{
                     flex: 1,
-                    background: "#4CAF50",
+                    background: "#3B82F6",
                     color: "white",
                     border: "none",
                     padding: "0.8rem",
@@ -1174,7 +1174,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     transition: "all 0.3s ease"
                   }}
                   onMouseOver={(e) => e.target.style.background = "#45a049"}
-                  onMouseOut={(e) => e.target.style.background = "#4CAF50"}
+                  onMouseOut={(e) => e.target.style.background = "#3B82F6"}
                 >
                   ✓ Add
                 </button>
@@ -1268,3 +1268,6 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 }
 
 export default AnalyzeFood;
+
+
+

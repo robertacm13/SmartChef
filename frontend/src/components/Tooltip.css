@@ -122,12 +122,13 @@ body.dark-mode .tooltip-arrow-right {
 
 /* Info icon hover effect */
 .info-icon:hover {
-  background: rgba(255, 107, 53, 0.2);
+  background: rgba(59, 130, 246, 0.2);
   transform: scale(1.1);
   transition: all 0.2s ease;
 }
 
 .info-icon:focus {
-  outline: 2px solid var(--primary, #ff6b35);
+  outline: 2px solid var(--primary, #3B82F6);
   outline-offset: 2px;
 }
+

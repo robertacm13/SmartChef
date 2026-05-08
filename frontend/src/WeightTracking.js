@@ -275,7 +275,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -314,32 +314,32 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
 
       {/* Main Content */}
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem" }}>
-        <button className="btn btn-secondary" onClick={onBack} style={{ marginBottom: "2rem" }}>← Înapoi</button>
+        <button className="btn btn-secondary" onClick={onBack} style={{ marginBottom: "2rem" }}>← Back</button>
 
         <div className="card" style={{ padding: "2rem", marginBottom: "1.5rem", textAlign: "center" }}>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>⚖️ Tracking Greutate</h1>
-          <p style={{ color: "#666", fontSize: "1rem" }}>Monitorizează-ți evoluția greutății în timp</p>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>⚖️ Weight Tracking</h1>
+          <p style={{ color: "#666", fontSize: "1rem" }}>Monitor your weight progress over time</p>
         </div>
 
         {/* Stats Cards */}
         {stats && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
             <div className="stat-card">
-              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Greutate curentă</div>
-              <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--primary, #ff6b35)" }}>{stats.current} kg</div>
+              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Current Weight</div>
+              <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--primary, #3B82F6)" }}>{stats.current} kg</div>
             </div>
             <div className="stat-card">
-              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Schimbare totală</div>
+              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Total Change</div>
               <div style={{ fontSize: "2.2rem", fontWeight: "800", color: stats.change >= 0 ? "#f44336" : "#4caf50" }}>
                 {stats.change > 0 ? "+" : ""}{stats.change.toFixed(1)} kg
               </div>
             </div>
             <div className="stat-card">
-              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Media generală</div>
+              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Average</div>
               <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#2196f3" }}>{stats.average.toFixed(1)} kg</div>
             </div>
             <div className="stat-card">
-              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Total măsurători</div>
+              <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>Total Entries</div>
               <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#9c27b0" }}>{entries.length}</div>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
         {/* Chart */}
         {chartData && (
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>📈 Evoluție în timp</h3>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>📈 Progress Over Time</h3>
             <div style={{ height: "300px" }}>
               <Line data={chartData} options={chartOptions} />
             </div>
@@ -357,10 +357,10 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
 
         {/* Add New Entry */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>➕ Adaugă o nouă măsurătoare</h3>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>➕ Add New Entry</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr auto", gap: "1rem", alignItems: "end" }}>
             <div>
-              <label className="form-label">Greutate (kg)</label>
+              <label className="form-label">Weight (kg)</label>
               <input 
                 type="number" 
                 step="0.1" 
@@ -371,7 +371,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
               />
             </div>
             <div>
-              <label className="form-label">Dată</label>
+              <label className="form-label">Date</label>
               <input 
                 type="date" 
                 className="form-input" 
@@ -380,13 +380,13 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
               />
             </div>
             <div>
-              <label className="form-label">Notițe (opțional)</label>
+              <label className="form-label">Notes (optional)</label>
               <input 
                 type="text" 
                 className="form-input" 
                 value={newNotes} 
                 onChange={(e) => setNewNotes(e.target.value)}
-                placeholder="Ex: Dimineață, după mic dejun"
+                placeholder="Ex: Morning, after breakfast"
               />
             </div>
             <button 
@@ -395,7 +395,7 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
               disabled={adding}
               style={{ height: "fit-content", padding: "0.7rem 1.5rem" }}
             >
-              {adding ? "..." : "Adaugă"}
+              {adding ? "..." : "Add"}
             </button>
           </div>
         </div>
@@ -410,12 +410,12 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
 
         {/* History Table */}
         <div className="card" style={{ padding: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>📋 Istoric măsurători</h3>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>📋 Entry History</h3>
           {entries.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem", color: "#888" }}>
               <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>📭</p>
-              <p>Nu ai încă măsurători înregistrate</p>
-              <p style={{ fontSize: "0.9rem" }}>Adaugă prima măsurătoare mai sus pentru a începe!</p>
+              <p>No entries recorded yet</p>
+              <p style={{ fontSize: "0.9rem" }}>Add your first entry above to get started!</p>
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -485,3 +485,4 @@ export default function WeightTracking({ userEmail, onBack, onLogout, onNavigate
     </div>
   );
 }
+

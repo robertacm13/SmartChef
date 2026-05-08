@@ -143,9 +143,9 @@ export default function Notifications({
   const getNotificationColor = (type) => {
     switch (type) {
       case "analysis_complete":
-        return "#4CAF50";
+        return "#3B82F6";
       case "goal_achieved":
-        return "#ff6b35";
+        return "#3B82F6";
       case "daily_reminder":
         return "#2196F3";
       case "weight_reminder":
@@ -228,7 +228,7 @@ export default function Notifications({
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -312,7 +312,7 @@ export default function Notifications({
 
       <main id="main-content" style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#ff6b35", marginBottom: "0.5rem" }}>
+          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#3B82F6", marginBottom: "0.5rem" }}>
             🔔 Notifications
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
@@ -334,7 +334,7 @@ export default function Notifications({
               className="btn btn-outline"
               onClick={() => setFilterType(type)}
               style={{
-                background: filterType === type ? "#ff6b35" : "transparent",
+                background: filterType === type ? "#3B82F6" : "transparent",
                 color: filterType === type ? "white" : "#666",
                 border: filterType === type ? "none" : "2px solid #ddd"
               }}
@@ -347,7 +347,7 @@ export default function Notifications({
         {/* Error Message */}
         {error && (
           <div style={{
-            background: "#ffebee",
+            background: "#F0F9FF",
             border: "2px solid #f44336",
             color: "#c62828",
             padding: "1rem",
@@ -413,7 +413,7 @@ export default function Notifications({
                           display: "inline-block",
                           width: "8px",
                           height: "8px",
-                          background: "#ff6b35",
+                          background: "#3B82F6",
                           borderRadius: "50%",
                           marginLeft: "0.5rem"
                         }}></span>
@@ -469,3 +469,6 @@ export default function Notifications({
     </div>
   );
 }
+
+
+

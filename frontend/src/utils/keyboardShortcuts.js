@@ -174,3 +174,4 @@ export function ShortcutBadge({ shortcut }) {
     </span>
   );
 }
+

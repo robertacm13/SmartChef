@@ -30,8 +30,8 @@
 }
 
 .error-warning {
-  background: #fff3cd;
-  border-left-color: #ff6b35;
+  background: #eff6ff;
+  border-left-color: #3B82F6;
 }
 
 .error-info {
@@ -46,8 +46,8 @@ body.dark-mode .error-error {
 }
 
 body.dark-mode .error-warning {
-  background: rgba(255, 107, 53, 0.1);
-  border-left-color: #ff8c42;
+  background: rgba(59, 130, 246, 0.1);
+  border-left-color: #60A5FA;
 }
 
 body.dark-mode .error-info {
@@ -121,24 +121,24 @@ body.dark-mode .error-tips {
 }
 
 .error-action-btn.primary {
-  background: var(--primary, #ff6b35);
+  background: var(--primary, #3B82F6);
   color: white;
 }
 
 .error-action-btn.primary:hover {
-  background: var(--accent, #ff8c42);
+  background: var(--accent, #60A5FA);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .error-action-btn.secondary {
   background: transparent;
-  color: var(--primary, #ff6b35);
-  border: 1px solid var(--primary, #ff6b35);
+  color: var(--primary, #3B82F6);
+  border: 1px solid var(--primary, #3B82F6);
 }
 
 .error-action-btn.secondary:hover {
-  background: rgba(255, 107, 53, 0.1);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 /* Inline error (pentru formulare) */
@@ -169,3 +169,4 @@ body.dark-mode .inline-error {
 .inline-error-icon {
   font-size: 16px;
 }
+

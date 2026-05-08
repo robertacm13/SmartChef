@@ -260,7 +260,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
         <div style={{ marginBottom: "0.8rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
             <span style={{ fontSize: "0.9rem", color: "#666" }}>🔥 Calorii</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#ff6b35" }}>
+            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.calories).toFixed(2)} kcal
             </span>
           </div>
@@ -274,7 +274,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <div style={{ 
               width: `${Math.min((totalNutrition.calories / maxCalories) * 100, 100)}%`, 
               height: "100%", 
-              background: "linear-gradient(90deg, #ff6b35, #ff8c42)",
+              background: "linear-gradient(90deg, #3B82F6, #2563EB)",
               transition: "width 0.5s ease"
             }}></div>
           </div>
@@ -283,7 +283,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
         <div style={{ marginBottom: "0.8rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
             <span style={{ fontSize: "0.9rem", color: "#666" }}>💪 Proteine</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#4CAF50" }}>
+            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.protein).toFixed(2)}g
             </span>
           </div>
@@ -297,7 +297,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <div style={{ 
               width: `${Math.min((totalNutrition.protein / maxProtein) * 100, 100)}%`, 
               height: "100%", 
-              background: "linear-gradient(90deg, #4CAF50, #66BB6A)",
+              background: "linear-gradient(90deg, #3B82F6, #66BB6A)",
               transition: "width 0.5s ease"
             }}></div>
           </div>
@@ -329,7 +329,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
             <span style={{ fontSize: "0.9rem", color: "#666" }}>🥑 Grăsimi</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#FFC107" }}>
+            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.fat).toFixed(2)}g
             </span>
           </div>
@@ -343,7 +343,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <div style={{ 
               width: `${Math.min((totalNutrition.fat / maxFat) * 100, 100)}%`, 
               height: "100%", 
-              background: "linear-gradient(90deg, #FFC107, #FFD54F)",
+              background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
               transition: "width 0.5s ease"
             }}></div>
           </div>
@@ -385,7 +385,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -515,7 +515,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
       {/* Main Content Area - Accessible landmark */}
       <main id="main-content" style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#ff6b35", marginBottom: "0.5rem" }}>
+          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#3B82F6", marginBottom: "0.5rem" }}>
             📊 Istoricul Analizelor
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
@@ -709,7 +709,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
               top: "0",
               bottom: "0",
               width: "3px",
-              background: "linear-gradient(180deg, #ff6b35, #ff8c42)",
+              background: "linear-gradient(180deg, #3B82F6, #2563EB)",
               borderRadius: "10px"
             }}></div>
 
@@ -730,10 +730,10 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                   top: "20px",
                   width: "16px",
                   height: "16px",
-                  background: "#ff6b35",
+                  background: "#3B82F6",
                   borderRadius: "50%",
                   border: "3px solid white",
-                  boxShadow: "0 0 0 3px #ff6b35"
+                  boxShadow: "0 0 0 3px #3B82F6"
                 }}></div>
 
                 <div
@@ -820,7 +820,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                         </button>
                       </Tooltip>
                       <span style={{
-                        background: "linear-gradient(135deg, #ff6b35, #ff8c42)",
+                        background: "linear-gradient(135deg, #3B82F6, #2563EB)",
                         color: "white",
                         padding: "0.3rem 0.8rem",
                         borderRadius: "20px",
@@ -1015,3 +1015,10 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
     </div>
   );
 }
+
+
+
+
+
+
+

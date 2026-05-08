@@ -63,12 +63,12 @@ export function InfoIcon({ text, size = '16px' }) {
           height: size,
           borderRadius: '50%',
           background: 'var(--bg)',
-          color: 'var(--primary, #ff6b35)',
+          color: 'var(--primary, #3B82F6)',
           fontSize: '12px',
           fontWeight: 'bold',
           cursor: 'help',
           marginLeft: '6px',
-          border: '1px solid var(--accent, rgba(255, 107, 53, 0.5))'
+          border: '1px solid var(--accent, rgba(59, 130, 246, 0.5))'
         }}
         aria-label="Informații suplimentare"
         tabIndex="0"
@@ -78,3 +78,4 @@ export function InfoIcon({ text, size = '16px' }) {
     </Tooltip>
   );
 }
+

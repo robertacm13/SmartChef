@@ -116,8 +116,8 @@ body.dark-mode .tutorial-skip-btn:hover {
 }
 
 body.dark-mode .tutorial-title {
-  color: #ff8c42;
-  text-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+  color: #2563EB;
+  text-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
 }
 
 .tutorial-main-content {
@@ -169,11 +169,11 @@ body.dark-mode .tutorial-description {
 }
 
 .tutorial-dot.active {
-  background: var(--primary, #ff6b35);
+  background: var(--primary, #3B82F6);
   width: 32px;
   border-radius: 6px;
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .tutorial-dot.completed {
@@ -189,7 +189,7 @@ body.dark-mode .tutorial-dot:hover {
 }
 
 body.dark-mode .tutorial-dot.active {
-  background: #ff6b35;
+  background: #3B82F6;
 }
 
 body.dark-mode .tutorial-dot.completed {
@@ -219,14 +219,14 @@ body.dark-mode .tutorial-dot.completed {
 }
 
 .tutorial-btn-primary {
-  background: linear-gradient(135deg, var(--primary, #ff6b35) 0%, #ff8c42 100%);
+  background: linear-gradient(135deg, var(--primary, #3B82F6) 0%, #2563EB 100%);
   color: white;
-  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
 }
 
 .tutorial-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
 }
 
 .tutorial-btn-primary:active {
@@ -328,7 +328,7 @@ body.dark-mode .tutorial-btn-secondary:hover {
 .tutorial-skip-btn:focus,
 .tutorial-dot:focus,
 .tutorial-btn:focus {
-  outline: 3px solid var(--primary, #ff6b35);
+  outline: 3px solid var(--primary, #3B82F6);
   outline-offset: 2px;
 }
 
@@ -347,3 +347,4 @@ body.dark-mode .tutorial-btn-secondary:hover {
     transform: translateX(0);
   }
 }
+

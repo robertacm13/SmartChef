@@ -52,7 +52,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
         <div className="card" style={{ padding: "2.5rem" }}>
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔐</div>
-            <h1 style={{ fontSize: "2rem", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>
+            <h1 style={{ fontSize: "2rem", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>
               Password Recovery
             </h1>
             <p style={{ color: "#666", fontSize: "0.95rem" }}>
@@ -67,7 +67,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
               <div
                 style={{
                   background: "#e8f5e9",
-                  border: "2px solid #4CAF50",
+                  border: "2px solid #3B82F6",
                   padding: "1.5rem",
                   borderRadius: "10px",
                   marginBottom: "2rem",
@@ -95,7 +95,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
               {error && (
                 <div
                   style={{
-                    background: "#ffebee",
+                    background: "#F0F9FF",
                     border: "2px solid #f44336",
                     color: "#c62828",
                     padding: "1rem",
@@ -112,7 +112,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
                 <div
                   style={{
                     background: "#e8f5e9",
-                    border: "2px solid #4CAF50",
+                    border: "2px solid #3B82F6",
                     color: "#2e7d32",
                     padding: "1rem",
                     borderRadius: "8px",
@@ -161,3 +161,10 @@ export default function ForgotPassword({ onBack, onNavigate }) {
     </div>
   );
 }
+
+
+
+
+
+
+

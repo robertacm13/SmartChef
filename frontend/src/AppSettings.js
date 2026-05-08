@@ -9,12 +9,12 @@ const THEMES = [
     name: "Orange",
     emoji: "🟠",
     description: "Default theme",
-    primary: "#ff6b35",
-    accent: "#ff8c42",
-    bg: "#ffecd1",
-    headerFrom: "#ff8c42",
-    headerTo: "#ff6b35",
-    fabColor: "#ff6b35",
+    primary: "#3B82F6",
+    accent: "#2563EB",
+    bg: "#F0F9FF",
+    headerFrom: "#2563EB",
+    headerTo: "#3B82F6",
+    fabColor: "#3B82F6",
   },
   {
     id: "forest",
@@ -312,7 +312,7 @@ export default function AppSettings({
                       position: "absolute",
                       top: "-5px",
                       right: "-5px",
-                      background: "#ff6b35",
+                      background: "#3B82F6",
                       color: "white",
                       borderRadius: "50%",
                       width: "24px",
@@ -435,7 +435,7 @@ export default function AppSettings({
             style={{
               fontSize: "2rem",
               fontWeight: "700",
-              color: "var(--primary, #ff6b35)",
+              color: "var(--primary, #3B82F6)",
               marginBottom: "0.5rem",
             }}
           >
@@ -681,3 +681,6 @@ export default function AppSettings({
     </div>
   );
 }
+
+
+

@@ -420,7 +420,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -516,7 +516,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
           <h2 style={{ 
             fontSize: "2rem", 
             fontWeight: "700", 
-            color: "#ff6b35", 
+            color: "#3B82F6", 
             marginBottom: "0.5rem",
             textAlign: "center"
           }}>
@@ -596,7 +596,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     flex: 1,
                     fontWeight: "600",
                     fontSize: "1rem",
-                    color: showEmailFields ? "#fff" : "#ff6b35"
+                    color: showEmailFields ? "#fff" : "#3B82F6"
                   }}
                 >
                   📧 Email
@@ -615,7 +615,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     flex: 1,
                     fontWeight: "600",
                     fontSize: "1rem",
-                    color: showPasswordFields ? "#fff" : "#ff6b35"
+                    color: showPasswordFields ? "#fff" : "#3B82F6"
                   }}
                 >
                   🔐 Parolă
@@ -662,14 +662,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         width: "100%",
                         padding: "0.75rem",
                         paddingRight: "3rem",
-                        border: newEmailValid ? "2px solid #4caf50" : "2px solid #e0e0e0",
+                        border: newEmailValid ? "2px solid #3B82F6" : "2px solid #e0e0e0",
                         borderRadius: "8px",
                         fontSize: "1rem",
                         outline: "none",
                         transition: "border-color 0.3s"
                       }}
-                      onFocus={(e) => e.target.style.borderColor = newEmailValid ? "#4caf50" : "#ff6b35"}
-                      onBlur={(e) => e.target.style.borderColor = newEmailValid ? "#4caf50" : "#e0e0e0"}
+                      onFocus={(e) => e.target.style.borderColor = newEmailValid ? "#3B82F6" : "#3B82F6"}
+                      onBlur={(e) => e.target.style.borderColor = newEmailValid ? "#3B82F6" : "#e0e0e0"}
                     />
                     {newEmailValid && (
                       <div style={{
@@ -678,7 +678,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         top: "50%",
                         transform: "translateY(-50%)",
                         fontSize: "1.5rem",
-                        color: "#4caf50"
+                        color: "#3B82F6"
                       }}>
                         ✓
                       </div>
@@ -723,14 +723,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         width: "100%",
                         padding: "0.75rem",
                         paddingRight: passwordValid ? "5rem" : "3.5rem",
-                        border: passwordValid ? "2px solid #4caf50" : "2px solid #e0e0e0",
+                        border: passwordValid ? "2px solid #3B82F6" : "2px solid #e0e0e0",
                         borderRadius: "8px",
                         fontSize: "1rem",
                         outline: "none",
                         transition: "border-color 0.3s"
                       }}
-                      onFocus={(e) => e.target.style.borderColor = passwordValid ? "#4caf50" : "#ff6b35"}
-                      onBlur={(e) => e.target.style.borderColor = passwordValid ? "#4caf50" : "#e0e0e0"}
+                      onFocus={(e) => e.target.style.borderColor = passwordValid ? "#3B82F6" : "#3B82F6"}
+                      onBlur={(e) => e.target.style.borderColor = passwordValid ? "#3B82F6" : "#e0e0e0"}
                     />
                     <button
                       type="button"
@@ -771,7 +771,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         transform: "translateY(-50%)",
                         width: "20px",
                         height: "20px",
-                        border: "2px solid #ff6b35",
+                        border: "2px solid #3B82F6",
                         borderTopColor: "transparent",
                         borderRadius: "50%",
                         animation: "spin 0.8s linear infinite"
@@ -784,7 +784,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         top: "50%",
                         transform: "translateY(-50%)",
                         fontSize: "1.5rem",
-                        color: "#4caf50"
+                        color: "#3B82F6"
                       }}>
                         ✓
                       </div>
@@ -825,14 +825,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         width: "100%",
                         padding: "0.75rem",
                         paddingRight: passwordValid ? "5rem" : "3.5rem",
-                        border: passwordValid ? "2px solid #4caf50" : "2px solid #e0e0e0",
+                        border: passwordValid ? "2px solid #3B82F6" : "2px solid #e0e0e0",
                         borderRadius: "8px",
                         fontSize: "1rem",
                         outline: "none",
                         transition: "border-color 0.3s"
                       }}
-                      onFocus={(e) => e.target.style.borderColor = passwordValid ? "#4caf50" : "#ff6b35"}
-                      onBlur={(e) => e.target.style.borderColor = passwordValid ? "#4caf50" : "#e0e0e0"}
+                      onFocus={(e) => e.target.style.borderColor = passwordValid ? "#3B82F6" : "#3B82F6"}
+                      onBlur={(e) => e.target.style.borderColor = passwordValid ? "#3B82F6" : "#e0e0e0"}
                     />
                     <button
                       type="button"
@@ -873,7 +873,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         transform: "translateY(-50%)",
                         width: "20px",
                         height: "20px",
-                        border: "2px solid #ff6b35",
+                        border: "2px solid #3B82F6",
                         borderTopColor: "transparent",
                         borderRadius: "50%",
                         animation: "spin 0.8s linear infinite"
@@ -886,7 +886,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         top: "50%",
                         transform: "translateY(-50%)",
                         fontSize: "1.5rem",
-                        color: "#4caf50"
+                        color: "#3B82F6"
                       }}>
                         ✓
                       </div>
@@ -945,14 +945,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         width: "100%",
                         padding: "0.75rem",
                         paddingRight: (newPasswordSameAsCurrent || newPasswordValid) ? "5rem" : "3.5rem",
-                        border: newPasswordSameAsCurrent ? "2px solid #f44336" : (newPasswordValid ? "2px solid #4caf50" : "2px solid #e0e0e0"),
+                        border: newPasswordSameAsCurrent ? "2px solid #f44336" : (newPasswordValid ? "2px solid #3B82F6" : "2px solid #e0e0e0"),
                         borderRadius: "8px",
                         fontSize: "1rem",
                         outline: "none",
                         transition: "border-color 0.3s"
                       }}
-                      onFocus={(e) => e.target.style.borderColor = newPasswordSameAsCurrent ? "#f44336" : (newPasswordValid ? "#4caf50" : "#ff6b35")}
-                      onBlur={(e) => e.target.style.borderColor = newPasswordSameAsCurrent ? "#f44336" : (newPasswordValid ? "#4caf50" : "#e0e0e0")}
+                      onFocus={(e) => e.target.style.borderColor = newPasswordSameAsCurrent ? "#f44336" : (newPasswordValid ? "#3B82F6" : "#3B82F6")}
+                      onBlur={(e) => e.target.style.borderColor = newPasswordSameAsCurrent ? "#f44336" : (newPasswordValid ? "#3B82F6" : "#e0e0e0")}
                     />
                     <button
                       type="button"
@@ -1004,7 +1004,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         top: "50%",
                         transform: "translateY(-50%)",
                         fontSize: "1.5rem",
-                        color: "#4caf50"
+                        color: "#3B82F6"
                       }}>
                         ✓
                       </div>
@@ -1061,14 +1061,14 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         width: "100%",
                         padding: "0.75rem",
                         paddingRight: confirmPasswordValid ? "5rem" : "3.5rem",
-                        border: confirmPasswordValid ? "2px solid #4caf50" : "2px solid #e0e0e0",
+                        border: confirmPasswordValid ? "2px solid #3B82F6" : "2px solid #e0e0e0",
                         borderRadius: "8px",
                         fontSize: "1rem",
                         outline: "none",
                         transition: "border-color 0.3s"
                       }}
-                      onFocus={(e) => e.target.style.borderColor = confirmPasswordValid ? "#4caf50" : "#ff6b35"}
-                      onBlur={(e) => e.target.style.borderColor = confirmPasswordValid ? "#4caf50" : "#e0e0e0"}
+                      onFocus={(e) => e.target.style.borderColor = confirmPasswordValid ? "#3B82F6" : "#3B82F6"}
+                      onBlur={(e) => e.target.style.borderColor = confirmPasswordValid ? "#3B82F6" : "#e0e0e0"}
                     />
                     <button
                       type="button"
@@ -1108,7 +1108,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                         top: "50%",
                         transform: "translateY(-50%)",
                         fontSize: "1.5rem",
-                        color: "#4caf50"
+                        color: "#3B82F6"
                       }}>
                         ✓
                       </div>
@@ -1356,3 +1356,5 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
     </div>
   );
 }
+
+

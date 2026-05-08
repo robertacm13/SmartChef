@@ -27,9 +27,9 @@
 }
 
 .toast-warning {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #3B82F6 100%);
   color: white;
-  border-left: 4px solid #e65100;
+  border-left: 4px solid #2563EB;
 }
 
 .toast-info {
@@ -95,3 +95,5 @@
     max-width: none;
   }
 }
+
+

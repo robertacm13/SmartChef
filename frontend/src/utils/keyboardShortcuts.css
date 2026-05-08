@@ -49,7 +49,7 @@ body.dark-mode .shortcuts-modal {
   align-items: center;
   padding: 24px 28px;
   border-bottom: 1px solid #e0e0e0;
-  background: linear-gradient(135deg, var(--header-from, #ff8c42) 0%, var(--header-to, #ff6b35) 100%);
+  background: linear-gradient(135deg, var(--header-from, #3B82F6) 0%, var(--header-to, #2563EB) 100%);
 }
 
 body.dark-mode .shortcuts-header {
@@ -99,12 +99,12 @@ body.dark-mode .shortcuts-header {
 .shortcuts-section h3 {
   margin: 0 0 16px 0;
   font-size: 16px;
-  color: var(--primary, #ff6b35);
+  color: var(--primary, #3B82F6);
   font-weight: 600;
 }
 
 body.dark-mode .shortcuts-section h3 {
-  color: var(--accent, #ff8c42);
+  color: var(--accent, #60A5FA);
 }
 
 .shortcuts-list {
@@ -248,3 +248,4 @@ body.dark-mode .shortcut-badge {
     min-width: auto;
   }
 }
+

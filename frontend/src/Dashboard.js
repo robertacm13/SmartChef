@@ -224,8 +224,8 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     datasets: [{
       label: 'Calorii Zilnice',
       data: stats.dailyData.map(d => d.calories),
-      borderColor: 'rgba(255, 107, 53, 1)',
-      backgroundColor: 'rgba(255, 107, 53, 0.1)',
+      borderColor: 'rgba(59, 130, 246, 1)',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
       tension: 0.4,
       fill: true
     }]
@@ -237,14 +237,14 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
       label: 'Frecvență',
       data: stats.topIngredients.map(([, count]) => count),
       backgroundColor: [
-        'rgba(255, 107, 53, 0.8)',
+        'rgba(59, 130, 246, 0.8)',
         'rgba(76, 175, 80, 0.8)',
         'rgba(33, 150, 243, 0.8)',
         'rgba(255, 193, 7, 0.8)',
         'rgba(156, 39, 176, 0.8)'
       ],
       borderColor: [
-        'rgba(255, 107, 53, 1)',
+        'rgba(59, 130, 246, 1)',
         'rgba(76, 175, 80, 1)',
         'rgba(33, 150, 243, 1)',
         'rgba(255, 193, 7, 1)',
@@ -287,7 +287,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -418,7 +418,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
       <main id="main-content" style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#ff6b35", marginBottom: "0.5rem" }}>
+          <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#3B82F6", marginBottom: "0.5rem" }}>
             📈 Dashboard Statistici
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
@@ -518,7 +518,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
             }}>
               <div className="feature-card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>📊</div>
-                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#3B82F6" }}>
                   {stats.totalAnalyses}
                 </div>
                 <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
@@ -529,7 +529,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
               <div className="feature-card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🔥</div>
-                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#3B82F6" }}>
                   {stats.totalCalories.toLocaleString()}
                 </div>
                 <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
@@ -540,7 +540,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
               <div className="feature-card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>📉</div>
-                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#3B82F6" }}>
                   {stats.avgCalories}
                 </div>
                 <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
@@ -551,7 +551,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
               <div className="feature-card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🥗</div>
-                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#3B82F6" }}>
                   {stats.topIngredients.length > 0 ? stats.topIngredients[0][0] : 'N/A'}
                 </div>
                 <div style={{ color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
@@ -562,7 +562,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
               <div className="feature-card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🔥</div>
-                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#3B82F6" }}>
                   {streak ? streak.current_streak : 0}
                 </div>
                 <div style={{ color: "#666", fontSize: "0.9rem" }}>Streak Actual (zile)</div>
@@ -570,7 +570,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
               <div className="feature-card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🏆</div>
-                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#ff6b35" }}>
+                <div style={{ fontSize: "2rem", fontWeight: "700", color: "#3B82F6" }}>
                   {streak ? streak.longest_streak : 0}
                 </div>
                 <div style={{ color: "#666", fontSize: "0.9rem" }}>Record Streak</div>
@@ -623,7 +623,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         width: `${Math.min((todayProgress.calories / goals.target_calories) * 100, 100)}%`,
                         height: "100%",
                         background: todayProgress.calories > goals.target_calories 
-                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
+                          ? "linear-gradient(90deg, #F87171, #ee5a6f)" 
                           : "linear-gradient(90deg, #51cf66, #37b24d)",
                         transition: "width 0.3s ease"
                       }}></div>
@@ -661,7 +661,7 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         width: `${Math.min((todayProgress.protein / goals.target_protein) * 100, 100)}%`,
                         height: "100%",
                         background: todayProgress.protein > goals.target_protein 
-                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
+                          ? "linear-gradient(90deg, #F87171, #ee5a6f)" 
                           : "linear-gradient(90deg, #4dabf7, #339af0)",
                         transition: "width 0.3s ease"
                       }}></div>
@@ -699,8 +699,8 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         width: `${Math.min((todayProgress.carbs / goals.target_carbs) * 100, 100)}%`,
                         height: "100%",
                         background: todayProgress.carbs > goals.target_carbs 
-                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
-                          : "linear-gradient(90deg, #ffd43b, #fab005)",
+                          ? "linear-gradient(90deg, #F87171, #ee5a6f)" 
+                          : "linear-gradient(90deg, #60A5FA, #60A5FA)",
                         transition: "width 0.3s ease"
                       }}></div>
                       <span style={{
@@ -737,8 +737,8 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         width: `${Math.min((todayProgress.fat / goals.target_fat) * 100, 100)}%`,
                         height: "100%",
                         background: todayProgress.fat > goals.target_fat 
-                          ? "linear-gradient(90deg, #ff6b6b, #ee5a6f)" 
-                          : "linear-gradient(90deg, #ff8787, #fa5252)",
+                          ? "linear-gradient(90deg, #F87171, #ee5a6f)" 
+                          : "linear-gradient(90deg, #93C5FD, #3B82F6)",
                         transition: "width 0.3s ease"
                       }}></div>
                       <span style={{
@@ -832,14 +832,14 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
             {/* Activity Overview */}
             <div className="nutrition-box" style={{ padding: "2rem", marginTop: "2rem" }}>
-              <h3 style={{ fontSize: "1.3rem", marginBottom: "1.5rem", color: "#ff6b35" }}>
+              <h3 style={{ fontSize: "1.3rem", marginBottom: "1.5rem", color: "#3B82F6" }}>
                 📅 Activitate Zilnică
               </h3>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                 {stats.dailyData.reverse().map((day, idx) => {
                   const intensity = day.count > 0 ? Math.min(day.count / 3, 1) : 0;
                   const color = day.count > 0 
-                    ? `rgba(255, 107, 53, ${0.2 + intensity * 0.8})`
+                    ? `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`
                     : '#f0f0f0';
                   
                   return (
@@ -929,3 +929,11 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     </div>
   );
 }
+
+
+
+
+
+
+
+

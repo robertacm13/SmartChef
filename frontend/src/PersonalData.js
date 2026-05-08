@@ -250,7 +250,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -346,7 +346,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
           <h2 style={{ 
             fontSize: "2rem", 
             fontWeight: "700", 
-            color: "#ff6b35", 
+            color: "#3B82F6", 
             marginBottom: "0.5rem",
             textAlign: "center"
           }}>
@@ -413,7 +413,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                     outline: "none",
                     transition: "border-color 0.3s"
                   }}
-                  onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
+                  onFocus={(e) => e.target.style.borderColor = "#3B82F6"}
                   onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
               </div>
@@ -442,7 +442,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                     outline: "none",
                     transition: "border-color 0.3s"
                   }}
-                  onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
+                  onFocus={(e) => e.target.style.borderColor = "#3B82F6"}
                   onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
               </div>
@@ -474,7 +474,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   outline: "none",
                   transition: "border-color 0.3s"
                 }}
-                onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
+                onFocus={(e) => e.target.style.borderColor = "#3B82F6"}
                 onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
               />
             </div>
@@ -507,7 +507,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                     outline: "none",
                     transition: "border-color 0.3s"
                   }}
-                  onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
+                  onFocus={(e) => e.target.style.borderColor = "#3B82F6"}
                   onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
               </div>
@@ -539,7 +539,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                     outline: "none",
                     transition: "border-color 0.3s"
                   }}
-                  onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
+                  onFocus={(e) => e.target.style.borderColor = "#3B82F6"}
                   onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
                 />
               </div>
@@ -569,7 +569,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
                   cursor: "pointer",
                   background: "white"
                 }}
-                onFocus={(e) => e.target.style.borderColor = "#ff6b35"}
+                onFocus={(e) => e.target.style.borderColor = "#3B82F6"}
                 onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
               >
                 <option value="">Select</option>
@@ -663,3 +663,5 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
     </div>
   );
 }
+
+

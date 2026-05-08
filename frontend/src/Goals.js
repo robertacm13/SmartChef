@@ -234,7 +234,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    background: "#ff6b35",
+                    background: "#3B82F6",
                     color: "white",
                     borderRadius: "50%",
                     width: "24px",
@@ -276,13 +276,13 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 <button class Name="btn btn-secondary" onClick={onBack} style={{ marginBottom: "2rem" }}>← Back</button>
 
         <div className="card" style={{ padding: "2rem", marginBottom: "1.5rem", textAlign: "center" }}>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>🎯 Your Goals</h1>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>🎯 Your Goals</h1>
           <p style={{ color: "#666", fontSize: "1rem" }}>Set personalized nutritional goals based on your profile</p>
         </div>
 
         {!hasProfile && (
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(255, 193, 7, 0.1)", border: "1px solid rgba(255, 193, 7, 0.4)" }}>
-            <h3 style={{ marginBottom: "0.5rem", color: "#f57c00" }}>⚠️ Missing personal data</h3>
+            <h3 style={{ marginBottom: "0.5rem", color: "#3B82F6" }}>⚠️ Missing personal data</h3>
             <p style={{ marginBottom: "1rem", color: "#666" }}>To calculate BMR and TDEE, complete your personal data (weight, height, age, gender).</p>
             <button className="btn btn-primary" onClick={() => onNavigate("personal-data")}>📝 Completează datele personale</button>
           </div>
@@ -291,7 +291,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         {/* BMR & TDEE Display */}
         {hasProfile && (
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>📊 Your Metabolic Calculator</h3>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>📊 Your Metabolic Calculator</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
               <div style={{ padding: "1rem", background: "rgba(33, 150, 243, 0.08)", borderRadius: "12px", border: "2px solid rgba(33, 150, 243, 0.3)" }}>
                 <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>BMR (Basal Metabolic Rate)</div>
@@ -310,7 +310,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Goal Type Selection */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>🎯 Goal type</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>🎯 Goal type</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.8rem" }}>
             {GOAL_TYPES.map(goal => (
               <button
@@ -329,7 +329,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Activity Level */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>🏃 Activity level</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>🏃 Activity level</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
             {ACTIVITY_LEVELS.map(level => (
               <button
@@ -354,18 +354,18 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
             <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#388e3c", marginBottom: "0.5rem" }}>🎖️ Recommended macronutrients</h3>
             <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Based on your goal and activity level</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "0.8rem" }}>
-              <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #4caf50" }}>
+              <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #3B82F6" }}>
                 <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Calorii</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#4caf50" }}>{recommended.calories}</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#3B82F6" }}>{recommended.calories}</div>
                 <div style={{ fontSize: "0.7rem", color: "#888" }}>kcal/zi</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #2196f3" }}>
                 <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Protein (g)</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#2196f3" }}>{recommended.protein}g</div>
               </div>
-              <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #ff9800" }}>
+              <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #3B82F6" }}>
                 <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Carbohidrați</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#ff9800" }}>{recommended.carbs}g</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#3B82F6" }}>{recommended.carbs}g</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #f44336" }}>
                 <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Fats (g)</div>
@@ -377,7 +377,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Custom Targets (Optional) */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "0.5rem" }}>⚙️ Target-uri personalizate (opțional)</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>⚙️ Target-uri personalizate (opțional)</h3>
           <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Suprascrie recomandările automate — lasă gol pentru a folosi calculele de mai sus</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
             <div>
@@ -401,7 +401,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Weight Goal */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #ff6b35)", marginBottom: "1rem" }}>⚖️ Obiectiv de greutate</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>⚖️ Obiectiv de greutate</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
               <label className="form-label">Greutate țintă (kg)</label>
@@ -446,3 +446,11 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+

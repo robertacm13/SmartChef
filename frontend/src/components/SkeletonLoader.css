@@ -305,24 +305,24 @@ body.dark-mode .skeleton-profile-header {
   width: 100%;
   height: 100%;
   border: 4px solid transparent;
-  border-top-color: var(--primary, #ff6b35);
+  border-top-color: var(--primary, #3B82F6);
   border-radius: 50%;
   animation: spinnerRotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
 .spinner-ring:nth-child(1) {
   animation-delay: -0.45s;
-  border-top-color: var(--primary, #ff6b35);
+  border-top-color: var(--primary, #3B82F6);
 }
 
 .spinner-ring:nth-child(2) {
   animation-delay: -0.3s;
-  border-top-color: #ff8c42;
+  border-top-color: #2563EB;
 }
 
 .spinner-ring:nth-child(3) {
   animation-delay: -0.15s;
-  border-top-color: #ffa960;
+  border-top-color: #60A5FA;
 }
 
 @keyframes spinnerRotate {
@@ -410,3 +410,4 @@ body.dark-mode .loading-message {
     animation-duration: 2s;
   }
 }
+

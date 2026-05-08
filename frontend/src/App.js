@@ -107,9 +107,9 @@ function App() {
   const renderPage = () => {
     switch (currentPage) {
       case "login":
-        return <Login onBack={() => setCurrentPage("main")} onLoginSuccess={handleLoginSuccess} onNavigateToRegister={() => setCurrentPage("register")} onNavigate={(page) => setCurrentPage(page)} />;
+        return <Login onBack={() => setCurrentPage("main")} onLoginSuccess={handleLoginSuccess} onNavigateToRegister={() => setCurrentPage("register")} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
       case "register":
-        return <Register onBack={() => setCurrentPage("main")} onRegisterSuccess={() => setCurrentPage("login")} onNavigateToLogin={() => setCurrentPage("login")} />;
+        return <Register onBack={() => setCurrentPage("main")} onRegisterSuccess={() => setCurrentPage("login")} onNavigateToLogin={() => setCurrentPage("login")} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
       case "forgot-password":
         return <ForgotPassword onBack={() => setCurrentPage("login")} onNavigate={(page) => setCurrentPage(page)} />;
       case "reset-password":
@@ -161,3 +161,4 @@ function App() {
 }
 
 export default App;
+
