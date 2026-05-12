@@ -1,68 +1,82 @@
 import { useState, useEffect } from "react";
+import logoImg from "./logo.png";
 import { ShortcutsHelp } from "./utils/keyboardShortcuts";
 import "./utils/keyboardShortcuts.css";
 import "./App.css";
+import Navbar from "./components/Navbar";
 
 const THEMES = [
   {
     id: "orange",
-    name: "Orange",
-    emoji: "🟠",
-    description: "Default theme",
+    name: "Ocean Blue",
+    emoji: "🌊",
+    description: "Default classic blue",
     primary: "#3B82F6",
     accent: "#2563EB",
-    bg: "#F0F9FF",
+    bg: "#DBEAFE",
     headerFrom: "#2563EB",
     headerTo: "#3B82F6",
     fabColor: "#3B82F6",
   },
   {
     id: "forest",
-    name: "Forest",
+    name: "Emerald",
     emoji: "🌿",
-    description: "Natural green",
-    primary: "#2e7d32",
-    accent: "#43a047",
-    bg: "#e8f5e9",
-    headerFrom: "#43a047",
-    headerTo: "#2e7d32",
-    fabColor: "#2e7d32",
+    description: "Fresh green theme",
+    primary: "#10B981",
+    accent: "#059669",
+    bg: "#DCFCE7",
+    headerFrom: "#059669",
+    headerTo: "#10B981",
+    fabColor: "#10B981",
   },
   {
     id: "ocean",
-    name: "Ocean",
-    emoji: "🌊",
-    description: "Ocean blue",
-    primary: "#1565c0",
-    accent: "#1976d2",
-    bg: "#e3f2fd",
-    headerFrom: "#42a5f5",
-    headerTo: "#1565c0",
-    fabColor: "#1565c0",
+    name: "Sunset",
+    emoji: "🌅",
+    description: "Warm orange & amber",
+    primary: "#F59E0B",
+    accent: "#D97706",
+    bg: "#FFEDD5",
+    headerFrom: "#D97706",
+    headerTo: "#F59E0B",
+    fabColor: "#F59E0B",
   },
   {
     id: "lavender",
-    name: "Lavender",
-    emoji: "💜",
-    description: "Delicate purple",
-    primary: "#7b1fa2",
-    accent: "#9c27b0",
-    bg: "#f3e5f5",
-    headerFrom: "#ba68c8",
-    headerTo: "#7b1fa2",
-    fabColor: "#7b1fa2",
+    name: "Rose",
+    emoji: "🌸",
+    description: "Soft pink & rose",
+    primary: "#F43F5E",
+    accent: "#E11D48",
+    bg: "#FFE4E6",
+    headerFrom: "#E11D48",
+    headerTo: "#F43F5E",
+    fabColor: "#F43F5E",
   },
   {
     id: "rose",
-    name: "Rose",
-    emoji: "🌹",
-    description: "Romantic red",
-    primary: "#c62828",
-    accent: "#e53935",
-    bg: "#fce4ec",
-    headerFrom: "#ef9a9a",
-    headerTo: "#c62828",
-    fabColor: "#c62828",
+    name: "Purple",
+    emoji: "🔮",
+    description: "Deep violet theme",
+    primary: "#8B5CF6",
+    accent: "#7C3AED",
+    bg: "#EDE9FE",
+    headerFrom: "#7C3AED",
+    headerTo: "#8B5CF6",
+    fabColor: "#8B5CF6",
+  },
+  {
+    id: "grey",
+    name: "Classic Grey",
+    emoji: "⚪",
+    description: "Neutral grey theme",
+    primary: "#3B82F6",
+    accent: "#2563EB",
+    bg: "#F1F5F9",
+    headerFrom: "#2563EB",
+    headerTo: "#3B82F6",
+    fabColor: "#3B82F6",
   },
 ];
 
@@ -96,6 +110,12 @@ export function applyTheme(themeId) {
   document.documentElement.style.setProperty("--header-from", theme.headerFrom);
   document.documentElement.style.setProperty("--header-to", theme.headerTo);
   document.documentElement.style.setProperty("--fab-color", theme.fabColor);
+  // Convert hex to rgb components for rgba() usage
+  const hex = theme.primary.replace("#", "");
+  const r = parseInt(hex.substring(0,2), 16);
+  const g = parseInt(hex.substring(2,4), 16);
+  const b = parseInt(hex.substring(4,6), 16);
+  document.documentElement.style.setProperty("--primary-rgb", `${r}, ${g}, ${b}`);
   document.body.setAttribute("data-theme", themeId);
 }
 
@@ -105,6 +125,101 @@ export function applyFontSize(sizeId) {
   document.documentElement.style.fontSize = size.size;
 }
 
+const TRANSLATIONS = {
+  ro: {
+    appSettings: "Setări aplicație",
+    customizeApp: "Personalizează aspectul și comportamentul SmartChef",
+    settingSaved: "Setare salvată automat",
+    colorTheme: "Temă culori",
+    choosePalette: "Alege paleta de culori a interfeței",
+    darkMode: "Mod întunecat",
+    enableDarkMode: "Activează modul întunecat pentru confort vizual",
+    darkModeEnabled: "Mod întunecat activat — apasă pentru Lumini",
+    lightModeEnabled: "Mod luminos activat — apasă pentru Întuneric",
+    textSize: "Dimensiune text",
+    adjustFontSize: "Ajustează dimensiunea fontului în întreaga aplicație",
+    current: "curent",
+    language: "Limbă",
+    setLanguage: "Setează limba interfeței",
+    homePageAfterSignIn: "Pagina de pornire după autentificare",
+    whichPageOpens: "Care pagină se deschide prima după autentificare",
+    nutritionalUnits: "Unități nutriționale",
+    howCaloriesDisplayed: "Cum sunt afișate caloriile în aplicație",
+    resetAllSettings: "Resetează toate setările",
+    confirmReset: "Resetezi toate setările la valorile implicite?",
+    back: "Înapoi",
+    skipToMain: "Sari la conținutul principal",
+    themes: {
+      orange: { name: "Ocean Blue", desc: "Albastru clasic implicit" },
+      forest: { name: "Emerald", desc: "Temă verde proaspătă" },
+      ocean: { name: "Sunset", desc: "Portocaliu cald și chihlimbar" },
+      lavender: { name: "Rose", desc: "Roz moale și trandafir" },
+      rose: { name: "Purple", desc: "Temă violet profund" },
+      grey: { name: "Classic Grey", desc: "Temă neutră de gri" },
+    },
+    fontSizes: {
+      small: { name: "Mic", desc: "Potrivit pentru ecrane mici" },
+      medium: { name: "Mediu", desc: "Dimensiune implicită" },
+      large: { name: "Mare", desc: "Mai ușor de citit" },
+    },
+    defaultPages: {
+      main: { name: "Analiză", desc: "Pagina principală de încărcare" },
+      dashboard: { name: "Panou control", desc: "Statistici și grafice" },
+      history: { name: "Istoric", desc: "Istoricul analizelor" },
+    },
+    units: {
+      kcal: { name: "kcal", desc: "Kilocalorii (standard)" },
+      kj: { name: "kJ", desc: "Kilojouli (1 kcal = 4.184 kJ)" },
+    }
+  },
+  en: {
+    appSettings: "App Settings",
+    customizeApp: "Customize the appearance and behavior of SmartChef",
+    settingSaved: "Setting saved automatically",
+    colorTheme: "Color Theme",
+    choosePalette: "Choose the interface color palette",
+    darkMode: "Dark Mode",
+    enableDarkMode: "Enable dark mode for visual comfort",
+    darkModeEnabled: "Dark mode enabled — press for Light",
+    lightModeEnabled: "Light mode enabled — press for Dark",
+    textSize: "Text Size",
+    adjustFontSize: "Adjust the font size across the entire app",
+    current: "current",
+    language: "Language",
+    setLanguage: "Set the interface language",
+    homePageAfterSignIn: "Home Page after Sign In",
+    whichPageOpens: "Which page opens first after authentication",
+    nutritionalUnits: "Nutritional Units",
+    howCaloriesDisplayed: "How calories are displayed in the app",
+    resetAllSettings: "Reset all settings",
+    confirmReset: "Reset all settings to default values?",
+    back: "Back",
+    skipToMain: "Skip to main content",
+    themes: {
+      orange: { name: "Ocean Blue", desc: "Default classic blue" },
+      forest: { name: "Emerald", desc: "Fresh green theme" },
+      ocean: { name: "Sunset", desc: "Warm orange & amber" },
+      lavender: { name: "Rose", desc: "Soft pink & rose" },
+      rose: { name: "Purple", desc: "Deep violet theme" },
+      grey: { name: "Classic Grey", desc: "Neutral grey theme" },
+    },
+    fontSizes: {
+      small: { name: "Small", desc: "Suitable for small screens" },
+      medium: { name: "Medium", desc: "Default size" },
+      large: { name: "Large", desc: "Easier to read" },
+    },
+    defaultPages: {
+      main: { name: "Analyze", desc: "Main upload page" },
+      dashboard: { name: "Dashboard", desc: "Statistics and charts" },
+      history: { name: "History", desc: "Analysis history" },
+    },
+    units: {
+      kcal: { name: "kcal", desc: "Kilocalories (standard)" },
+      kj: { name: "kJ", desc: "Kilojoules (1 kcal = 4.184 kJ)" },
+    }
+  }
+};
+
 export default function AppSettings({
   userEmail,
   onBack,
@@ -112,6 +227,7 @@ export default function AppSettings({
   onNavigate,
   darkMode,
   toggleDarkMode,
+  currentPage,
 }) {
   const [activeTheme, setActiveTheme] = useState(
     () => localStorage.getItem("appTheme") || "orange"
@@ -122,6 +238,7 @@ export default function AppSettings({
   const [activeLanguage, setActiveLanguage] = useState(
     () => localStorage.getItem("appLanguage") || "ro"
   );
+  const t = TRANSLATIONS[activeLanguage] || TRANSLATIONS.en;
   const [langBanner, setLangBanner] = useState(false);
   const [activeDefaultPage, setActiveDefaultPage] = useState(
     () => localStorage.getItem("appDefaultPage") || "main"
@@ -130,42 +247,7 @@ export default function AppSettings({
     () => localStorage.getItem("appUnits") || "kcal"
   );
   const [saved, setSaved] = useState(false);
-
-  const [showNavDropdown, setShowNavDropdown] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
-  const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Fetch unread notifications on component mount
-  useEffect(() => {
-    const fetchUnreadNotifications = async () => {
-      try {
-        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-        const data = await res.json();
-        if (data.status === "success") {
-          setUnreadCount(data.unread_count);
-        }
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
-      }
-    };
-
-    if (userEmail) {
-      fetchUnreadNotifications();
-    }
-  }, [userEmail]);
-
-  const handleUserMouseEnter = () => {
-    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
-    setShowUserDropdown(true);
-  };
-
-  const handleUserMouseLeave = () => {
-    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
-    setUserDropdownTimeout(timeout);
-  };
 
   const handleHelp = () => {
     alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
@@ -216,7 +298,7 @@ export default function AppSettings({
   };
 
   const handleResetAll = () => {
-    if (window.confirm("Reset all settings to default values?")) {
+    if (window.confirm(t.confirmReset)) {
       handleThemeChange("orange");
       handleFontSizeChange("medium");
       handleLanguageChange("ro");
@@ -227,209 +309,37 @@ export default function AppSettings({
   };
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh" }}>
-      {/* Header */}
-      <header className="header">
-        <div className="header-content">
-          <div
-            className="logo"
-            onClick={onBack}
-            style={{ cursor: "pointer" }}
-          >
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            {userEmail ? (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "0.8rem",
-                  alignItems: "center",
-                  marginLeft: "auto",
-                  marginRight: "-0.5rem",
-                }}
-              >
-                {/* Navigation Dropdown */}
-                <div
-                  style={{ position: "relative" }}
-                  onMouseEnter={() => setShowNavDropdown(true)}
-                  onMouseLeave={() => setShowNavDropdown(false)}
-                >
-                  <button
-                    className="btn btn-outline"
-                    style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem" }}
-                  >
-                    ☰
-                  </button>
-                  {showNavDropdown && (
-                    <div className="nav-dropdown">
-                      <button
-                        className="nav-dropdown-item"
-                        onClick={() => {
-                          onNavigate("dashboard");
-                          setShowNavDropdown(false);
-                        }}
-                      >
-                        📈 Dashboard
-                      </button>
-                      <button
-                        className="nav-dropdown-item"
-                        onClick={() => {
-                          onNavigate("history");
-                          setShowNavDropdown(false);
-                        }}
-                      >
-                        📊 History
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    width: "1px",
-                    height: "30px",
-                    background: "rgba(255,255,255,0.3)",
-                    margin: "0 0.5rem",
-                  }}
-                ></div>
-
-                {/* Notifications Bell */}
-                <button
-                  className="btn btn-outline"
-                  onClick={() => onNavigate('notifications')}
-                  style={{ 
-                    padding: "0.7rem 1.2rem", 
-                    fontSize: "1.5rem", 
-                    background: "rgba(255,255,255,0.2)",
-                    position: "relative"
-                  }}
-                  title="Notificări"
-                >
-                  🔔
-                  {unreadCount > 0 && (
-                    <span style={{
-                      position: "absolute",
-                      top: "-5px",
-                      right: "-5px",
-                      background: "#3B82F6",
-                      color: "white",
-                      borderRadius: "50%",
-                      width: "24px",
-                      height: "24px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      border: "2px solid white"
-                    }}>
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* User Dropdown */}
-                <div
-                  style={{ position: "relative" }}
-                  onMouseEnter={handleUserMouseEnter}
-                  onMouseLeave={handleUserMouseLeave}
-                >
-                  <button
-                    className="btn btn-outline"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    👤 {userEmail}
-                    <span
-                      style={{
-                        fontSize: "0.7rem",
-                        transition: "transform 0.3s",
-                        display: "inline-block",
-                        transform: showUserDropdown
-                          ? "rotate(90deg)"
-                          : "rotate(0deg)",
-                      }}
-                    >
-                      ►
-                    </span>
-                  </button>
-                  {showUserDropdown && (
-                    <div className="user-dropdown">
-                      <button
-                        className="user-dropdown-item"
-                        onClick={() => alert("🚧 Profile - Coming soon!")}
-                      >
-                        <span className="dropdown-icon">👤</span>
-                        Profile
-                      </button>
-                      <button
-                        className="user-dropdown-item"
-                        onClick={() => {
-                          onNavigate("personal-data");
-                          setShowUserDropdown(false);
-                        }}
-                      >
-                        <span className="dropdown-icon">📊</span>
-                        Personal Data
-                      </button>
-                      <button
-                        className="user-dropdown-item"
-                        onClick={() => {
-                          onNavigate("account-settings");
-                          setShowUserDropdown(false);
-                        }}
-                      >
-                        <span className="dropdown-icon">🔑</span>
-                        Account Settings
-                      </button>
-                      <button
-                        className="user-dropdown-item"
-                        onClick={() => {
-                          onNavigate("app-settings");
-                          setShowUserDropdown(false);
-                        }}
-                        style={{
-                          fontWeight: "600",
-                        }}
-                      >
-                        <span className="dropdown-icon">⚙️</span>
-                        App Settings
-                      </button>
-                      <div className="user-dropdown-divider"></div>
-                      <button
-                        className="user-dropdown-item logout-item"
-                        onClick={onLogout}
-                      >
-                        <span className="dropdown-icon">🚪</span>
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </header>
+    <div className="animated-bg" style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "var(--bg, #F1F5F9)" }}>
+      {/* Skip Link untuk keyboard navigation - WCAG 2.1 */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      
+      <Navbar 
+        userEmail={userEmail}
+        onBack={onBack}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage={currentPage}
+      />
 
       {/* Page Content */}
-      <div style={{ maxWidth: "700px", margin: "0 auto", padding: "2rem" }}>
+      <div style={{ maxWidth: "700px", margin: "0 auto", padding: "6rem 2rem 2rem 2rem" }}>
         <button
           className="btn btn-secondary"
           onClick={onBack}
           style={{ marginBottom: "2rem" }}
         >
-          ← Back
+          ← {t.back}
         </button>
 
         {/* Title Card */}
         <div
           className="card"
-          style={{ padding: "2rem", marginBottom: "1.5rem", textAlign: "center" }}
+          style={{ padding: "6rem 2rem 2rem 2rem", marginBottom: "1.5rem", textAlign: "center", background: darkMode ? "#1E293B" : "#FFFFFF", border: darkMode ? "1px solid #334155" : "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
         >
           <h2
             style={{
@@ -439,10 +349,10 @@ export default function AppSettings({
               marginBottom: "0.5rem",
             }}
           >
-            ⚙️ App Settings
+            ⚙️ {t.appSettings}
           </h2>
-          <p style={{ color: "#666", fontSize: "0.95rem" }}>
-            Customize the appearance and behavior of SmartChef
+          <p style={{ color: darkMode ? "#94A3B8" : "#64748B", fontSize: "0.95rem" }}>
+            {t.customizeApp}
           </p>
           {saved && (
             <div
@@ -458,15 +368,15 @@ export default function AppSettings({
                 display: "inline-block",
               }}
             >
-              ✅ Setting saved automatically
+              {t.settingSaved}
             </div>
           )}
         </div>
 
         {/* ===== SECTION: Color Theme ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🎨 Color Theme</h3>
-          <p className="appsettings-section-desc">Choose the interface color palette</p>
+          <h3 className="appsettings-section-title">🎨 {t.colorTheme}</h3>
+          <p className="appsettings-section-desc">{t.choosePalette}</p>
           <div className="appsettings-theme-grid">
             {THEMES.map((theme) => (
               <button
@@ -491,8 +401,8 @@ export default function AppSettings({
                   <div className="appsettings-theme-preview-dot" style={{ background: theme.primary }} />
                 </div>
                 <span className="appsettings-theme-emoji">{theme.emoji}</span>
-                <span className="appsettings-theme-name">{theme.name}</span>
-                <span className="appsettings-theme-desc">{theme.description}</span>
+                <span className="appsettings-theme-name">{t.themes[theme.id]?.name || theme.name}</span>
+                <span className="appsettings-theme-desc">{t.themes[theme.id]?.desc || theme.description}</span>
                 {activeTheme === theme.id && (
                   <span className="appsettings-check">✓</span>
                 )}
@@ -503,15 +413,15 @@ export default function AppSettings({
 
         {/* ===== SECTION: Dark Mode ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🌙 Dark Mode</h3>
-          <p className="appsettings-section-desc">Enable dark mode for visual comfort</p>
+          <h3 className="appsettings-section-title">🌙 {t.darkMode}</h3>
+          <p className="appsettings-section-desc">{t.enableDarkMode}</p>
           <button
             className={`appsettings-toggle-btn ${darkMode ? "active" : ""}`}
             onClick={toggleDarkMode}
           >
             <span className="appsettings-toggle-icon">{darkMode ? "☀️" : "🌙"}</span>
             <span className="appsettings-toggle-text">
-              {darkMode ? "Dark mode enabled — press for Light" : "Light mode enabled — press for Dark"}
+              {darkMode ? t.darkModeEnabled : t.lightModeEnabled}
             </span>
             <span className={`appsettings-toggle-switch ${darkMode ? "on" : ""}`}>
               <span className="appsettings-toggle-knob" />
@@ -521,11 +431,11 @@ export default function AppSettings({
 
         {/* ===== SECTION: Font Size ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🔤 Text Size</h3>
+          <h3 className="appsettings-section-title">🔤 {t.textSize}</h3>
           <p className="appsettings-section-desc">
-            Adjust the font size across the entire app
+            {t.adjustFontSize}
             {" "}<span style={{ fontStyle: "italic", color: "#aaa" }}>
-              (current: {FONT_SIZES.find(f => f.id === activeFontSize)?.name})
+              ({t.current}: {t.fontSizes[activeFontSize]?.name || FONT_SIZES.find(f => f.id === activeFontSize)?.name})
             </span>
           </p>
           <div className="appsettings-option-row">
@@ -536,8 +446,8 @@ export default function AppSettings({
                 onClick={() => handleFontSizeChange(fs.id)}
               >
                 <span style={{ fontSize: fs.size, fontWeight: "700" }}>Aa</span>
-                <span className="appsettings-option-label">{fs.name}</span>
-                <span className="appsettings-option-sub">{fs.description}</span>
+                <span className="appsettings-option-label">{t.fontSizes[fs.id]?.name || fs.name}</span>
+                <span className="appsettings-option-sub">{t.fontSizes[fs.id]?.desc || fs.description}</span>
               </button>
             ))}
           </div>
@@ -545,11 +455,10 @@ export default function AppSettings({
 
         {/* ===== SECTION: Language ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🌍 Language</h3>
+          <h3 className="appsettings-section-title">🌍 {t.language}</h3>
           <p className="appsettings-section-desc">
-            Set the interface language
+            {t.setLanguage}
           </p>
-          {langBanner && (
             <div style={{
               padding: "0.7rem 1rem",
               background: "rgba(33, 150, 243, 0.08)",
@@ -559,9 +468,13 @@ export default function AppSettings({
               fontSize: "0.85rem",
               marginBottom: "1rem"
             }}>
-              ℹ️ <strong>English</strong> — Complete interface translation is in progress. Some texts may remain in Romanian for now.
+              {activeLanguage === "en" ? (
+                <>ℹ️ <strong>English</strong> — Complete interface translation is in progress. Some texts may remain in Romanian for now.</>
+              ) : (
+                <>ℹ️ <strong>Română</strong> — Traducerea completă a interfeței este în curs. Unele texte pot rămâne în engleză deocamdată.</>
+              )}
             </div>
-          )}
+
           <div className="appsettings-option-row">
             {LANGUAGES.map((lang) => (
               <button
@@ -578,8 +491,8 @@ export default function AppSettings({
 
         {/* ===== SECTION: Default Page ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🏠 Home Page after Sign In</h3>
-          <p className="appsettings-section-desc">Which page opens first after authentication</p>
+          <h3 className="appsettings-section-title">🏠 {t.homePageAfterSignIn}</h3>
+          <p className="appsettings-section-desc">{t.whichPageOpens}</p>
           <div className="appsettings-option-row">
             {DEFAULT_PAGES.map((page) => (
               <button
@@ -588,8 +501,8 @@ export default function AppSettings({
                 onClick={() => handleDefaultPageChange(page.id)}
               >
                 <span style={{ fontSize: "1.8rem" }}>{page.emoji}</span>
-                <span className="appsettings-option-label">{page.name}</span>
-                <span className="appsettings-option-sub">{page.description}</span>
+                <span className="appsettings-option-label">{t.defaultPages[page.id]?.name || page.name}</span>
+                <span className="appsettings-option-sub">{t.defaultPages[page.id]?.desc || page.description}</span>
               </button>
             ))}
           </div>
@@ -597,8 +510,8 @@ export default function AppSettings({
 
         {/* ===== SECTION: Nutritional Units ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🔥 Nutritional Units</h3>
-          <p className="appsettings-section-desc">How calories are displayed in the app</p>
+          <h3 className="appsettings-section-title">🔥 {t.nutritionalUnits}</h3>
+          <p className="appsettings-section-desc">{t.howCaloriesDisplayed}</p>
           <div className="appsettings-option-row">
             {UNITS.map((unit) => (
               <button
@@ -609,7 +522,7 @@ export default function AppSettings({
                 <span style={{ fontSize: "1.5rem", fontWeight: "800", fontFamily: "monospace" }}>
                   {unit.name}
                 </span>
-                <span className="appsettings-option-label">{unit.description}</span>
+                <span className="appsettings-option-label">{t.units[unit.id]?.desc || unit.description}</span>
               </button>
             ))}
           </div>
@@ -622,54 +535,9 @@ export default function AppSettings({
             onClick={handleResetAll}
             style={{ color: "#e53935", borderColor: "#e53935" }}
           >
-            🔄 Reset all settings
+            🔄 {t.resetAllSettings}
           </button>
         </div>
-      </div>
-
-      {/* Floating Action Button Menu */}
-      <div className="fab-container">
-        {/* Menu Items (appear when expanded) */}
-        <button
-          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
-          onClick={toggleDarkMode}
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => {
-            // Already on settings page
-              alert('⚙️ You are already on the settings page!');
-            }}
-            title="Settings"
-          >
-            ⚙️
-          </button>
-          <button
-            className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
-            onClick={handleHelp}
-            title="Help & Support"
-          >
-            ❓
-          </button>
-          <button
-            className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
-            onClick={() => setShowShortcuts(true)}
-            title="Keyboard Shortcuts (press ?)"
-          >
-            ⌨️
-          </button>
-        
-        {/* Main FAB Button */}
-        <button
-          className={`fab-main ${showFabMenu ? 'active' : ''}`}
-          onClick={() => setShowFabMenu(!showFabMenu)}
-          title="Menu"
-        >
-          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
-        </button>
       </div>
 
       {/* Keyboard Shortcuts Help Modal */}
@@ -681,6 +549,8 @@ export default function AppSettings({
     </div>
   );
 }
+
+
 
 
 

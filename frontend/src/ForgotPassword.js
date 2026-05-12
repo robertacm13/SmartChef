@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import logo from "./logo.png";
 
 export default function ForgotPassword({ onBack, onNavigate }) {
   const [email, setEmail] = useState("");
@@ -39,16 +40,34 @@ export default function ForgotPassword({ onBack, onNavigate }) {
   };
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh" }}>
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
+    <div style={{ minHeight: "100vh", background: "#F1F5F9" }}>
+      {/* Navbar */}
+      <nav style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "1rem 2rem",
+        borderBottom: "1px solid #E2E8F0",
+        background: "#FFFFFF",
+        position: "fixed",
+        top: 0, left: 0, right: 0,
+        zIndex: 1000,
+        width: "100%",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }} onClick={onBack}>
+          <img src={logo} alt="SmartChef Logo" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
+          <span style={{ fontSize: "1.25rem", fontWeight: "700", letterSpacing: "-0.05em", color: "#1E293B" }}>SmartChef</span>
         </div>
-      </header>
+        <button
+          onClick={onBack}
+          style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: "#1E293B" }}
+        >
+          ← Back to Sign In
+        </button>
+      </nav>
 
-      <div style={{ maxWidth: "500px", margin: "4rem auto", padding: "2rem" }}>
+      <div style={{ maxWidth: "500px", margin: "0 auto", padding: "2rem", paddingTop: "6rem" }}>
         <div className="card" style={{ padding: "2.5rem" }}>
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔐</div>
@@ -66,7 +85,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
             <div style={{ textAlign: "center" }}>
               <div
                 style={{
-                  background: "#e8f5e9",
+                  background: "#F0F9FF",
                   border: "2px solid #3B82F6",
                   padding: "1.5rem",
                   borderRadius: "10px",
@@ -74,7 +93,7 @@ export default function ForgotPassword({ onBack, onNavigate }) {
                 }}
               >
                 <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>✅</div>
-                <p style={{ color: "#2e7d32", fontWeight: "600", marginBottom: "0.5rem" }}>
+                <p style={{ color: "#3B82F6", fontWeight: "600", marginBottom: "0.5rem" }}>
                   Email sent successfully!
                 </p>
                 <p style={{ color: "#555", fontSize: "0.9rem" }}>
@@ -111,9 +130,9 @@ export default function ForgotPassword({ onBack, onNavigate }) {
               {message && (
                 <div
                   style={{
-                    background: "#e8f5e9",
+                    background: "#F0F9FF",
                     border: "2px solid #3B82F6",
-                    color: "#2e7d32",
+                    color: "#3B82F6",
                     padding: "1rem",
                     borderRadius: "8px",
                     marginBottom: "1.5rem",

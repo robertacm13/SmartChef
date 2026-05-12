@@ -1,60 +1,18 @@
 import { useState, useEffect } from "react";
+import { MdOutlineKeyboardArrowUp, MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { ShortcutsHelp } from "./utils/keyboardShortcuts";
 import "./utils/keyboardShortcuts.css";
 import "./App.css";
+import Navbar from "./components/Navbar";
 
-export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }) {
+export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, currentPage, darkMode, toggleDarkMode }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showScroll, setShowScroll] = useState(false);
   
-  const [showNavDropdown, setShowNavDropdown] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
-  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
-  const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Fetch unread notifications on component mount
-  useEffect(() => {
-    const fetchUnreadNotifications = async () => {
-      try {
-        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-        const data = await res.json();
-        if (data.status === "success") {
-          setUnreadCount(data.unread_count);
-        }
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
-      }
-    };
-
-    if (userEmail) {
-      fetchUnreadNotifications();
-    }
-  }, [userEmail]);
-
-  const handleNavMouseEnter = () => {
-    if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
-    setShowNavDropdown(true);
-  };
-
-  const handleNavMouseLeave = () => {
-    const timeout = setTimeout(() => setShowNavDropdown(false), 200);
-    setNavDropdownTimeout(timeout);
-  };
-
-  const handleUserMouseEnter = () => {
-    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
-    setShowUserDropdown(true);
-  };
-
-  const handleUserMouseLeave = () => {
-    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
-    setUserDropdownTimeout(timeout);
-  };
 
   const handleSettings = () => {
     onNavigate("app-settings");
@@ -77,6 +35,27 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Scroll event listener for showing scroll buttons
+  useEffect(() => {
+    const updateScrollVisibility = () => {
+      const isScrollable = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight > 100;
+      setShowScroll(isScrollable);
+    };
+
+    // Check immediately and at multiple intervals
+    updateScrollVisibility();
+    setTimeout(updateScrollVisibility, 50);
+    setTimeout(updateScrollVisibility, 200);
+    setTimeout(updateScrollVisibility, 500);
+    
+    window.addEventListener("scroll", updateScrollVisibility);
+    window.addEventListener("resize", updateScrollVisibility);
+    return () => {
+      window.removeEventListener("scroll", updateScrollVisibility);
+      window.removeEventListener("resize", updateScrollVisibility);
+    };
+  }, [loading, formData]);
 
   const fetchProfile = async () => {
     try {
@@ -161,17 +140,17 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
 
   if (loading) {
     return (
-      <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
-        <header className="header">
-          <div className="header-content">
-            <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-              🍳 SmartChef
-            </div>
-            <button className="btn btn-secondary" onClick={onBack}>
-              ← Înapoi
-            </button>
-          </div>
-        </header>
+      <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem", background: darkMode ? "#0F172A" : "#F1F5F9" }}>
+        <Navbar 
+          userEmail={userEmail}
+          onBack={onBack}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
+          darkMode={darkMode}
+          toggleDarkMode={toggleDarkMode}
+          handleHelp={handleHelp}
+          currentPage={currentPage}
+        />
         <div style={{ textAlign: "center", padding: "3rem", marginTop: "4rem" }}>
           <div className="spinner" style={{ margin: "0 auto 1rem" }}></div>
           <p style={{ color: "#666" }}>Se încarcă datele...</p>
@@ -181,159 +160,24 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
   }
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
-              {/* Navigation Dropdown */}
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleNavMouseEnter}
-                onMouseLeave={handleNavMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem", background: "rgba(255,255,255,0.2)" }}
-                >
-                  ☰
-                </button>
-                {showNavDropdown && (
-                  <div className="nav-dropdown">
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('dashboard');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📈 Dashboard
-                    </button>
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('history');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📊 History
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div style={{
-                width: "1px",
-                height: "30px",
-                background: "rgba(255,255,255,0.3)",
-                margin: "0 0.5rem"
-              }}></div>
+    <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem", background: darkMode ? "#0F172A" : "#F1F5F9" }}>
+      {/* Skip Link untuk keyboard navigation - WCAG 2.1 */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      
+      <Navbar 
+        userEmail={userEmail}
+        onBack={onBack}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage={currentPage}
+      />
 
-              {/* Notifications Bell */}
-              <button
-                className="btn btn-outline"
-                onClick={() => onNavigate('notifications')}
-                style={{ 
-                  padding: "0.7rem 1.2rem", 
-                  fontSize: "1.5rem", 
-                  background: "rgba(255,255,255,0.2)",
-                  position: "relative"
-                }}
-                title="Notificări"
-              >
-                🔔
-                {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-5px",
-                    background: "#3B82F6",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "24px",
-                    height: "24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: "700",
-                    border: "2px solid white"
-                  }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              {/* User Dropdown */}
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleUserMouseEnter}
-                onMouseLeave={handleUserMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ 
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem"
-                  }}
-                >
-                  👤 {userEmail}
-                  <span style={{ 
-                    fontSize: "0.7rem",
-                    transition: "transform 0.3s",
-                    display: "inline-block",
-                    transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
-                  }}>►</span>
-                </button>
-                {showUserDropdown && (
-                  <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profil - Coming soon!')}>
-                      <span className="dropdown-icon">👤</span>
-                      Profile
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('personal-data');
-                      setShowUserDropdown(false);
-                    }} style={{ fontWeight: "600" }}>
-                      <span className="dropdown-icon">📊</span>
-                      Personal Data
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('account-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">🔑</span>
-                      Account Settings
-                    </button>
-
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('app-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">⚙️</span>
-                      App Settings
-                    </button>
-                    
-                    <div className="user-dropdown-divider"></div>
-                    <button className="user-dropdown-item logout-item" onClick={onLogout}>
-                      <span className="dropdown-icon">🚪</span>
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "2rem" }}>
+      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "6rem 2rem 2rem 2rem" }}>
         <button
           className="btn btn-secondary"
           onClick={onBack}
@@ -342,7 +186,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
           ← Back
         </button>
 
-        <div className="card" style={{ padding: "2rem" }}>
+        <div className="card" style={{ padding: "6rem 2rem 2rem 2rem", background: darkMode ? "#1E293B" : "#FFFFFF", border: darkMode ? "1px solid #334155" : "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)" }}>
           <h2 style={{ 
             fontSize: "2rem", 
             fontWeight: "700", 
@@ -353,7 +197,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
             📊 Personal Data
           </h2>
           <p style={{ 
-            color: "#666", 
+            color: darkMode ? "#94A3B8" : "#64748B", 
             fontSize: "0.95rem", 
             textAlign: "center",
             marginBottom: "2rem"
@@ -377,10 +221,10 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
           {success && (
             <div style={{
               padding: "1rem",
-              background: "rgba(76, 175, 80, 0.1)",
-              border: "1px solid rgba(76, 175, 80, 0.3)",
+              background: "rgba(59, 130, 246, 0.1)",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
               borderRadius: "8px",
-              color: "#388e3c",
+              color: "#3B82F6",
               marginBottom: "1rem"
             }}>
               {success}
@@ -609,50 +453,83 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
         </div>
       </div>
 
-      {/* Floating Action Button Menu */}
-      <div className="fab-container">
-        {/* Menu Items (appear when expanded) */}
-        <button
-          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => {
-            // Toggle dark mode via parent if you like
-            alert('🌙 Dark Mode toggle - funcționalitate viitoare!');
-          }}
-          title="Dark Mode"
-        >
-          🌙
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleSettings}
-          title="Settings"
-        >
-          ⚙️
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleHelp}
-          title="Help & Support"
-        >
-          ❓
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => setShowShortcuts(true)}
-          title="Keyboard Shortcuts (apasă ?)"
-        >
-          ⌨️
-        </button>
-        
-        {/* Main FAB Button */}
-        <button
-          className={`fab-main ${showFabMenu ? 'active' : ''}`}
-          onClick={() => setShowFabMenu(!showFabMenu)}
-          title="Menu"
-        >
-          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
-        </button>
-      </div>
+      {/* Scroll to Top/Bottom floating buttons */}
+      {showScroll && (
+        <div style={{
+          position: "fixed",
+          bottom: "2rem",
+          right: "2rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+          zIndex: 1100
+        }}>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Scroll to top"
+            style={{
+              padding: "0.75rem",
+              background: "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.75rem",
+              height: "2.75rem"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.5)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+            }}
+          >
+            <MdOutlineKeyboardArrowUp style={{ width: "1.5rem", height: "1.5rem" }} />
+          </button>
+          <button
+            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+            aria-label="Scroll to bottom"
+            style={{
+              padding: "0.75rem",
+              background: "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.75rem",
+              height: "2.75rem"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "translateY(3px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.5)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+            }}
+          >
+            <MdOutlineKeyboardArrowDown style={{ width: "1.5rem", height: "1.5rem" }} />
+          </button>
+        </div>
+      )}
 
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcuts && (
@@ -663,5 +540,8 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate }
     </div>
   );
 }
+
+
+
 
 

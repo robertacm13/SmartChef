@@ -6,6 +6,8 @@ import "./utils/errorMessages.css";
 import { useKeyboardShortcuts, ShortcutsHelp } from "./utils/keyboardShortcuts";
 import "./utils/keyboardShortcuts.css";
 import { AnalysisCardSkeleton } from "./components/SkeletonLoader";
+import logoImg from "./logo.png";
+import Navbar from "./components/Navbar";
 
 export default function History({ userEmail, onBack, onLogout, onNavigate, darkMode, toggleDarkMode, handleSettings, handleHelp }) {
   const ITEMS_PER_PAGE = 20;
@@ -14,31 +16,6 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
   const [error, setError] = useState("");
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [showNavDropdown, setShowNavDropdown] = useState(false);
-  const [showFabMenu, setShowFabMenu] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
-  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
-
-  const handleNavMouseEnter = () => {
-    if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
-    setShowNavDropdown(true);
-  };
-
-  const handleNavMouseLeave = () => {
-    const timeout = setTimeout(() => setShowNavDropdown(false), 200);
-    setNavDropdownTimeout(timeout);
-  };
-
-  const handleUserMouseEnter = () => {
-    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
-    setShowUserDropdown(true);
-  };
-
-  const handleUserMouseLeave = () => {
-    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
-    setUserDropdownTimeout(timeout);
-  };
   
   // Filtre și căutare
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,9 +35,9 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
     'f': () => document.querySelector('.search-input')?.focus(),
     '?': () => setShowShortcuts(true),
     'Escape': () => {
+      if (showShortcuts) setShowShortcuts(false);
       if (selectedAnalysis) setSelectedAnalysis(null);
       else if (deleteConfirm) setDeleteConfirm(null);
-      else if (showShortcuts) setShowShortcuts(false);
     }
   });
 
@@ -189,7 +166,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
       );
     }
 
-    // Filtrare după număr ingrediente
+    // Filter by number of ingredients
     if (ingredientFilter !== "all") {
       filtered = filtered.filter(analysis => {
         const count = analysis.ingredients.length;
@@ -259,7 +236,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
       <div style={{ marginTop: "1rem" }}>
         <div style={{ marginBottom: "0.8rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
-            <span style={{ fontSize: "0.9rem", color: "#666" }}>🔥 Calorii</span>
+            <span style={{ fontSize: "0.9rem", color: "#666" }}>🔥 Calories</span>
             <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.calories).toFixed(2)} kcal
             </span>
@@ -297,7 +274,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <div style={{ 
               width: `${Math.min((totalNutrition.protein / maxProtein) * 100, 100)}%`, 
               height: "100%", 
-              background: "linear-gradient(90deg, #3B82F6, #66BB6A)",
+              background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
               transition: "width 0.5s ease"
             }}></div>
           </div>
@@ -306,7 +283,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
         <div style={{ marginBottom: "0.8rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
             <span style={{ fontSize: "0.9rem", color: "#666" }}>🍞 Carbohidrați</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#2196F3" }}>
+            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.carbs).toFixed(2)}g
             </span>
           </div>
@@ -320,7 +297,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <div style={{ 
               width: `${Math.min((totalNutrition.carbs / maxCarbs) * 100, 100)}%`, 
               height: "100%", 
-              background: "linear-gradient(90deg, #2196F3, #42A5F5)",
+              background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
               transition: "width 0.5s ease"
             }}></div>
           </div>
@@ -353,173 +330,30 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
   };
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
+    <div style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "var(--bg, #F1F5F9)", color: darkMode ? "#E2E8F0" : "#1E293B", paddingBottom: "2rem" }}>
+      <Navbar 
+        userEmail={userEmail}
+        onBack={onBack}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage="history"
+      />
+
       {/* Skip Link pentru keyboard navigation - WCAG 2.1 */}
       <a href="#main-content" className="skip-link">
-        Sari la conținut principal
+        Skip to main content
       </a>
-      
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            {/* Right side - Menu & User */}
-              <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
-              {/* Notifications Bell */}
-              <button
-                className="btn btn-outline"
-                onClick={() => onNavigate('notifications')}
-                style={{ 
-                  padding: "0.7rem 1.2rem", 
-                  fontSize: "1.5rem", 
-                  background: "rgba(255,255,255,0.2)",
-                  position: "relative"
-                }}
-                title="Notificări"
-              >
-                🔔
-                {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-5px",
-                    background: "#3B82F6",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "24px",
-                    height: "24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: "700",
-                    border: "2px solid white"
-                  }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              {/* Navigation Dropdown */}
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleNavMouseEnter}
-                onMouseLeave={handleNavMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem", background: "rgba(255,255,255,0.2)" }}
-                >
-                  ☰
-                </button>
-                {showNavDropdown && (
-                  <div className="nav-dropdown">
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('dashboard');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📈 Dashboard
-                    </button>
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('history');
-                        setShowNavDropdown(false);
-                      }}
-                      style={{ fontWeight: "600" }}
-                    >
-                      📊 History
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div style={{
-                width: "1px",
-                height: "30px",
-                background: "rgba(255,255,255,0.3)",
-                margin: "0 0.5rem"
-              }}></div>
-              
-              {/* User Dropdown */}
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleUserMouseEnter}
-                onMouseLeave={handleUserMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ 
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem"
-                  }}
-                >
-                  👤 {userEmail}
-                  <span style={{ 
-                    fontSize: "0.7rem",
-                    transition: "transform 0.3s",
-                    display: "inline-block",
-                    transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
-                  }}>►</span>
-                </button>
-                {showUserDropdown && (
-                  <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
-                      <span className="dropdown-icon">👤</span>
-                      Profile
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('personal-data');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">📊</span>
-                      Personal Data
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('account-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">🔑</span>
-                      Account Settings
-                    </button>
-
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('app-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">⚙️</span>
-                      App Settings
-                    </button>
-                    
-                    <div className="user-dropdown-divider"></div>
-                    <button className="user-dropdown-item logout-item" onClick={onLogout}>
-                      <span className="dropdown-icon">🚪</span>
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content Area - Accessible landmark */}
-      <main id="main-content" style={{ maxWidth: "1000px", margin: "0 auto", padding: "2rem" }}>
+      <main id="main-content" style={{ maxWidth: "1000px", margin: "0 auto", padding: "6rem 2rem 2rem 2rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#3B82F6", marginBottom: "0.5rem" }}>
-            📊 Istoricul Analizelor
+            📊 Analysis History
           </h2>
           <p style={{ color: "#666", fontSize: "1rem" }}>
-            Toate analizele tale de mâncare
+            All your food analyses
           </p>
         </div>
 
@@ -632,7 +466,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
 
           {/* Counter rezultate */}
           <div style={{ marginTop: "1rem", textAlign: "center", color: "#666", fontSize: "0.9rem" }}>
-            {filteredAnalyses.length} {filteredAnalyses.length === 1 ? 'rezultat găsit' : 'rezultate găsite'}
+            {filteredAnalyses.length} {filteredAnalyses.length === 1 ? 'result found' : 'results found'}
           </div>
         </div>
 
@@ -641,7 +475,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
           onClick={onBack}
           style={{ marginBottom: "2rem" }}
         >
-          ← Înapoi
+          ← Back
         </button>
 
         {loading && (
@@ -806,15 +640,15 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                           ⭐
                         </button>
                       </Tooltip>
-                      <Tooltip text="Şterge analiza" position="left">
+                      <Tooltip text="Delete analysis" position="left">
                         <button
                           className="delete-btn"
                           onClick={(e) => {
                             e.stopPropagation();
                             setDeleteConfirm(analysis);
                           }}
-                          aria-label="Şterge analiza"
-                          title="Șterge analiza"
+                          aria-label="Delete analysis"
+                          title="Delete analysis"
                         >
                           🗑️
                         </button>
@@ -827,14 +661,14 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                         fontSize: "0.85rem",
                         fontWeight: "600"
                       }}>
-                        {analysis.ingredients.length} ingrediente
+                        {analysis.ingredients.length} ingredients
                       </span>
                     </div>
                   </div>
 
                   <div style={{ marginBottom: "1rem" }}>
                     <p style={{ fontSize: "0.9rem", fontWeight: "600", color: "#333", marginBottom: "0.5rem" }}>
-                      🥗 Ingrediente detectate:
+                      🥗 Detected Ingredients:
                     </p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                       {analysis.ingredients.map((ing, i) => (
@@ -875,8 +709,8 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                     fontStyle: "italic"
                   }}>
                     {selectedAnalysis?._id === analysis._id 
-                      ? "Click pentru a ascunde detaliile" 
-                      : "Click pentru a vedea detaliile nutriționale"}
+                      ? "Click to hide details" 
+                      : "Click to see nutritional details"}
                   </p>
                 </div>
               </div>
@@ -923,12 +757,12 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
           <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
             <div className="delete-icon">🗑️</div>
             <h3 style={{ fontSize: "1.5rem", margin: "1rem 0", color: "#2d3436" }}>
-              Șterge Analiza?
+              Delete Analysis?
             </h3>
             <p style={{ color: "#636e72", marginBottom: "1.5rem", lineHeight: "1.6" }}>
-              Ești sigur că vrei să ștergi această analiză?<br/>
+              Are you sure you want to delete this analysis?<br/>
               <strong>{deleteConfirm.image_name}</strong><br/>
-              Această acțiune nu poate fi anulată.
+              This action cannot be undone.
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
               <button
@@ -936,70 +770,21 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                 onClick={() => setDeleteConfirm(null)}
                 style={{ minWidth: "120px" }}
               >
-                Anulează
+                Cancel
               </button>
               <button
                 className="btn-delete-confirm"
                 onClick={() => handleDelete(deleteConfirm._id)}
                 style={{ minWidth: "120px" }}
               >
-                Șterge
+                Delete
               </button>
             </div>
           </div>
         </div>
       )}
       
-      {/* Floating Action Button with Expandable Menu */}
-      <div className="fab-container">
-        {/* Menu Items (appear when expanded) */}
-        <button
-          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
-          onClick={toggleDarkMode}
-          aria-label={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          title={darkMode ? "Light Mode" : "Dark Mode"}
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
-        
-        <button
-          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleSettings}
-          aria-label="Settings"
-          title="App Settings"
-        >
-          ⚙️
-        </button>
-        
-        <button
-          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleHelp}
-          aria-label="Help & Support"
-          title="Help & Support"
-        >
-          ❓
-        </button>
-        
-        <button
-          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => setShowShortcuts(true)}
-          aria-label="Keyboard Shortcuts"
-          title="Keyboard Shortcuts (apasă ?)"
-        >
-          ⌨️
-        </button>
-        
-        {/* Main FAB Button */}
-        <button
-          className={`fab-main ${showFabMenu ? 'active' : ''}`}
-          onClick={() => setShowFabMenu(!showFabMenu)}
-          aria-label="Menu"
-          aria-expanded={showFabMenu}
-          title="Meniu acțiuni rapide"
-        >
-          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
-        </button>
-      </div>
+
       
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcuts && (
@@ -1007,7 +792,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
           onClose={() => setShowShortcuts(false)}
           customShortcuts={{
             'f': { description: 'Focus căutare', action: 'focus-search' },
-            's': { description: 'Mergi la Istoric (acum)', action: 'navigate-history' }
+            's': { description: 'Go to History (current)', action: 'navigate-history' }
           }}
         />
       )}

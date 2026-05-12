@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import axios from "axios";
 import { QRCodeSVG } from "qrcode.react";
 import "./App.css";
+import logo from "./logo.png";
 import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
 import { MdOutlineKeyboardArrowUp, MdOutlineKeyboardArrowDown } from "react-icons/md";
 
@@ -166,110 +167,52 @@ export default function Register({ onBack, onRegisterSuccess, onNavigateToLogin,
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: darkMode ? "#0F172A" : "#F1F5F9", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
       {/* --- NAVBAR --- */}
-      <nav style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "1rem 2rem",
-        borderBottom: "1px solid #E2E8F0",
-        background: darkMode ? "#1E293B" : "#F8FAFC",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        width: "100%"
-      }}>
+      <nav className="pre-login-nav" style={{ background: darkMode ? "#1E293B" : "#FFFFFF", borderBottom: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+        {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }} onClick={onBack}>
-          <div style={{
-            width: "32px",
-            height: "32px",
-            background: "#3B82F6",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-            fontWeight: "bold",
-            fontSize: "1.2rem"
-          }}>
-            🍳
-          </div>
-          <span style={{ fontSize: "1.25rem", fontWeight: "bold", letterSpacing: "-0.05em" }}>SmartChef</span>
+          <img src={logo} alt="SmartChef Logo" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
+          <span className="nav-logo-text" style={{ fontSize: "1.25rem", fontWeight: "bold", letterSpacing: "-0.05em", color: darkMode ? "#E2E8F0" : "#1E293B" }}>SmartChef</span>
         </div>
-        
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button 
-            onClick={onBack}
-            style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}
-          >
+
+        {/* Right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <button className="nav-text-btn" onClick={onBack}
+            style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
             Back
           </button>
-          <button 
-            onClick={onNavigateToLogin}
-            style={{ padding: "0.625rem 1.25rem", background: "#3B82F6", color: "white", borderRadius: "0.375rem", fontSize: "0.875rem", fontWeight: "600", border: "none", cursor: "pointer" }}
-          >
+          <button onClick={onNavigateToLogin}
+            style={{ padding: "0.5rem 1rem", background: "var(--primary)", color: "white", borderRadius: "0.375rem", fontSize: "0.875rem", fontWeight: "600", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
             Sign In
           </button>
-          
-          {/* Light/Dark Toggle */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "1rem", paddingLeft: "1rem", borderLeft: "1px solid #E2E8F0" }}>
-            {/* Help Button */}
-            <button
-              onClick={() => setShowHelpModal(true)}
-              aria-label="Open help and support"
-              style={{
-                padding: "0.5rem 0.75rem",
-                fontSize: "1.125rem",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: darkMode ? "#E2E8F0" : "#1E293B",
-                transition: "all 0.3s ease",
-                borderRadius: "0.375rem"
-              }}
-              onMouseOver={(e) => {
-                e.target.style.background = darkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(59, 130, 246, 0.1)";
-                e.target.style.color = "#3B82F6";
-              }}
-              onMouseOut={(e) => {
-                e.target.style.background = "none";
-                e.target.style.color = darkMode ? "#E2E8F0" : "#1E293B";
-              }}
-            >
-              ?
-            </button>
-            
-            <span style={{ fontSize: "0.75rem", fontWeight: "500", opacity: 0.6 }}>Light/Dark</span>
-            <button 
-              onClick={toggleDarkMode}
-              style={{
-                width: "48px",
-                height: "24px",
-                background: darkMode ? "#3B82F6" : "#E2E8F0",
-                borderRadius: "9999px",
-                padding: "0.25rem",
-                transition: "all 0.3s ease",
-                border: "none",
-                cursor: "pointer",
-                position: "relative",
-                display: "flex",
-                alignItems: "center"
-              }}
-            >
-              <div style={{
-                width: "16px",
-                height: "16px",
-                background: "white",
-                borderRadius: "9999px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                transform: darkMode ? "translateX(24px)" : "translateX(0)",
-                transition: "transform 0.3s ease"
-              }} />
-            </button>
-          </div>
+
+          {/* Divider */}
+          <div style={{ width: "1px", height: "24px", background: darkMode ? "#334155" : "#E2E8F0", margin: "0 0.25rem" }} />
+
+          {/* Help */}
+          <button onClick={() => setShowHelpModal(true)} aria-label="Help"
+            style={{ padding: "0.4rem 0.6rem", fontSize: "1rem", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#64748B", borderRadius: "6px" }}>
+            ?
+          </button>
+
+          {/* Dark mode toggle — pill only */}
+          <button onClick={toggleDarkMode} aria-label="Toggle dark mode"
+            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            style={{
+              width: "44px", height: "24px",
+              background: darkMode ? "var(--primary)" : "#E2E8F0",
+              borderRadius: "9999px", padding: "0.2rem",
+              border: "none", cursor: "pointer", position: "relative",
+              display: "flex", alignItems: "center", transition: "background 0.3s ease", flexShrink: 0
+            }}>
+            <div style={{
+              width: "16px", height: "16px", background: "white",
+              borderRadius: "9999px", boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              transform: darkMode ? "translateX(20px)" : "translateX(0)",
+              transition: "transform 0.3s ease"
+            }} />
+          </button>
         </div>
       </nav>
 

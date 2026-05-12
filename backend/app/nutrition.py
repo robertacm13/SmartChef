@@ -210,16 +210,17 @@ NUTRITION_DATABASE = {
     }
 }
 
-def get_nutrition_info(ingredients: List[str]) -> Dict:
+def get_nutrition_info(ingredients) -> Dict:
     """
-    Get aggregated nutritional information for a list of ingredients.
-    Assumes 100g of each ingredient for calculation.
+    Get aggregated nutritional information for a list of ingredients with optional weights.
     
     Args:
-        ingredients: List of ingredient names
+        ingredients: List of ingredient names (strings) or dicts with {name, weight}
+                    If string, assumes 100g default weight.
+                    If dict, uses specified weight in grams.
         
     Returns:
-        Dictionary with total and per-ingredient nutrition data
+        Dictionary with total and per-ingredient nutrition data including calculation formula
     """
     total_nutrition = {
         "calories": 0,
@@ -232,44 +233,69 @@ def get_nutrition_info(ingredients: List[str]) -> Dict:
     ingredient_details = []
     individual_nutrition = {}
     unknown_ingredients = []
+    calculation_formulas = []
     
     for ingredient in ingredients:
-        ingredient_lower = ingredient.lower()
+        # Handle both string and dict formats
+        if isinstance(ingredient, dict):
+            ingredient_name = ingredient.get("name", "").lower()
+            weight = ingredient.get("weight", 100)
+        else:
+            ingredient_name = str(ingredient).lower()
+            weight = 100
         
-        if ingredient_lower in NUTRITION_DATABASE:
-            nutrition = NUTRITION_DATABASE[ingredient_lower]
+        if ingredient_name in NUTRITION_DATABASE:
+            base_nutrition = NUTRITION_DATABASE[ingredient_name]
+            
+            # Calculate nutrition for actual weight: (weight / 100) * nutrition_per_100g
+            weight_multiplier = weight / 100
+            calculated_nutrition = {
+                "calories": round(base_nutrition.get("calories", 0) * weight_multiplier, 2),
+                "protein": round(base_nutrition.get("protein", 0) * weight_multiplier, 2),
+                "carbs": round(base_nutrition.get("carbs", 0) * weight_multiplier, 2),
+                "fat": round(base_nutrition.get("fat", 0) * weight_multiplier, 2),
+                "fiber": round(base_nutrition.get("fiber", 0) * weight_multiplier, 2)
+            }
             
             # Add to totals
-            total_nutrition["calories"] += nutrition.get("calories", 0)
-            total_nutrition["protein"] += nutrition.get("protein", 0)
-            total_nutrition["carbs"] += nutrition.get("carbs", 0)
-            total_nutrition["fat"] += nutrition.get("fat", 0)
-            total_nutrition["fiber"] += nutrition.get("fiber", 0)
+            total_nutrition["calories"] += calculated_nutrition["calories"]
+            total_nutrition["protein"] += calculated_nutrition["protein"]
+            total_nutrition["carbs"] += calculated_nutrition["carbs"]
+            total_nutrition["fat"] += calculated_nutrition["fat"]
+            total_nutrition["fiber"] += calculated_nutrition["fiber"]
+            
+            # Create calculation formula for this ingredient
+            formula = f"{ingredient_name.capitalize()} ({weight}g) = ({weight}/100) × {base_nutrition.get('calories', 0)} kcal = {calculated_nutrition['calories']} kcal"
+            calculation_formulas.append(formula)
             
             # Store individual ingredient info
             ingredient_details.append({
-                "name": ingredient,
-                "nutrition": nutrition
+                "name": ingredient_name,
+                "weight": weight,
+                "nutrition": calculated_nutrition,
+                "formula": formula
             })
             
             # Add to individual nutrition mapping
-            individual_nutrition[ingredient_lower] = {
-                "calories": nutrition.get("calories", 0),
-                "protein": nutrition.get("protein", 0),
-                "carbs": nutrition.get("carbs", 0),
-                "fat": nutrition.get("fat", 0),
-                "fiber": nutrition.get("fiber", 0)
-            }
+            individual_nutrition[ingredient_name] = calculated_nutrition
         else:
-            unknown_ingredients.append(ingredient)
+            unknown_ingredients.append(ingredient_name if isinstance(ingredient, dict) else ingredient)
+    
+    # Round total nutrition values
+    total_nutrition = {k: round(v, 2) for k, v in total_nutrition.items()}
+    
+    # Create total formula
+    total_formula = f"Total = {' + '.join([str(ing['nutrition']['calories']) for ing in ingredient_details])} = {total_nutrition['calories']} kcal"
     
     return {
         "total_nutrition": total_nutrition,
         "individual_nutrition": individual_nutrition,
-        "serving_note": "Values calculated for 100g of each ingredient",
+        "serving_note": f"Values calculated based on actual ingredient weights",
         "ingredients": ingredient_details,
         "unknown_ingredients": unknown_ingredients,
-        "ingredient_count": len(ingredient_details)
+        "ingredient_count": len(ingredient_details),
+        "calculation_formulas": calculation_formulas,
+        "total_formula": total_formula
     }
 
 def format_nutrition_response(nutrition_data: Dict) -> str:
@@ -306,3 +332,35 @@ def format_nutrition_response(nutrition_data: Dict) -> str:
         response += f"\n\n⚠️ **Unknown ingredients:** {', '.join(nutrition_data['unknown_ingredients'])}"
     
     return response
+
+
+def get_ingredient_suggestions(search_text: str) -> List[str]:
+    """
+    Get autocomplete suggestions for ingredients based on search text.
+    
+    Args:
+        search_text: User's input text to search for
+        
+    Returns:
+        List of matching ingredient names, limited to 10 results
+    """
+    if not search_text or len(search_text.strip()) == 0:
+        return []
+    
+    search_lower = search_text.lower().strip()
+    
+    # Get exact matches first, then partial matches
+    exact_matches = []
+    partial_matches = []
+    
+    for ingredient in NUTRITION_DATABASE.keys():
+        if ingredient == search_lower:
+            exact_matches.append(ingredient)
+        elif search_lower in ingredient or ingredient.startswith(search_lower):
+            partial_matches.append(ingredient)
+    
+    # Combine: exact matches first, then partial matches
+    suggestions = exact_matches + sorted(partial_matches)
+    
+    # Return top 10 suggestions, formatted nicely
+    return [ing.capitalize() for ing in suggestions[:10]]

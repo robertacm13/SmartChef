@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 
 export const SHORTCUTS = {
   // Navigation
-  'h': { description: 'Mergi la Home', action: 'navigate-home' },
+  'h': { description: 'Go to Home', action: 'navigate-home' },
   'a': { description: 'Analizează alimentul', action: 'navigate-analyze' },
   's': { description: 'Istoric (History)', action: 'navigate-history' },
   'd': { description: 'Dashboard', action: 'navigate-dashboard' },
@@ -15,7 +15,7 @@ export const SHORTCUTS = {
   // Actions
   'u': { description: 'Upload imagine', action: 'upload-image' },
   'Enter': { description: 'Analizează/Confirmă', action: 'submit' },
-  'Escape': { description: 'Închide modal/Anulează', action: 'cancel' },
+  'Escape': { description: 'Close modal / Cancel', action: 'cancel' },
   
   // UI
   't': { description: 'Toggle Dark Mode', action: 'toggle-theme' },

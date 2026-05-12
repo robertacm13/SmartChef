@@ -3,8 +3,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 /* ===================================== */
+/* CSS THEME VARIABLES (defaults = blue) */
+/* ===================================== */
+:root {
+  --primary:     #3B82F6;
+  --accent:      #2563EB;
+  --bg:          #F1F5F9;
+  --header-from: #2563EB;
+  --header-to:   #3B82F6;
+  --fab-color:   #3B82F6;
+  --primary-rgb: 59, 130, 246;  /* used for rgba() shadows */
+}
+
+/* ===================================== */
 /* ACCESSIBILITY STYLES (WCAG 2.1) */
 /* ===================================== */
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* Screen Reader Only - hides visually but accessible to screen readers */
 .sr-only {
@@ -109,7 +132,7 @@ body {
 
 /* Static Background */
 .animated-bg {
-  background: var(--bg, #FFFFFF);
+  background: var(--bg, #F1F5F9);
   min-height: 100vh;
   padding-top: 80px;
   transition: background 0.4s ease;
@@ -491,8 +514,8 @@ button:disabled:hover {
 
 .btn-outline {
   background: transparent;
-  color: white;
-  border: 2px solid white;
+  color: var(--primary, #3B82F6);
+  border: 2px solid var(--primary, #3B82F6);
 }
 
 /* Card Styles */
@@ -2150,4 +2173,41 @@ body.dark-mode .appsettings-section-title {
   color: var(--primary, #3B82F6);
 }
 
+/* ===================================== */
+/* RESPONSIVE NAVBAR (pre-login pages)   */
+/* ===================================== */
+.pre-login-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  width: 100%;
+  box-sizing: border-box;
+}
 
+.pre-login-nav .nav-logo-text {
+  display: inline;
+}
+
+.pre-login-nav .nav-label-text {
+  display: none; /* hide "Light/Dark" text always */
+}
+
+@media (max-width: 640px) {
+  .pre-login-nav {
+    padding: 0.75rem 1rem;
+  }
+
+  .pre-login-nav .nav-logo-text {
+    display: none; /* hide "SmartChef" text on very small screens */
+  }
+
+  .pre-login-nav .nav-text-btn {
+    display: none; /* hide "Log In" / "Back" text-only buttons */
+  }
+}

@@ -143,7 +143,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
             <div style={{ textAlign: "center" }}>
               <div
                 style={{
-                  background: "#e8f5e9",
+                  background: "#F0F9FF",
                   border: "2px solid #3B82F6",
                   padding: "1.5rem",
                   borderRadius: "10px",
@@ -151,7 +151,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
                 }}
               >
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>✅</div>
-                <p style={{ color: "#2e7d32", fontWeight: "600", marginBottom: "0.5rem" }}>
+                <p style={{ color: "#3B82F6", fontWeight: "600", marginBottom: "0.5rem" }}>
                   Password reset successfully!
                 </p>
                 <p style={{ color: "#555", fontSize: "0.9rem" }}>

@@ -36,145 +36,95 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
   }, [authToken, userEmail]);
 
   return (
-    <div style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
+    <div style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "#F1F5F9", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
       {/* --- NAVBAR --- */}
-      <nav style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "1rem 2rem",
-        borderBottom: "1px solid #E2E8F0",
-        background: darkMode ? "#1E293B" : "#F8FAFC",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        width: "100%"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{
-            width: "40px", 
-            height: "40px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden"
-          }}>
-            <img 
-              src={logoImg} 
-              alt="SmartChef Logo" 
-              style={{ width: "100%", height: "100%", objectFit: "contain" }} 
-            />
+      <nav className="pre-login-nav" style={{ background: darkMode ? "#1E293B" : "#FFFFFF", borderBottom: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }} onClick={() => onNavigate && onNavigate("main")}>
+          <div style={{ width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+            <img src={logoImg} alt="SmartChef Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
-          <span style={{ fontSize: "1.25rem", fontWeight: "bold", letterSpacing: "-0.05em" }}>SmartChef</span>
+          <span className="nav-logo-text" style={{ fontSize: "1.25rem", fontWeight: "bold", letterSpacing: "-0.05em", color: darkMode ? "#E2E8F0" : "#1E293B" }}>SmartChef</span>
         </div>
-        
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+
+        {/* Right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           {authToken ? (
             <>
-              <button 
-                onClick={() => onNavigate("dashboard")}
-                style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}
-              >
+              <button className="nav-text-btn" onClick={() => onNavigate("dashboard")}
+                style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
                 Dashboard
               </button>
-              <button 
-                onClick={() => onNavigate("dashboard")}
-                style={{ padding: "0.625rem 1.25rem", background: "#3B82F6", color: "white", borderRadius: "0.375rem", fontSize: "0.875rem", fontWeight: "600", border: "none", cursor: "pointer" }}
-              >
+              <button onClick={() => onNavigate("analyze")}
+                style={{ padding: "0.5rem 1rem", background: "var(--primary)", color: "white", borderRadius: "0.375rem", fontSize: "0.875rem", fontWeight: "600", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 Analyze
               </button>
-              <button 
-                onClick={onLogout}
-                style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}
-              >
+              <button className="nav-text-btn" onClick={onLogout}
+                style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
                 Log Out
               </button>
             </>
           ) : (
             <>
-              <button 
-                onClick={() => onNavigate("login")}
-                style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}
-              >
+              <button className="nav-text-btn" onClick={() => onNavigate("login")}
+                style={{ padding: "0.5rem 1rem", fontSize: "0.875rem", fontWeight: "500", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
                 Log In
               </button>
-              <button 
-                onClick={() => onNavigate("register")}
-                style={{ padding: "0.625rem 1.25rem", background: "#3B82F6", color: "white", borderRadius: "0.375rem", fontSize: "0.875rem", fontWeight: "600", border: "none", cursor: "pointer" }}
-              >
+              <button onClick={() => onNavigate("register")}
+                style={{ padding: "0.5rem 1rem", background: "var(--primary)", color: "white", borderRadius: "0.375rem", fontSize: "0.875rem", fontWeight: "600", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 Sign Up
               </button>
             </>
           )}
-          
-          {/* Light/Dark Toggle */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "1rem", paddingLeft: "1rem", borderLeft: "1px solid #E2E8F0" }}>
-            {/* Help Button */}
-            <button
-              onClick={() => setShowHelpModal(true)}
-              aria-label="Open help and support"
-              style={{
-                padding: "0.5rem 0.75rem",
-                fontSize: "1.125rem",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: darkMode ? "#E2E8F0" : "#1E293B",
-                transition: "all 0.3s ease",
-                borderRadius: "0.375rem"
-              }}
-              onMouseOver={(e) => {
-                e.target.style.background = darkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(59, 130, 246, 0.1)";
-                e.target.style.color = "#3B82F6";
-              }}
-              onMouseOut={(e) => {
-                e.target.style.background = "none";
-                e.target.style.color = darkMode ? "#E2E8F0" : "#1E293B";
-              }}
-            >
-              ?
-            </button>
-            
-            <span style={{ fontSize: "0.75rem", fontWeight: "500", opacity: 0.6 }}>Light/Dark</span>
-            <button 
-              onClick={toggleDarkMode}
-              style={{
-                width: "48px",
-                height: "24px",
-                background: darkMode ? "#3B82F6" : "#E2E8F0",
-                borderRadius: "9999px",
-                padding: "0.25rem",
-                transition: "all 0.3s ease",
-                border: "none",
-                cursor: "pointer",
-                position: "relative",
-                display: "flex",
-                alignItems: "center"
-              }}
-            >
-              <div style={{
-                width: "16px",
-                height: "16px",
-                background: "white",
-                borderRadius: "9999px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                transform: darkMode ? "translateX(24px)" : "translateX(0)",
-                transition: "transform 0.3s ease"
-              }} />
-            </button>
-          </div>
+
+          {/* Divider */}
+          <div style={{ width: "1px", height: "24px", background: darkMode ? "#334155" : "#E2E8F0", margin: "0 0.25rem" }} />
+
+          {/* Help */}
+          <button onClick={() => setShowHelpModal(true)} aria-label="Help"
+            style={{ padding: "0.4rem 0.6rem", fontSize: "1rem", background: "none", border: "none", cursor: "pointer", color: darkMode ? "#E2E8F0" : "#64748B", borderRadius: "6px" }}>
+            ?
+          </button>
+
+          {/* Dark mode toggle — pill only, no text */}
+          <button onClick={toggleDarkMode} aria-label="Toggle dark mode"
+            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            style={{
+              width: "44px", height: "24px",
+              background: darkMode ? "var(--primary)" : "#E2E8F0",
+              borderRadius: "9999px", padding: "0.2rem",
+              border: "none", cursor: "pointer", position: "relative",
+              display: "flex", alignItems: "center", transition: "background 0.3s ease", flexShrink: 0
+            }}>
+            <div style={{
+              width: "16px", height: "16px", background: "white",
+              borderRadius: "9999px", boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              transform: darkMode ? "translateX(20px)" : "translateX(0)",
+              transition: "transform 0.3s ease"
+            }} />
+          </button>
         </div>
       </nav>
 
       {/* --- MAIN CONTENT --- */}
-      <main style={{ paddingTop: "80px" }}>
+      <main style={{ paddingTop: "100px" }}>
         {!authToken ? (
           <>
             {/* --- HERO SECTION --- */}
-            <section style={{ background: darkMode ? "#0F172A" : "#FFFFFF", padding: "4rem 2rem", maxWidth: "1400px", margin: "0 auto" }}>
-              <div style={{ display: "flex", gap: "3rem", alignItems: "center", flexWrap: "wrap" }}>
+            <section style={{ padding: "1rem 1.5rem 2rem 1.5rem", maxWidth: "100%" }}>
+              <div style={{
+                display: "flex",
+                gap: "4rem",
+                alignItems: "center",
+                flexWrap: "wrap",
+                maxWidth: "1600px",
+                margin: "0 auto",
+                background: darkMode ? "#1E293B" : "#FFFFFF",
+                borderRadius: "1.5rem",
+                padding: "3.5rem 5rem",
+                boxShadow: darkMode ? "0 4px 24px rgba(0,0,0,0.3)" : "0 4px 24px rgba(0,0,0,0.06)",
+                border: darkMode ? "1px solid #334155" : "1px solid #E2E8F0"
+              }}>
                 {/* Left: Text */}
                 <div style={{ flex: 1, minWidth: "350px" }}>
                   <h1 style={{
@@ -196,7 +146,7 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                     lineHeight: "1.6",
                     maxWidth: "28rem"
                   }}>
-                    Use our model to instantly analyze the calories and macronutrients of your meals.
+                    Instantly analyze the calories and macronutrients of your meals.
                   </p>
 
                   <button
@@ -278,11 +228,11 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 {/* Feature 1 */}
                 <div style={{ textAlign: "center" }}>
                   <div style={{
-                    padding: "1rem",
+                    padding: "1.25rem",
                     background: darkMode ? "#1E3A5F" : "#F0F9FF",
                     borderRadius: "1rem",
                     color: "#3B82F6",
-                    fontSize: "2rem",
+                    fontSize: "2.75rem",
                     marginBottom: "1rem",
                     display: "inline-block"
                   }}>
@@ -295,11 +245,11 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 {/* Feature 2 */}
                 <div style={{ textAlign: "center" }}>
                   <div style={{
-                    padding: "1rem",
+                    padding: "1.25rem",
                     background: darkMode ? "#1E3A5F" : "#F0F9FF",
                     borderRadius: "1rem",
                     color: "#3B82F6",
-                    fontSize: "2rem",
+                    fontSize: "2.75rem",
                     marginBottom: "1rem",
                     display: "inline-block"
                   }}>
@@ -312,11 +262,11 @@ function Home({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDark
                 {/* Feature 3 */}
                 <div style={{ textAlign: "center" }}>
                   <div style={{
-                    padding: "1rem",
+                    padding: "1.25rem",
                     background: darkMode ? "#1E3A5F" : "#F0F9FF",
                     borderRadius: "1rem",
                     color: "#3B82F6",
-                    fontSize: "2rem",
+                    fontSize: "2.75rem",
                     marginBottom: "1rem",
                     display: "inline-block"
                   }}>

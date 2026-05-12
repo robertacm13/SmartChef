@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from app.auth import register_user, login_user, request_password_reset, verify_reset_token, reset_password
 from app.model import get_model
-from app.nutrition import get_nutrition_info, format_nutrition_response
+from app.nutrition import get_nutrition_info, format_nutrition_response, get_ingredient_suggestions
 from app.database import (
     food_analyses_collection, 
     user_profiles_collection, 
@@ -176,11 +176,12 @@ async def analyze_food(
                 
                 # Create notification for analysis completion
                 try:
+                    display_food_name = food_name.replace("_", " ").strip().title() if food_name else "Your meal"
                     notification_data = {
                         "user_email": user_email,
                         "type": "analysis_complete",
-                        "title": "Analysis complete! 🎉",
-                        "message": f"Detected {len(detected_ingredients)} ingredients in {file.filename}",
+                        "title": f"{display_food_name} analysis complete! 🎉",
+                        "message": f"Great news! We've identified {len(detected_ingredients)} ingredients in your {display_food_name}. Tap here to see the full nutritional breakdown.",
                         "data": {
                             "analysis_id": analysis_id,
                             "food_name": food_name,
@@ -250,6 +251,28 @@ async def calculate_nutrition(data: dict):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating nutrition: {str(e)}")
+
+
+@app.get("/ingredient_suggestions/")
+async def ingredient_suggestions(search: str):
+    """
+    Get autocomplete suggestions for ingredients.
+    
+    Args:
+        search: Search text for ingredient autocomplete
+        
+    Returns:
+        List of matching ingredient names (max 10 results)
+    """
+    try:
+        if not search or len(search.strip()) == 0:
+            return {"suggestions": []}
+        
+        suggestions = get_ingredient_suggestions(search)
+        return {"suggestions": suggestions}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting suggestions: {str(e)}")
 
 
 class RegisterRequest(BaseModel):

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import Navbar from "./components/Navbar";
 
 const GOAL_TYPES = [
   { id: "lose_weight", name: "Weight Loss", emoji: "📉", description: "Caloric deficit for weight loss" },
@@ -16,7 +17,7 @@ const ACTIVITY_LEVELS = [
   { id: "very_active", name: "Extremely Active", description: "Very intense exercise + physical job", multiplier: 1.9 }
 ];
 
-export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
+export default function Goals({ userEmail, onBack, onLogout, onNavigate, darkMode, toggleDarkMode, handleHelp }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [calculated, setCalculated] = useState({});
@@ -31,9 +32,6 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
   const [targetWeight, setTargetWeight] = useState("");
   const [weeklyGoal, setWeeklyGoal] = useState("-0.5");
   
-  const [showNavDropdown, setShowNavDropdown] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
@@ -56,16 +54,6 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
       fetchUnreadNotifications();
     }
   }, [userEmail]);
-
-  const handleUserMouseEnter = () => {
-    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
-    setShowUserDropdown(true);
-  };
-
-  const handleUserMouseLeave = () => {
-    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
-    setUserDropdownTimeout(timeout);
-  };
 
   useEffect(() => {
     fetchGoals();
@@ -190,90 +178,32 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
   }
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh" }}>
-      {/* Header */}
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={() => setShowNavDropdown(true)}
-                onMouseLeave={() => setShowNavDropdown(false)}
-              >
-                <button className="btn btn-outline" style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem" }}>☰</button>
-                {showNavDropdown && (
-                  <div className="nav-dropdown">
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("dashboard"); setShowNavDropdown(false); }}>📈 Dashboard</button>
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("history"); setShowNavDropdown(false); }}>📊 History</button>
-                    <button className="nav-dropdown-item" onClick={() => { onNavigate("goals"); setShowNavDropdown(false); }} style={{ fontWeight: "600" }}>🎯 Goals</button>
-                  </div>
-                )}
-              </div>
-              
-              <div style={{ width: "1px", height: "30px", background: "rgba(255,255,255,0.3)", margin: "0 0.5rem" }}></div>
-              
-              {/* Notifications Bell */}
-              <button
-                className="btn btn-outline"
-                onClick={() => onNavigate('notifications')}
-                style={{ 
-                  padding: "0.7rem 1.2rem", 
-                  fontSize: "1.5rem", 
-                  background: "rgba(255,255,255,0.2)",
-                  position: "relative"
-                }}
-                title="Notificări"
-              >
-                🔔
-                {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-5px",
-                    background: "#3B82F6",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "24px",
-                    height: "24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: "700",
-                    border: "2px solid white"
-                  }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              <div style={{ position: "relative" }} onMouseEnter={handleUserMouseEnter} onMouseLeave={handleUserMouseLeave}>
-                <button className="btn btn-outline" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  👤 {userEmail}
-                  <span style={{ fontSize: "0.7rem", transition: "transform 0.3s", display: "inline-block", transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)" }}>►</span>
-                </button>
-                {showUserDropdown && (
-                  <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => onNavigate("personal-data")}><span className="dropdown-icon">📊</span> Personal Data</button>
-                    <button className="user-dropdown-item" onClick={() => onNavigate("account-settings")}><span className="dropdown-icon">🔑</span> Account Settings</button>
-                    <button className="user-dropdown-item" onClick={() => onNavigate("app-settings")}><span className="dropdown-icon">⚙️</span> App Settings</button>
-                    <div className="user-dropdown-divider"></div>
-                    <button className="user-dropdown-item logout-item" onClick={onLogout}><span className="dropdown-icon">🚪</span> Logout</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "#F1F5F9", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
+      <Navbar 
+        userEmail={userEmail}
+        onBack={onBack}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage="goals"
+      />
 
+      {/* Skip Link untuk keyboard navigation - WCAG 2.1 */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      
       {/* Main Content */}
-      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem" }}>
-<button class Name="btn btn-secondary" onClick={onBack} style={{ marginBottom: "2rem" }}>← Back</button>
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "6rem 2rem 2rem 2rem" }} id="main-content">
+        <button
+          className="btn btn-secondary"
+          onClick={onBack}
+          style={{ marginBottom: "2rem" }}
+        >
+          ← Back
+        </button>
 
         <div className="card" style={{ padding: "2rem", marginBottom: "1.5rem", textAlign: "center" }}>
           <h1 style={{ fontSize: "2.5rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>🎯 Your Goals</h1>
@@ -281,10 +211,10 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
         </div>
 
         {!hasProfile && (
-          <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(255, 193, 7, 0.1)", border: "1px solid rgba(255, 193, 7, 0.4)" }}>
+          <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
             <h3 style={{ marginBottom: "0.5rem", color: "#3B82F6" }}>⚠️ Missing personal data</h3>
             <p style={{ marginBottom: "1rem", color: "#666" }}>To calculate BMR and TDEE, complete your personal data (weight, height, age, gender).</p>
-            <button className="btn btn-primary" onClick={() => onNavigate("personal-data")}>📝 Completează datele personale</button>
+            <button className="btn btn-primary" onClick={() => onNavigate("personal-data")}>📝 Complete Personal Data</button>
           </div>
         )}
 
@@ -293,14 +223,14 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
           <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
             <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>📊 Your Metabolic Calculator</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-              <div style={{ padding: "1rem", background: "rgba(33, 150, 243, 0.08)", borderRadius: "12px", border: "2px solid rgba(33, 150, 243, 0.3)" }}>
+              <div style={{ padding: "1rem", background: "rgba(59, 130, 246, 0.08)", borderRadius: "12px", border: "2px solid rgba(59, 130, 246, 0.3)" }}>
                 <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>BMR (Basal Metabolic Rate)</div>
-                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#1976d2" }}>{calculated.bmr || "—"}</div>
+                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#3B82F6" }}>{calculated.bmr || "—"}</div>
                 <div style={{ fontSize: "0.8rem", color: "#888" }}>kcal/day at rest</div>
               </div>
-              <div style={{ padding: "1rem", background: "rgba(76, 175, 80, 0.08)", borderRadius: "12px", border: "2px solid rgba(76, 175, 80, 0.3)" }}>
+              <div style={{ padding: "1rem", background: "rgba(96, 165, 250, 0.08)", borderRadius: "12px", border: "2px solid rgba(96, 165, 250, 0.3)" }}>
                 <div style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.3rem" }}>TDEE (Total Daily Energy Expenditure)</div>
-                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#388e3c" }}>{calculated.tdee || "—"}</div>
+                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#60A5FA" }}>{calculated.tdee || "—"}</div>
                 <div style={{ fontSize: "0.8rem", color: "#888" }}>kcal/day with activity</div>
               </div>
             </div>
@@ -350,21 +280,21 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Recommended Macros */}
         {recommended && (
-          <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(76, 175, 80, 0.05)" }}>
-            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#388e3c", marginBottom: "0.5rem" }}>🎖️ Recommended macronutrients</h3>
+          <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem", background: "rgba(56, 142, 60, 0.08)", border: "1px solid rgba(56, 142, 60, 0.18)" }}>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#2e7d32", marginBottom: "0.5rem" }}>🎖️ Recommended macronutrients</h3>
             <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Based on your goal and activity level</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: "0.8rem" }}>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #3B82F6" }}>
-                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Calorii</div>
+                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Calories</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#3B82F6" }}>{recommended.calories}</div>
-                <div style={{ fontSize: "0.7rem", color: "#888" }}>kcal/zi</div>
+                <div style={{ fontSize: "0.7rem", color: "#888" }}>kcal/day</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #2196f3" }}>
                 <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Protein (g)</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#2196f3" }}>{recommended.protein}g</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #3B82F6" }}>
-                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Carbohidrați</div>
+                <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.2rem" }}>Carbohydrates (g)</div>
                 <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "#3B82F6" }}>{recommended.carbs}g</div>
               </div>
               <div style={{ padding: "0.8rem", background: "white", borderRadius: "10px", textAlign: "center", border: "2px solid #f44336" }}>
@@ -377,23 +307,23 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Custom Targets (Optional) */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>⚙️ Target-uri personalizate (opțional)</h3>
-          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Suprascrie recomandările automate — lasă gol pentru a folosi calculele de mai sus</p>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "0.5rem" }}>⚙️ Personalized Goals (Optional)</h3>
+          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Override automatic recommendations — leave empty to use calculations above</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem" }}>
             <div>
-              <label className="form-label">Calorii (kcal/zi)</label>
+              <label className="form-label">Calories (kcal/day)</label>
               <input type="number" className="form-input" value={customCalories} onChange={(e) => setCustomCalories(e.target.value)} placeholder={recommended ? recommended.calories : "2000"} />
             </div>
             <div>
-              <label className="form-label">Proteine (g)</label>
+              <label className="form-label">Protein (g)</label>
               <input type="number" className="form-input" value={customProtein} onChange={(e) => setCustomProtein(e.target.value)} placeholder={recommended ? recommended.protein : "150"} />
             </div>
             <div>
-              <label className="form-label">Carbohidrați (g)</label>
+              <label className="form-label">Carbohydrates (g)</label>
               <input type="number" className="form-input" value={customCarbs} onChange={(e) => setCustomCarbs(e.target.value)} placeholder={recommended ? recommended.carbs : "200"} />
             </div>
             <div>
-              <label className="form-label">Grăsimi (g)</label>
+              <label className="form-label">Fats (g)</label>
               <input type="number" className="form-input" value={customFat} onChange={(e) => setCustomFat(e.target.value)} placeholder={recommended ? recommended.fat : "65"} />
             </div>
           </div>
@@ -401,10 +331,10 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Weight Goal */}
         <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
-          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>⚖️ Obiectiv de greutate</h3>
+          <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--primary, #3B82F6)", marginBottom: "1rem" }}>⚖️ Weight Goals</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <div>
-              <label className="form-label">Greutate țintă (kg)</label>
+              <label className="form-label">Target Weight (kg)</label>
               <input type="number" step="0.1" className="form-input" value={targetWeight} onChange={(e) => setTargetWeight(e.target.value)} placeholder="Ex: 75.0" />
             </div>
             <div>
@@ -424,7 +354,7 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Messages */}
         {success && (
-          <div style={{ padding: "1rem", background: "rgba(76, 175, 80, 0.1)", border: "1px solid rgba(76, 175, 80, 0.3)", borderRadius: "8px", color: "#388e3c", marginBottom: "1rem" }}>{success}</div>
+          <div style={{ padding: "1rem", background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.3)", borderRadius: "8px", color: "#3B82F6", marginBottom: "1rem" }}>{success}</div>
         )}
         {error && (
           <div style={{ padding: "1rem", background: "rgba(244, 67, 54, 0.1)", border: "1px solid rgba(244, 67, 54, 0.3)", borderRadius: "8px", color: "#d32f2f", marginBottom: "1rem" }}>{error}</div>
@@ -439,8 +369,8 @@ export default function Goals({ userEmail, onBack, onLogout, onNavigate }) {
 
         {/* Quick Links */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-          <button className="btn btn-secondary" onClick={() => onNavigate("weight-tracking")} style={{ padding: "1rem" }}>📊 Tracking greutate</button>
-          <button className="btn btn-secondary" onClick={() => onNavigate("dashboard")} style={{ padding: "1rem" }}>📈 Vezi progres</button>
+          <button className="btn btn-secondary" onClick={() => onNavigate("weight-tracking")} style={{ padding: "1rem" }}>📊 Weight Tracking</button>
+          <button className="btn btn-secondary" onClick={() => onNavigate("dashboard")} style={{ padding: "1rem" }}>📈 View Progress</button>
         </div>
       </div>
     </div>

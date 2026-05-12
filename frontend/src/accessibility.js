@@ -11,13 +11,13 @@ export function setupFocusTrap(modalElement) {
   const focusableElements = modalElement.querySelectorAll(
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
-  
+
   const firstFocusable = focusableElements[0];
   const lastFocusable = focusableElements[focusableElements.length - 1];
-  
+
   function handleTab(e) {
     if (e.key !== 'Tab') return;
-    
+
     if (e.shiftKey) {
       // Shift + Tab
       if (document.activeElement === firstFocusable) {
@@ -32,12 +32,12 @@ export function setupFocusTrap(modalElement) {
       }
     }
   }
-  
+
   modalElement.addEventListener('keydown', handleTab);
-  
+
   // Focus first element
   firstFocusable?.focus();
-  
+
   // Return cleanup function
   return () => {
     modalElement.removeEventListener('keydown', handleTab);
@@ -55,9 +55,9 @@ export function announceToScreenReader(message, priority = 'polite') {
   announcement.setAttribute('aria-atomic', 'true');
   announcement.className = 'sr-only';
   announcement.textContent = message;
-  
+
   document.body.appendChild(announcement);
-  
+
   setTimeout(() => {
     document.body.removeChild(announcement);
   }, 1000);
@@ -76,12 +76,12 @@ export function getContrastRatio(foreground, background) {
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  
+
   const l1 = getLuminance(foreground);
   const l2 = getLuminance(background);
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
-  
+
   return (lighter + 0.05) / (darker + 0.05);
 }
 
@@ -92,9 +92,9 @@ export function getContrastRatio(foreground, background) {
 export function enableKeyboardNavigation(containerElement) {
   const items = Array.from(containerElement.querySelectorAll('[role="listitem"], button, a'));
   let currentIndex = 0;
-  
+
   function handleKeyDown(e) {
-    switch(e.key) {
+    switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
         currentIndex = Math.min(currentIndex + 1, items.length - 1);
@@ -117,15 +117,15 @@ export function enableKeyboardNavigation(containerElement) {
         break;
     }
   }
-  
+
   containerElement.addEventListener('keydown', handleKeyDown);
-  
+
   // Set tabindex
   items.forEach((item, index) => {
     item.setAttribute('tabindex', index === 0 ? '0' : '-1');
     item.addEventListener('focus', () => { currentIndex = index; });
   });
-  
+
   return () => {
     containerElement.removeEventListener('keydown', handleKeyDown);
   };
@@ -150,15 +150,15 @@ export function createSkipLink() {
     text-decoration: none;
     z-index: 9999;
   `;
-  
+
   skipLink.addEventListener('focus', () => {
     skipLink.style.top = '0';
   });
-  
+
   skipLink.addEventListener('blur', () => {
     skipLink.style.top = '-40px';
   });
-  
+
   document.body.insertBefore(skipLink, document.body.firstChild);
 }
 

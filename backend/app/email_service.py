@@ -27,6 +27,19 @@ class EmailService:
         
         if self.use_resend and not self.resend_api_key:
             logger.error("RESEND_API_KEY not set in .env")
+
+    def _format_food_name(self, food_name: str) -> str:
+        if not food_name:
+            return "Unknown food"
+
+        cleaned = " ".join(
+            part for part in food_name.replace("_", " ").replace("-", " ").split()
+        ).strip()
+
+        if not cleaned:
+            return "Unknown food"
+
+        return " ".join(word[:1].upper() + word[1:].lower() for word in cleaned.split())
         
     def send_password_reset_email(self, recipient_email: str, reset_token: str, username: str = None) -> bool:
         """
@@ -59,7 +72,7 @@ class EmailService:
               <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                   <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #ff6b35;">SmartChef</h1>
+                    <h1 style="color: #3B82F6;">SmartChef</h1>
                   </div>
                   
                   <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
@@ -69,7 +82,7 @@ class EmailService:
                     
                     <p style="margin: 30px 0;">
                       <a href="{reset_link}" 
-                         style="display: inline-block; padding: 12px 30px; background-color: #ff6b35; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                         style="display: inline-block; padding: 12px 30px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
                         Reset Your Password
                       </a>
                     </p>
@@ -204,23 +217,25 @@ TESTING INSTRUCTIONS:
             if not self.resend_api_key:
                 logger.error("Resend API key not configured")
                 return False
-            
+
+            display_food_name = self._format_food_name(food_name)
+
             ingredients_html = "".join([
                 f'<li style="padding: 5px 0;">{ingredient}</li>'
                 for ingredient in ingredients
             ])
-            
+
             html_content = f"""
             <html>
               <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                   <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #ff6b35;">SmartChef ✅</h1>
+                    <h1 style="color: #3B82F6;">SmartChef ✅</h1>
                   </div>
                   
-                  <div style="background: linear-gradient(135deg, #ff6b35, #ff8c42); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                    <h2 style="margin: 0 0 10px 0;">Your Analysis is Ready!</h2>
-                    <p style="margin: 0; font-size: 16px;">🍽️ {food_name}</p>
+                  <div style="background: linear-gradient(135deg, #3B82F6, #60A5FA); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h2 style="margin: 0 0 10px 0;">Your Analysis is Complete!</h2>
+                    <p style="margin: 0; font-size: 16px;">🍽️ {display_food_name}</p>
                   </div>
                   
                   <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
@@ -231,11 +246,11 @@ TESTING INSTRUCTIONS:
                     
                     <div style="margin-top: 20px; text-align: center;">
                       <a href="{self.app_url}/notifications" 
-                         style="display: inline-block; padding: 12px 30px; background-color: #ff6b35; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px;">
+                         style="display: inline-block; padding: 12px 30px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px;">
                         View Details
                       </a>
                       <a href="{self.app_url}" 
-                         style="display: inline-block; padding: 12px 30px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px;">
+                         style="display: inline-block; padding: 12px 30px; background-color: #2563EB; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 10px 5px;">
                         Go to App
                       </a>
                     </div>
@@ -248,26 +263,26 @@ TESTING INSTRUCTIONS:
               </body>
             </html>
             """
-            
+
             headers = {
                 "Authorization": f"Bearer {self.resend_api_key}",
                 "Content-Type": "application/json"
             }
-            
+
             payload = {
                 "from": self.sender_email,
                 "to": recipient_email,
-                "subject": f"SmartChef - Analysis Complete: {food_name}",
+                "subject": f"SmartChef - Analysis Complete: {display_food_name}",
                 "html": html_content
             }
-            
+
             response = requests.post(
                 "https://api.resend.com/emails",
                 json=payload,
                 headers=headers,
                 timeout=10
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 email_id = result.get("id")
@@ -285,6 +300,7 @@ TESTING INSTRUCTIONS:
     def _log_analysis_email_to_file(self, recipient_email: str, food_name: str, ingredients: list, ingredients_count: int) -> bool:
         """Log analysis email to file for testing"""
         try:
+            display_food_name = self._format_food_name(food_name)
             os.makedirs("emails", exist_ok=True)
             
             email_file = f"emails/analysis_{recipient_email.replace('@', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
@@ -297,9 +313,9 @@ ANALYSIS COMPLETE EMAIL - {datetime.now()}
 
 To: {recipient_email}
 From: {self.sender_email}
-Subject: SmartChef - Analysis Complete: {food_name}
+Subject: SmartChef - Analysis Complete: {display_food_name}
 
-Food Name: {food_name}
+Food Name: {display_food_name}
 Ingredients Detected: {ingredients_count}
 
 Ingredients:

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import logoImg from "./logo.png";
+import { MdOutlineKeyboardArrowUp, MdOutlineKeyboardArrowDown } from "react-icons/md";
 import "./App.css";
 import Toast from "./components/Toast";
 import Tooltip from "./components/Tooltip";
 import "./utils/errorMessages.css";
 import { useKeyboardShortcuts } from "./utils/keyboardShortcuts";
+import Navbar from "./components/Navbar";
 
 export default function Notifications({ 
   userEmail, 
@@ -19,31 +22,19 @@ export default function Notifications({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
-  const [showNavDropdown, setShowNavDropdown] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
-  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
   const [filterType, setFilterType] = useState("all"); // all, unread, analysis_complete, goal_achieved, etc.
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showScroll, setShowScroll] = useState(false);
 
-  const handleNavMouseEnter = () => {
-    if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
-    setShowNavDropdown(true);
-  };
-
-  const handleNavMouseLeave = () => {
-    const timeout = setTimeout(() => setShowNavDropdown(false), 200);
-    setNavDropdownTimeout(timeout);
-  };
-
-  const handleUserMouseEnter = () => {
-    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
-    setShowUserDropdown(true);
-  };
-
-  const handleUserMouseLeave = () => {
-    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
-    setUserDropdownTimeout(timeout);
+  const formatMealName = (value) => {
+    if (!value) return "your meal";
+    return String(value)
+      .replace(/[_-]+/g, " ")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   useKeyboardShortcuts({
@@ -82,6 +73,27 @@ export default function Notifications({
     const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
   }, [userEmail]);
+
+  // Scroll event listener for showing scroll buttons
+  useEffect(() => {
+    const updateScrollVisibility = () => {
+      const isScrollable = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight > 100;
+      setShowScroll(isScrollable);
+    };
+
+    // Check immediately and at multiple intervals to ensure buttons appear
+    updateScrollVisibility();
+    setTimeout(updateScrollVisibility, 50);
+    setTimeout(updateScrollVisibility, 200);
+    setTimeout(updateScrollVisibility, 500);
+    
+    window.addEventListener("scroll", updateScrollVisibility);
+    window.addEventListener("resize", updateScrollVisibility);
+    return () => {
+      window.removeEventListener("scroll", updateScrollVisibility);
+      window.removeEventListener("resize", updateScrollVisibility);
+    };
+  }, [notifications, filterType]);
 
   const markNotificationAsRead = async (notificationId, e) => {
     e.stopPropagation();
@@ -132,9 +144,11 @@ export default function Notifications({
       case "goal_achieved":
         return "🎉";
       case "daily_reminder":
-        return "📅";
+        return "";
       case "weight_reminder":
-        return "⚖️";
+        return "";
+            case "meal_reminder":
+              return "🍽️";
       default:
         return "📢";
     }
@@ -147,170 +161,63 @@ export default function Notifications({
       case "goal_achieved":
         return "#3B82F6";
       case "daily_reminder":
-        return "#2196F3";
+        return "#60A5FA";
       case "weight_reminder":
-        return "#9C27B0";
+        return "#2563EB";
+            case "meal_reminder":
+              return "#F59E0B";
       default:
         return "#666";
     }
   };
 
+  const getNotificationTitle = (notification) => {
+    if (notification.type === "analysis_complete") {
+      const mealName = formatMealName(notification?.data?.food_name || notification?.food_name);
+      return `${mealName} analysis completed!`;
+    }
+
+    return notification.title;
+  };
+
+  const getNotificationMessage = (notification) => {
+    if (notification.type === "analysis_complete") {
+      return "";
+    }
+
+    return notification.message;
+  };
+
   const filteredNotifications = filterType === "all" 
     ? notifications 
+    : filterType === "reminders"
+    ? notifications.filter(n => ["daily_reminder", "weight_reminder", "meal_reminder"].includes(n.type))
     : notifications.filter(n => n.type === filterType);
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh" }}>
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleNavMouseEnter}
-                onMouseLeave={handleNavMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem", background: "rgba(255,255,255,0.2)" }}
-                >
-                  ☰
-                </button>
-                {showNavDropdown && (
-                  <div className="nav-dropdown">
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('dashboard');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📈 Dashboard
-                    </button>
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('history');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📊 History
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div style={{
-                width: "1px",
-                height: "30px",
-                background: "rgba(255,255,255,0.3)",
-                margin: "0 0.5rem"
-              }}></div>
+    <div style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "#F1F5F9", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
+      {/* Navbar */}
+      <Navbar 
+        userEmail={userEmail}
+        onBack={onBack}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage="notifications"
+      />
 
-              {/* Notifications Bell */}
-              <button
-                className="btn btn-outline"
-                onClick={() => onNavigate('notifications')}
-                style={{ 
-                  padding: "0.7rem 1.2rem", 
-                  fontSize: "1.5rem", 
-                  background: "rgba(255,255,255,0.2)",
-                  position: "relative"
-                }}
-                title="Notifications"
-              >
-                🔔
-                {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-5px",
-                    background: "#3B82F6",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "24px",
-                    height: "24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: "700",
-                    border: "2px solid white"
-                  }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleUserMouseEnter}
-                onMouseLeave={handleUserMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ 
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem"
-                  }}
-                >
-                  👤 {userEmail}
-                  <span style={{ 
-                    fontSize: "0.7rem",
-                    transition: "transform 0.3s",
-                    display: "inline-block",
-                    transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
-                  }}>►</span>
-                </button>
-                {showUserDropdown && (
-                  <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
-                      <span className="dropdown-icon">👤</span>
-                      Profile
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('personal-data');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">📊</span>
-                      Personal Data
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('account-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">🔑</span>
-                      Account Settings
-                    </button>
+      <main id="main-content" style={{ maxWidth: "800px", margin: "0 auto", padding: "6rem 2rem 2rem 2rem" }}>
+        {/* Back Button */}
+        <button
+          className="btn btn-secondary"
+          onClick={onBack}
+          style={{ marginBottom: "2rem" }}
+        >
+          ← Back
+        </button>
 
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('app-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">⚙️</span>
-                      App Settings
-                    </button>
-                    
-                    <div className="user-dropdown-divider"></div>
-                    <button className="user-dropdown-item logout-item" onClick={onLogout}>
-                      <span className="dropdown-icon">🚪</span>
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main id="main-content" style={{ maxWidth: "800px", margin: "0 auto", padding: "2rem" }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "2.5rem", fontWeight: "700", color: "#3B82F6", marginBottom: "0.5rem" }}>
             🔔 Notifications
@@ -328,7 +235,7 @@ export default function Notifications({
           flexWrap: "wrap",
           justifyContent: "center"
         }}>
-          {["all", "analysis_complete", "goal_achieved", "daily_reminder"].map(type => (
+          {["all", "analysis_complete", "goal_achieved", "reminders"].map(type => (
             <button
               key={type}
               className="btn btn-outline"
@@ -339,7 +246,7 @@ export default function Notifications({
                 border: filterType === type ? "none" : "2px solid #ddd"
               }}
             >
-              {type === "all" ? "All" : type.replace("_", " ")}
+              {type === "all" ? "All" : type === "reminders" ? "reminders" : type.replace("_", " ")}
             </button>
           ))}
         </div>
@@ -406,7 +313,7 @@ export default function Notifications({
                         {getNotificationIcon(notification.type)}
                       </span>
                       <h3 style={{ margin: 0, color: "#333", fontSize: "1.1rem", fontWeight: "600" }}>
-                        {notification.title}
+                        {getNotificationTitle(notification)}
                       </h3>
                       {!notification.is_read && (
                         <span style={{
@@ -419,9 +326,11 @@ export default function Notifications({
                         }}></span>
                       )}
                     </div>
-                    <p style={{ margin: "0.5rem 0 0 0", color: "#666", fontSize: "0.95rem" }}>
-                      {notification.message}
-                    </p>
+                    {getNotificationMessage(notification) && (
+                      <p style={{ margin: "0.5rem 0 0 0", color: "#666", fontSize: "0.95rem" }}>
+                        {getNotificationMessage(notification)}
+                      </p>
+                    )}
                     <p style={{ margin: "0.5rem 0 0 0", color: "#999", fontSize: "0.85rem" }}>
                       📅 {new Date(notification.timestamp).toLocaleString('en-US')}
                     </p>
@@ -457,6 +366,84 @@ export default function Notifications({
           </div>
         )}
       </main>
+
+      {/* Scroll to Top/Bottom floating buttons */}
+      {true && (
+        <div style={{
+          position: "fixed",
+          bottom: "2rem",
+          right: "2rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+          zIndex: 1100
+        }}>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Scroll to top"
+            style={{
+              padding: "0.75rem",
+              background: "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              boxShadow: "0 4px 15px rgba(var(--primary-rgb), 0.4)",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.75rem",
+              height: "2.75rem"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(var(--primary-rgb), 0.5)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(var(--primary-rgb), 0.4)";
+            }}
+          >
+            <MdOutlineKeyboardArrowUp style={{ width: "1.5rem", height: "1.5rem" }} />
+          </button>
+          <button
+            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+            aria-label="Scroll to bottom"
+            style={{
+              padding: "0.75rem",
+              background: "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              boxShadow: "0 4px 15px rgba(var(--primary-rgb), 0.4)",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.75rem",
+              height: "2.75rem"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "translateY(3px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(var(--primary-rgb), 0.5)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(var(--primary-rgb), 0.4)";
+            }}
+          >
+            <MdOutlineKeyboardArrowDown style={{ width: "1.5rem", height: "1.5rem" }} />
+          </button>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (

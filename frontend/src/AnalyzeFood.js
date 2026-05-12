@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { Pie, Bar } from 'react-chartjs-2';
 import {
@@ -14,9 +14,10 @@ import {
 } from 'chart.js';
 import CustomTooltip, { InfoIcon } from "./components/Tooltip";
 import { getUserFriendlyError, ErrorDisplay } from "./utils/errorMessages";
-import "./utils/errorMessages.css";
 import { useKeyboardShortcuts, ShortcutsHelp, ShortcutBadge } from "./utils/keyboardShortcuts";
 import "./utils/keyboardShortcuts.css";
+import Navbar from "./components/Navbar";
+import { MdOutlineKeyboardArrowUp, MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 ChartJS.register(
   ArcElement,
@@ -37,13 +38,76 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
   const [showNavDropdown, setShowNavDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
-  const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [userFriendlyError, setUserFriendlyError] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [editedIngredients, setEditedIngredients] = useState([]);
   const [showAddIngredientModal, setShowAddIngredientModal] = useState(false);
   const [newIngredientName, setNewIngredientName] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [editedIngredients, setEditedIngredients] = useState([]);
+  const [ingredientSuggestions, setIngredientSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showScroll, setShowScroll] = useState(false);
+
+  const nutrientColorMap = {
+    calories: {
+      label: "#F97316",
+      background: "linear-gradient(90deg, #F97316, #FB923C)",
+      fill: "rgba(249, 115, 22, 0.15)"
+    },
+    protein: {
+      label: "#16A34A",
+      background: "linear-gradient(90deg, #16A34A, #4ADE80)",
+      fill: "rgba(22, 163, 74, 0.15)"
+    },
+    carbs: {
+      label: "#2563EB",
+      background: "linear-gradient(90deg, #2563EB, #38BDF8)",
+      fill: "rgba(37, 99, 235, 0.15)"
+    },
+    fat: {
+      label: "#7C3AED",
+      background: "linear-gradient(90deg, #7C3AED, #A855F7)",
+      fill: "rgba(124, 58, 237, 0.15)"
+    },
+    fiber: {
+      label: "#0F766E",
+      background: "linear-gradient(90deg, #0F766E, #2DD4BF)",
+      fill: "rgba(15, 118, 110, 0.15)"
+    }
+  };
+
+  const ingredientBarColors = [
+    "rgba(239, 68, 68, 0.75)",
+    "rgba(249, 115, 22, 0.75)",
+    "rgba(245, 158, 11, 0.75)",
+    "rgba(34, 197, 94, 0.75)",
+    "rgba(14, 165, 233, 0.75)",
+    "rgba(59, 130, 246, 0.75)",
+    "rgba(168, 85, 247, 0.75)",
+    "rgba(236, 72, 153, 0.75)"
+  ];
+
+  // Scroll event listener for showing scroll buttons
+  React.useEffect(() => {
+    const updateScrollVisibility = () => {
+      const isScrollable = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight > 100;
+      setShowScroll(isScrollable);
+    };
+
+    // Check immediately and at multiple intervals
+    updateScrollVisibility();
+    setTimeout(updateScrollVisibility, 50);
+    setTimeout(updateScrollVisibility, 200);
+    setTimeout(updateScrollVisibility, 500);
+    
+    window.addEventListener("scroll", updateScrollVisibility);
+    window.addEventListener("resize", updateScrollVisibility);
+    return () => {
+      window.removeEventListener("scroll", updateScrollVisibility);
+      window.removeEventListener("resize", updateScrollVisibility);
+    };
+  }, [loading, results, previewUrl, showAddIngredientModal, showSuggestions, editedIngredients.length]);
 
   // Fetch unread notifications on component mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,12 +129,15 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     }
   }, [authToken, userEmail]);
 
-  // Initialize edited ingredients when results change
+  // Initialize edited ingredients when a new food is detected (not on nutrition recalculation)
   React.useEffect(() => {
     if (results && results.ingredients) {
-      setEditedIngredients([...results.ingredients]);
+      setEditedIngredients(results.ingredients.map(ing => ({
+        name: ing,
+        weight: 100 // default 100g
+      })));
     }
-  }, [results]);
+  }, [results?.food_name]); // Only re-initialize on new food, not on nutrition recalculation
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -108,11 +175,39 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      setResults(null);
+      handleFile(file);
     }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        handleFile(file);
+      } else {
+        const friendlyError = getUserFriendlyError("Please upload an image file.");
+        setUserFriendlyError(friendlyError);
+      }
+    }
+  };
+
+  const handleFile = (file) => {
+    setSelectedFile(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setResults(null);
   };
 
   const analyzeFood = async () => {
@@ -174,7 +269,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
   };
 
   const deleteIngredient = (ingredientName) => {
-    const updatedIngredients = editedIngredients.filter(ing => ing !== ingredientName);
+    const updatedIngredients = editedIngredients.filter(ing => ing.name !== ingredientName);
     setEditedIngredients(updatedIngredients);
     recalculateNutrition(updatedIngredients);
   };
@@ -185,29 +280,82 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       return;
     }
 
-    if (editedIngredients.includes(newIngredientName.toLowerCase())) {
+    if (editedIngredients.some(ing => ing.name === newIngredientName.toLowerCase())) {
       alert("ℹ️ This ingredient is already in the list!");
       return;
     }
 
-    const updatedIngredients = [...editedIngredients, newIngredientName.toLowerCase()];
+    const updatedIngredients = [...editedIngredients, { name: newIngredientName.toLowerCase(), weight: 100 }];
     setEditedIngredients(updatedIngredients);
     recalculateNutrition(updatedIngredients);
     setNewIngredientName("");
     setShowAddIngredientModal(false);
+    setShowSuggestions(false);
+    setIngredientSuggestions([]);
+  };
+
+  const formatFoodName = (foodName) => {
+    if (!foodName) return "";
+
+    const cleaned = String(foodName)
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/^[^a-zA-Z0-9]+/, "")
+      .replace(/[_-]+/g, " ")
+      .replace(/[^a-zA-Z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleaned) return "";
+
+    return cleaned
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  const handleIngredientInputChange = async (value) => {
+    setNewIngredientName(value);
+
+    if (value.trim().length === 0) {
+      setShowSuggestions(false);
+      setIngredientSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/ingredient_suggestions/?search=${encodeURIComponent(value)}`);
+      const data = await response.json();
+      setIngredientSuggestions(data.suggestions || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
+  };
+
+  const selectSuggestion = (suggestion) => {
+    setNewIngredientName(suggestion);
+    setShowSuggestions(false);
   };
 
   const recalculateNutrition = async (ingredientsList) => {
     if (!results) return;
 
     try {
-      // Get nutrition info for new ingredient list
+      // Convert ingredient objects to format backend expects
+      const ingredientData = ingredientsList.map(ing => ({
+        name: typeof ing === 'string' ? ing : ing.name,
+        weight: typeof ing === 'string' ? 100 : (ing.weight || 100)
+      }));
+
+      // Get nutrition info for new ingredient list with weights
       const response = await fetch("http://127.0.0.1:8000/calculate_nutrition/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ ingredients: ingredientsList })
+        body: JSON.stringify({ ingredients: ingredientData })
       });
 
       if (!response.ok) {
@@ -220,7 +368,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       // Update results with new nutrition data
       setResults({
         ...results,
-        ingredients: ingredientsList,
+        ingredients: ingredientsList.map(ing => typeof ing === 'string' ? ing : ing.name),
         nutrition: nutritionData
       });
     } catch (error) {
@@ -252,12 +400,13 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
     doc.setTextColor(0, 0, 0);
     let yPos = 50;
     
-    // Food Name
+    // Food Name - Clean up any non-alphabetic prefixes
     if (results.food_name && results.food_name !== "unknown") {
       doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(59, 130, 246);
-      doc.text('🍽️ ' + results.food_name.replace(/_/g, ' ').toUpperCase(), 15, yPos);
+      const cleanFoodName = formatFoodName(results.food_name);
+      doc.text(cleanFoodName, 15, yPos);
       doc.setTextColor(100, 100, 100);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
@@ -361,171 +510,18 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
   };
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh" }}>
-      {/* Header */}
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={() => onNavigate("main")} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            {authToken && (
-              <>
-                <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
-                  {/* Navigation Dropdown */}
-                  <div 
-                    style={{ position: "relative" }}
-                    onMouseEnter={() => setShowNavDropdown(true)}
-                    onMouseLeave={() => setShowNavDropdown(false)}
-                  >
-                    <button
-                      className="btn btn-outline"
-                      style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem" }}
-                    >
-                      ☰
-                    </button>
-                    {showNavDropdown && (
-                      <div className="nav-dropdown">
-                        <button
-                          className="nav-dropdown-item"
-                          onClick={() => {
-                            onNavigate("dashboard");
-                            setShowNavDropdown(false);
-                          }}
-                        >
-                          📈 Dashboard
-                        </button>
-                        <button
-                          className="nav-dropdown-item"
-                          onClick={() => {
-                            onNavigate("history");
-                            setShowNavDropdown(false);
-                          }}
-                        >
-                          📊 History
-                        </button>
-                        <button
-                          className="nav-dropdown-item"
-                          onClick={() => {
-                            onNavigate("goals");
-                            setShowNavDropdown(false);
-                          }}
-                        >
-                          🎯 Goals
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div style={{
-                    width: "1px",
-                    height: "30px",
-                    background: "rgba(255,255,255,0.3)",
-                    margin: "0 0.5rem"
-                  }}></div>
-
-                  {/* Notifications Bell */}
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => onNavigate('notifications')}
-                    style={{ 
-                      padding: "0.7rem 1.2rem", 
-                      fontSize: "1.5rem", 
-                      background: "rgba(255,255,255,0.2)",
-                      position: "relative"
-                    }}
-                    title="Notifications"
-                  >
-                    🔔
-                    {unreadCount > 0 && (
-                      <span style={{
-                        position: "absolute",
-                        top: "-5px",
-                        right: "-5px",
-                        background: "#3B82F6",
-                        color: "white",
-                        borderRadius: "50%",
-                        width: "24px",
-                        height: "24px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "0.75rem",
-                        fontWeight: "700",
-                        border: "2px solid white"
-                      }}>
-                        {unreadCount}
-                      </span>
-                    )}
-                  </button>
-                  
-                  {/* User Dropdown */}
-                  <div 
-                    style={{ position: "relative" }}
-                    onMouseEnter={handleUserMouseEnter}
-                    onMouseLeave={handleUserMouseLeave}
-                  >
-                    <button
-                      className="btn btn-outline"
-                      style={{ 
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem"
-                      }}
-                    >
-                      👤 {userEmail}
-                      <span style={{ 
-                        fontSize: "0.7rem",
-                        transition: "transform 0.3s",
-                        display: "inline-block",
-                        transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
-                      }}>►</span>
-                    </button>
-                    {showUserDropdown && (
-                      <div className="user-dropdown">
-                        <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
-                          <span className="dropdown-icon">👤</span>
-                          Profile
-                        </button>
-                        
-                        <button className="user-dropdown-item" onClick={() => {
-                          onNavigate("personal-data");
-                          setShowUserDropdown(false);
-                        }}>
-                          <span className="dropdown-icon">📊</span>
-                          Personal Data
-                        </button>
-                        
-                        <button className="user-dropdown-item" onClick={() => {
-                          onNavigate("account-settings");
-                          setShowUserDropdown(false);
-                        }}>
-                          <span className="dropdown-icon">🔑</span>
-                          Account Settings
-                        </button>
-
-                        <button className="user-dropdown-item" onClick={() => {
-                          onNavigate("app-settings");
-                          setShowUserDropdown(false);
-                        }}>
-                          <span className="dropdown-icon">⚙️</span>
-                          App Settings
-                        </button>
-                        
-                        <div className="user-dropdown-divider"></div>
-                        <button className="user-dropdown-item logout-item" onClick={onLogout}>
-                          <span className="dropdown-icon">🚪</span>
-                          Logout
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="animated-bg" style={{ minHeight: "100vh", background: darkMode ? "#0F172A" : "var(--bg, #F1F5F9)", paddingBottom: "2rem" }}>
+      {/* --- NAVBAR --- */}
+      <Navbar 
+        userEmail={userEmail}
+        onBack={() => onNavigate("main")}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage="analyze-food"
+      />
 
       {/* Main Content Container */}
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "3rem 2rem" }}>
@@ -547,7 +543,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             gap: "0.5rem"
           }}
         >
-          ← Back to Home
+          ← Back
         </button>
 
         <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
@@ -570,10 +566,21 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
           />
 
           {!previewUrl ? (
-            <label htmlFor="file-upload" className="upload-area">
-              <div className="upload-icon">📁</div>
+            <label 
+              htmlFor="file-upload" 
+              className="upload-area"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              style={{
+                border: isDragging ? "3px dashed #10B981" : "3px dashed #3B82F6",
+                backgroundColor: isDragging ? "rgba(16, 185, 129, 0.1)" : "rgba(59, 130, 246, 0.05)",
+                transition: "all 0.3s ease"
+              }}
+            >
+              <div className="upload-icon" style={{ color: isDragging ? "#10B981" : "#3B82F6" }}>{isDragging ? "⬇️" : "📁"}</div>
               <p style={{ fontSize: "1.1rem", color: "#666", marginBottom: "0.5rem" }}>
-                Click to select an image
+                {isDragging ? "Drop image here" : "Click to select or drag and drop an image"}
               </p>
               <p style={{ fontSize: "0.9rem", color: "#999", display: "flex", alignItems: "center", gap: "4px", justifyContent: "center" }}>
                 We accept JPG, PNG, JPEG
@@ -600,36 +607,53 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             </div>
           )}
 
-          <CustomTooltip 
-            text="Analyze the image and get detailed nutritional information"
-            position="top"
-          >
-            <button
-              className="btn btn-primary"
-              onClick={analyzeFood}
-              disabled={loading || !selectedFile}
-              aria-label="Analyze food (Enter)"
-              style={{
-                width: "100%",
-                padding: "1.2rem",
-                fontSize: "1.1rem",
-                marginTop: "1.5rem",
-                opacity: loading || !selectedFile ? 0.6 : 1,
-                cursor: loading || !selectedFile ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem"
-              }}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <CustomTooltip 
+              text="Analyze the image and get detailed nutritional information"
+              position="top"
             >
-              {loading ? "🔄 Analyzing..." : (
-                <>
-                  🔍 Analyze Food
-                  <ShortcutBadge shortcut="Enter" />
-                </>
-              )}
-            </button>
-          </CustomTooltip>
+              <button
+                className="btn btn-primary"
+                onClick={analyzeFood}
+                disabled={loading || !selectedFile}
+                aria-label="Analyze food (Enter)"
+                style={{
+                  width: "100%",
+                  maxWidth: "400px",
+                  margin: "1.5rem auto",
+                  padding: "1.3rem 2rem",
+                  fontSize: "1.2rem",
+                  opacity: loading || !selectedFile ? 0.6 : 1,
+                  cursor: loading || !selectedFile ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  fontWeight: "700",
+                  letterSpacing: "0.5px",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 15px rgba(59, 130, 246, 0.3)"
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading && selectedFile) {
+                    e.target.style.transform = "translateY(-3px)";
+                    e.target.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.4)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.3)";
+                }}
+              >
+                {loading ? "🔄 Analyzing..." : (
+                  <>
+                    🔍 Analyze Food
+                    <ShortcutBadge shortcut="Enter" />
+                  </>
+                )}
+              </button>
+            </CustomTooltip>
+          </div>
 
           {/* Error Display */}
           {userFriendlyError && (
@@ -672,7 +696,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
               {results.food_name && results.food_name !== "unknown" && (
                 <div style={{ 
                   textAlign: "center", 
-                  backgroundColor: "#fff3e0", 
+                  backgroundColor: "rgba(59, 130, 246, 0.08)", 
                   padding: "1rem", 
                   borderRadius: "12px", 
                   marginBottom: "1.5rem",
@@ -684,7 +708,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     color: "#3B82F6",
                     textTransform: "capitalize"
                   }}>
-                    🍽️ {results.food_name.replace(/_/g, ' ')}
+                    🍽️ {formatFoodName(results.food_name)}
                   </h2>
                   {results.confidence && (
                     <p style={{ margin: "0.5rem 0 0 0", color: "#666", fontSize: "0.95rem" }}>
@@ -698,51 +722,76 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <h3 style={{ fontSize: "1.3rem", marginBottom: "1rem", color: "#2e7d32" }}>
                   🥗 Detected Ingredients ({editedIngredients.length}):
                 </h3>
-                <div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
                   {editedIngredients.map((ingredient, index) => (
                     <div
                       key={index}
                       style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        margin: "0.4rem"
+                        background: "#f9f9f9",
+                        border: "2px solid #3B82F6",
+                        borderRadius: "12px",
+                        padding: "1rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.5rem"
                       }}
                     >
-                      <span 
-                        className="ingredient-badge clickable"
-                        onClick={() => handleIngredientClick(ingredient)}
-                        title="Click for nutritional details"
-                        style={{
-                          display: "inline-block"
-                        }}
-                      >
-                        {ingredient}
-                      </span>
-                      <button
-                        onClick={() => deleteIngredient(ingredient)}
-                        style={{
-                          background: "#3B82F6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "50%",
-                          width: "28px",
-                          height: "28px",
-                          cursor: "pointer",
-                          fontSize: "1rem",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "0",
-                          fontWeight: "bold",
-                          transition: "all 0.3s ease"
-                        }}
-                        onMouseOver={(e) => e.target.style.background = "#e55a24"}
-                        onMouseOut={(e) => e.target.style.background = "#3B82F6"}
-                        title="Delete ingredient"
-                      >
-                        ×
-                      </button>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <span style={{ fontWeight: "700", fontSize: "1rem", color: "#333", textTransform: "capitalize" }}>
+                          {ingredient.name}
+                        </span>
+                        <button
+                          onClick={() => deleteIngredient(ingredient.name)}
+                          style={{
+                            background: "#e74c3c",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: "26px",
+                            height: "26px",
+                            cursor: "pointer",
+                            fontSize: "0.9rem",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0",
+                            fontWeight: "bold",
+                            transition: "all 0.2s ease"
+                          }}
+                          onMouseOver={(e) => e.target.style.background = "#c0392b"}
+                          onMouseOut={(e) => e.target.style.background = "#e74c3c"}
+                          title="Delete ingredient"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <label style={{ fontSize: "0.85rem", color: "#666", fontWeight: "600", minWidth: "60px" }}>
+                          Weight (g):
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="1000"
+                          value={ingredient.weight}
+                          onChange={(e) => {
+                            const updatedIngredients = editedIngredients.map((ing, i) =>
+                              i === index ? { ...ing, weight: parseInt(e.target.value) || 100 } : ing
+                            );
+                            setEditedIngredients(updatedIngredients);
+                            recalculateNutrition(updatedIngredients);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: "0.5rem",
+                            border: "1px solid #ddd",
+                            borderRadius: "6px",
+                            fontSize: "0.9rem",
+                            fontWeight: "600",
+                            color: "#3B82F6"
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -771,7 +820,41 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 </button>
               </div>
 
-              {/* Grafice Nutriționale */}
+              {/* Calculation Formulas Section */}
+              {results.nutrition.calculation_formulas && results.nutrition.calculation_formulas.length > 0 && (
+                <div style={{
+                  background: "#f0f9ff",
+                  border: "2px solid #3B82F6",
+                  borderRadius: "12px",
+                  padding: "1.5rem",
+                  marginBottom: "2rem"
+                }}>
+                  <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem", color: "#2563EB", fontWeight: "700" }}>
+                    📐 Calculation Formula
+                  </h3>
+                  <div style={{ background: "white", padding: "1rem", borderRadius: "8px", marginBottom: "1rem", borderLeft: "4px solid #3B82F6" }}>
+                    {results.nutrition.calculation_formulas.map((formula, idx) => (
+                      <div key={idx} style={{ fontSize: "0.95rem", marginBottom: "0.5rem", color: "#333", fontFamily: "monospace" }}>
+                        {formula}
+                      </div>
+                    ))}
+                    {results.nutrition.total_formula && (
+                      <div style={{
+                        fontSize: "1rem",
+                        fontWeight: "700",
+                        color: "#059669",
+                        marginTop: "1rem",
+                        paddingTop: "0.75rem",
+                        borderTop: "2px solid #e5e7eb"
+                      }}>
+                        {results.nutrition.total_formula}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Nutritional Charts */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem", marginBottom: "2rem" }}>
                 {/* Pie Chart - Macronutrients */}
                 <div className="nutrition-box" style={{ padding: "1.5rem" }}>
@@ -788,14 +871,14 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           results.nutrition.total_nutrition.fat
                         ],
                         backgroundColor: [
-                          'rgba(76, 175, 80, 0.8)',
-                          'rgba(33, 150, 243, 0.8)',
-                          'rgba(255, 193, 7, 0.8)'
+                          'rgba(34, 197, 94, 0.85)',
+                          'rgba(59, 130, 246, 0.85)',
+                          'rgba(168, 85, 247, 0.85)'
                         ],
                         borderColor: [
-                          'rgba(76, 175, 80, 1)',
-                          'rgba(33, 150, 243, 1)',
-                          'rgba(255, 193, 7, 1)'
+                          'rgba(34, 197, 94, 1)',
+                          'rgba(59, 130, 246, 1)',
+                          'rgba(168, 85, 247, 1)'
                         ],
                         borderWidth: 2
                       }]
@@ -832,8 +915,8 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                           const indNut = results.nutrition.individual_nutrition?.[ing.toLowerCase()];
                           return indNut?.calories || 0;
                         }),
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: results.ingredients.map((_, index) => ingredientBarColors[index % ingredientBarColors.length]),
+                        borderColor: results.ingredients.map((_, index) => ingredientBarColors[index % ingredientBarColors.length].replace('0.75', '1')),
                         borderWidth: 2
                       }]
                     }}
@@ -867,7 +950,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🔥 Calories</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#3B82F6" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: nutrientColorMap.calories.label }}>
                       {Number(results.nutrition.total_nutrition.calories).toFixed(2)} kcal
                     </span>
                   </div>
@@ -881,7 +964,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.calories / 800) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #3B82F6, #2563EB)",
+                      background: nutrientColorMap.calories.background,
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -891,7 +974,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>💪 Protein</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#3B82F6" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: nutrientColorMap.protein.label }}>
                       {Number(results.nutrition.total_nutrition.protein).toFixed(2)}g
                     </span>
                   </div>
@@ -905,7 +988,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.protein / 50) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #3B82F6, #66BB6A)",
+                      background: nutrientColorMap.protein.background,
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -915,7 +998,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🍞 Carbohydrates</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#2196F3" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: nutrientColorMap.carbs.label }}>
                       {Number(results.nutrition.total_nutrition.carbs).toFixed(2)}g
                     </span>
                   </div>
@@ -929,7 +1012,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.carbs / 100) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #2196F3, #42A5F5)",
+                      background: nutrientColorMap.carbs.background,
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -939,7 +1022,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div style={{ marginBottom: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🥑 Fat</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#3B82F6" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: nutrientColorMap.fat.label }}>
                       {Number(results.nutrition.total_nutrition.fat).toFixed(2)}g
                     </span>
                   </div>
@@ -953,7 +1036,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.fat / 50) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
+                      background: nutrientColorMap.fat.background,
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -963,7 +1046,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}>🌾 Fibre</span>
-                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#8BC34A" }}>
+                    <span style={{ fontSize: "1.1rem", fontWeight: "700", color: nutrientColorMap.fiber.label }}>
                       {Number(results.nutrition.total_nutrition.fiber).toFixed(2)}g
                     </span>
                   </div>
@@ -977,7 +1060,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                     <div style={{ 
                       width: `${Math.min((results.nutrition.total_nutrition.fiber / 30) * 100, 100)}%`, 
                       height: "100%", 
-                      background: "linear-gradient(90deg, #8BC34A, #9CCC65)",
+                      background: nutrientColorMap.fiber.background,
                       transition: "width 0.8s ease",
                       borderRadius: "10px"
                     }}></div>
@@ -1053,7 +1136,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             <div className="modal-nutrition-bars">
               <div className="modal-nutrition-item">
                 <div className="modal-nutrition-label">
-                  <span>🔥 Calorii</span>
+                  <span>🔥 Calories</span>
                   <span className="modal-nutrition-value">{Number(selectedIngredient.nutrition.calories).toFixed(2)} kcal</span>
                 </div>
                 <div className="modal-progress-bar">
@@ -1122,13 +1205,18 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
       {/* Add Ingredient Modal */}
       {showAddIngredientModal && (
-        <div className="ingredient-modal-overlay" onClick={() => setShowAddIngredientModal(false)}>
+        <div className="ingredient-modal-overlay" onClick={() => {
+          setShowAddIngredientModal(false);
+          setShowSuggestions(false);
+        }}>
           <div className="ingredient-modal" onClick={(e) => e.stopPropagation()}>
             <button 
               className="modal-close" 
               onClick={() => {
                 setShowAddIngredientModal(false);
                 setNewIngredientName("");
+                setShowSuggestions(false);
+                setIngredientSuggestions([]);
               }}
             >
               ✕
@@ -1136,14 +1224,19 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             <h2 className="modal-title">➕ Add Ingredient</h2>
             <div className="modal-subtitle">Enter ingredient name</div>
             
-            <div style={{ padding: "1rem 0" }}>
+            <div style={{ padding: "1rem 0", position: "relative" }}>
               <input
                 type="text"
                 value={newIngredientName}
-                onChange={(e) => setNewIngredientName(e.target.value)}
+                onChange={(e) => handleIngredientInputChange(e.target.value)}
                 onKeyPress={(e) => {
                   if (e.key === "Enter") {
                     handleAddIngredient();
+                  }
+                }}
+                onFocus={() => {
+                  if (newIngredientName.trim().length > 0) {
+                    setShowSuggestions(true);
                   }
                 }}
                 placeholder="e.g. broccoli, apple, rice..."
@@ -1154,11 +1247,52 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   border: "2px solid #3B82F6",
                   borderRadius: "8px",
                   boxSizing: "border-box",
-                  marginBottom: "1rem"
+                  marginBottom: "0.5rem"
                 }}
               />
               
-              <div style={{ display: "flex", gap: "1rem" }}>
+              {/* Autocomplete Suggestions Dropdown */}
+              {showSuggestions && ingredientSuggestions.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  top: "60px",
+                  left: 0,
+                  right: 0,
+                  background: "white",
+                  border: "2px solid #3B82F6",
+                  borderRadius: "8px",
+                  maxHeight: "250px",
+                  overflowY: "auto",
+                  zIndex: 1000,
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}>
+                  {ingredientSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      onClick={() => selectSuggestion(suggestion)}
+                      style={{
+                        padding: "0.8rem",
+                        borderBottom: index < ingredientSuggestions.length - 1 ? "1px solid #e0e0e0" : "none",
+                        cursor: "pointer",
+                        backgroundColor: newIngredientName.toLowerCase() === suggestion.toLowerCase() ? "#e3f2fd" : "white",
+                        transition: "background-color 0.2s ease"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = "#f0f4f8";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = newIngredientName.toLowerCase() === suggestion.toLowerCase() ? "#e3f2fd" : "white";
+                      }}
+                    >
+                      <span style={{ fontSize: "0.95rem", color: "#333", fontWeight: "500" }}>
+                        🥬 {suggestion}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
                 <button
                   onClick={handleAddIngredient}
                   style={{
@@ -1182,6 +1316,8 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                   onClick={() => {
                     setShowAddIngredientModal(false);
                     setNewIngredientName("");
+                    setShowSuggestions(false);
+                    setIngredientSuggestions([]);
                   }}
                   style={{
                     flex: 1,
@@ -1206,56 +1342,9 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
         </div>
       )}
 
-      {/* Floating Action Button with Expandable Menu */}
-      <div className="fab-container">
-        {/* Menu Items (appear when expanded) */}
-        <button
-          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
-          onClick={toggleDarkMode}
-          aria-label={darkMode ? "Light Mode" : "Dark Mode"}
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleSettings}
-          aria-label="Settings"
-          title="App Settings"
-        >
-          ⚙️
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleHelp}
-          aria-label="Ajutor"
-          title="Ajutor & Suport"
-        >
-          ❓
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => setShowShortcuts(true)}
-          aria-label="Scurtături tastatură"
-          title="Comenzi Rapid de la Tastatură (apasă ?)"
-        >
-          ⌨️
-        </button>
-        
-        {/* Main FAB Button */}
-        <button
-          className={`fab-main ${showFabMenu ? 'active' : ''}`}
-          onClick={() => setShowFabMenu(!showFabMenu)}
-          aria-label="Menu"
-          title="Quick Actions Menu"
-        >
-          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
-        </button>
-      </div>
-
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcuts && (
-        <ShortcutsHelp 
+        <ShortcutsHelp
           onClose={() => setShowShortcuts(false)}
           customShortcuts={{
             'u': { description: 'Trigger image upload', action: 'upload-image' },
@@ -1263,7 +1352,86 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             'Escape': { description: 'Close modals / Cancel', action: 'cancel' }
           }}
         />
-      )}    </div>
+      )}
+
+      <div
+        style={{
+          position: "fixed",
+          bottom: "2rem",
+          right: "2rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem",
+          zIndex: 1100,
+          opacity: showScroll ? 1 : 0.92
+        }}
+      >
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Scroll to top"
+          style={{
+            padding: "0.75rem",
+            background: "var(--primary)",
+            color: "white",
+            border: "none",
+            borderRadius: "50%",
+            boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+            cursor: "pointer",
+            fontSize: "1.25rem",
+            transition: "all 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "2.75rem",
+            height: "2.75rem"
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = "var(--accent)";
+            e.currentTarget.style.transform = "translateY(-3px)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.5)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = "var(--primary)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+          }}
+        >
+          <MdOutlineKeyboardArrowUp style={{ width: "1.5rem", height: "1.5rem" }} />
+        </button>
+        <button
+          onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+          aria-label="Scroll to bottom"
+          style={{
+            padding: "0.75rem",
+            background: "var(--primary)",
+            color: "white",
+            border: "none",
+            borderRadius: "50%",
+            boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+            cursor: "pointer",
+            fontSize: "1.25rem",
+            transition: "all 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "2.75rem",
+            height: "2.75rem"
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = "var(--accent)";
+            e.currentTarget.style.transform = "translateY(3px)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.5)";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = "var(--primary)";
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+          }}
+        >
+          <MdOutlineKeyboardArrowDown style={{ width: "1.5rem", height: "1.5rem" }} />
+        </button>
+      </div>
+    </div>
   );
 }
 

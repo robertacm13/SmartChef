@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import logoImg from "./logo.png";
 import { ShortcutsHelp } from "./utils/keyboardShortcuts";
 import "./utils/keyboardShortcuts.css";
 import "./App.css";
+import Navbar from "./components/Navbar";
 
-export default function AccountSettings({ userEmail, onBack, onEmailChange, onLogout, onNavigate }) {
+export default function AccountSettings({ userEmail, onBack, onEmailChange, onLogout, onNavigate, currentPage, darkMode, toggleDarkMode, handleHelp }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -23,14 +25,8 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(false);
   const [newEmailValid, setNewEmailValid] = useState(false);
   
-  const [showNavDropdown, setShowNavDropdown] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [navDropdownTimeout, setNavDropdownTimeout] = useState(null);
-  const [userDropdownTimeout, setUserDropdownTimeout] = useState(null);
   const [passwordValidationTimeout, setPasswordValidationTimeout] = useState(null);
-  const [showFabMenu, setShowFabMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   
   // Vizibilitate parole
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -46,45 +42,6 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   });
   const [loadingPrefs, setLoadingPrefs] = useState(true);
   const [savingPrefs, setSavingPrefs] = useState(false);
-
-  // Fetch unread notifications on component mount
-  useEffect(() => {
-    const fetchUnreadNotifications = async () => {
-      try {
-        const res = await fetch(`http://localhost:8000/notifications/${userEmail}`);
-        const data = await res.json();
-        if (data.status === "success") {
-          setUnreadCount(data.unread_count);
-        }
-      } catch (err) {
-        console.error("Error fetching notifications:", err);
-      }
-    };
-
-    if (userEmail) {
-      fetchUnreadNotifications();
-    }
-  }, [userEmail]);
-
-  const handleNavMouseEnter = () => {
-    if (navDropdownTimeout) clearTimeout(navDropdownTimeout);
-    setShowNavDropdown(true);
-  };
-
-  const handleNavMouseLeave = () => {
-    const timeout = setTimeout(() => setShowNavDropdown(false), 200);
-    setNavDropdownTimeout(timeout);
-  };
-
-  const handleUserMouseEnter = () => {
-    if (userDropdownTimeout) clearTimeout(userDropdownTimeout);
-    setShowUserDropdown(true);
-  };
-
-  const handleUserMouseLeave = () => {
-    const timeout = setTimeout(() => setShowUserDropdown(false), 200);
-    setUserDropdownTimeout(timeout);
-  };
 
   // Fetch notification preferences on mount
   useEffect(() => {
@@ -143,10 +100,6 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
 
   const handleSettings = () => {
     onNavigate("app-settings");
-  };
-
-  const handleHelp = () => {
-    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
   };
 
   const validateCurrentPassword = async (password) => {
@@ -232,7 +185,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
     if (showPasswordFields) {
       // Verifică dacă parola curentă este validată
       if (!passwordValid) {
-        setError("❌ Parola curentă este incorectă. Te rog verifică și încearcă din nou.");
+        setError("❌ Current password is incorrect. Please try again.");
         return;
       }
       
@@ -351,168 +304,33 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
   };
 
   return (
-    <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem" }}>
-      <header className="header">
-        <div className="header-content">
-          <div className="logo" onClick={onBack} style={{ cursor: "pointer" }}>
-            🍳 SmartChef
-          </div>
-          <div className="nav-buttons">
-            <div style={{ display: "flex", gap: "0.8rem", alignItems: "center", marginLeft: "auto", marginRight: "-0.5rem" }}>
-              {/* Navigation Dropdown */}
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleNavMouseEnter}
-                onMouseLeave={handleNavMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ padding: "0.7rem 1.2rem", fontSize: "1.5rem", background: "rgba(255,255,255,0.2)" }}
-                >
-                  ☰
-                </button>
-                {showNavDropdown && (
-                  <div className="nav-dropdown">
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('dashboard');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📈 Dashboard
-                    </button>
-                    <button
-                      className="nav-dropdown-item"
-                      onClick={() => {
-                        onNavigate('history');
-                        setShowNavDropdown(false);
-                      }}
-                    >
-                      📊 Istoric
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div style={{
-                width: "1px",
-                height: "30px",
-                background: "rgba(255,255,255,0.3)",
-                margin: "0 0.5rem"
-              }}></div>
+    <div className="animated-bg" style={{ minHeight: "100vh", paddingBottom: "2rem", background: darkMode ? "#0F172A" : "#F1F5F9" }}>
+      {/* Skip Link pentru keyboard navigation - WCAG 2.1 */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+      
+      <Navbar 
+        userEmail={userEmail}
+        onBack={onBack}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        handleHelp={handleHelp}
+        currentPage={currentPage}
+      />
 
-              {/* Notifications Bell */}
-              <button
-                className="btn btn-outline"
-                onClick={() => onNavigate('notifications')}
-                style={{ 
-                  padding: "0.7rem 1.2rem", 
-                  fontSize: "1.5rem", 
-                  background: "rgba(255,255,255,0.2)",
-                  position: "relative"
-                }}
-                title="Notificări"
-              >
-                🔔
-                {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: "-5px",
-                    right: "-5px",
-                    background: "#3B82F6",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "24px",
-                    height: "24px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.75rem",
-                    fontWeight: "700",
-                    border: "2px solid white"
-                  }}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              
-              {/* User Dropdown */}
-              <div 
-                style={{ position: "relative" }}
-                onMouseEnter={handleUserMouseEnter}
-                onMouseLeave={handleUserMouseLeave}
-              >
-                <button
-                  className="btn btn-outline"
-                  style={{ 
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem"
-                  }}
-                >
-                  👤 {userEmail}
-                  <span style={{ 
-                    fontSize: "0.7rem",
-                    transition: "transform 0.3s",
-                    display: "inline-block",
-                    transform: showUserDropdown ? "rotate(90deg)" : "rotate(0deg)"
-                  }}>►</span>
-                </button>
-                {showUserDropdown && (
-                  <div className="user-dropdown">
-                    <button className="user-dropdown-item" onClick={() => alert('🚧 Profile - Coming soon!')}>
-                      <span className="dropdown-icon">👤</span>
-                      Profile
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('personal-data');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">📊</span>
-                      Personal Data
-                    </button>
-                    
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('account-settings');
-                      setShowUserDropdown(false);
-                    }} style={{ fontWeight: "600" }}>
-                      <span className="dropdown-icon">🔑</span>
-                      Account Settings
-                    </button>
-
-                    <button className="user-dropdown-item" onClick={() => {
-                      onNavigate('app-settings');
-                      setShowUserDropdown(false);
-                    }}>
-                      <span className="dropdown-icon">⚙️</span>
-                      App Settings
-                    </button>
-                    
-                    <div className="user-dropdown-divider"></div>
-                    <button className="user-dropdown-item logout-item" onClick={onLogout}>
-                      <span className="dropdown-icon">🚪</span>
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "2rem" }}>
+      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "6rem 2rem 2rem 2rem" }}>
         <button
           className="btn btn-secondary"
           onClick={onBack}
           style={{ marginBottom: "2rem" }}
         >
-          ← Înapoi
+          ← Back
         </button>
 
-        <div className="card" style={{ padding: "2rem" }}>
+        <div className="card" style={{ padding: "6rem 2rem 2rem 2rem", background: darkMode ? "#1E293B" : "#FFFFFF", border: darkMode ? "1px solid #334155" : "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)" }}>
           <h2 style={{ 
             fontSize: "2rem", 
             fontWeight: "700", 
@@ -520,10 +338,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
             marginBottom: "0.5rem",
             textAlign: "center"
           }}>
-            ⚙️ Setările Contului
+            ⚙️ Account Settings
           </h2>
           <p style={{ 
-            color: "#666", 
+            color: darkMode ? "#94A3B8" : "#64748B", 
             fontSize: "0.95rem", 
             textAlign: "center",
             marginBottom: "2rem"
@@ -547,10 +365,10 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
           {success && (
             <div style={{
               padding: "1rem",
-              background: "rgba(76, 175, 80, 0.1)",
-              border: "1px solid rgba(76, 175, 80, 0.3)",
+              background: "rgba(59, 130, 246, 0.1)",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
               borderRadius: "8px",
-              color: "#388e3c",
+              color: "#3B82F6",
               marginBottom: "1rem"
             }}>
               {success}
@@ -561,13 +379,13 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
             {/* Current Email Display */}
             <div style={{
               padding: "1rem",
-              background: "rgba(33, 150, 243, 0.05)",
+              background: "rgba(59, 130, 246, 0.05)",
               borderRadius: "8px",
               marginBottom: "1.5rem",
-              border: "1px solid rgba(33, 150, 243, 0.2)"
+              border: "1px solid rgba(59, 130, 246, 0.2)"
             }}>
               <p style={{ margin: 0, color: "#666", fontSize: "0.9rem" }}>
-                📧 <strong>Email curent:</strong> {userEmail}
+                📧 <strong>Current Email:</strong> {userEmail}
               </p>
             </div>
 
@@ -618,7 +436,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     color: showPasswordFields ? "#fff" : "#3B82F6"
                   }}
                 >
-                  🔐 Parolă
+                  🔒 Password
                 </button>
               </div>
             </div>
@@ -633,7 +451,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     marginBottom: "0.5rem",
                     color: "#333"
                   }}>
-                    📧 Email Nou
+                    📧 New Email
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -700,7 +518,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     marginBottom: "0.5rem",
                     color: "#333"
                   }}>
-                    🔒 Parola Curentă (pentru verificare)
+                    🔒 Current Password (for verification)
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -711,13 +529,13 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          // Dacă parola e validă, submit formular
+                          // If password is valid, submit form
                           if (passwordValid) {
                             document.querySelector('button[type="submit"]')?.click();
                           }
                         }
                       }}
-                      placeholder="Introdu parola curentă"
+                      placeholder="Enter current password"
                       required
                       style={{
                         width: "100%",
@@ -805,7 +623,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                     marginBottom: "0.5rem",
                     color: "#333"
                   }}>
-                    🔒 Parola Curentă (pentru verificare)
+                    🔒 Current Password (for verification)
                   </label>
                   <div style={{ position: "relative" }}>
                     <input
@@ -819,7 +637,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                           document.getElementById('newPasswordField')?.focus();
                         }
                       }}
-                      placeholder="Introdu parola curentă"
+                      placeholder="Enter current password"
                       required
                       style={{
                         width: "100%",
@@ -1017,7 +835,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
                   )}
                   {!newPasswordSameAsCurrent && (
                     <p style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.5rem", marginBottom: 0 }}>
-                      Cerințe: min. 8 caractere, o majusculă, o cifră, un caracter special (!@#$%^&*)
+                      Requirements: min. 8 characters, one uppercase letter, one number, one special character (!@#$%^&*)
                     </p>
                   )}
                 </div>
@@ -1303,49 +1121,6 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
         </div>
       </div>
 
-      {/* Floating Action Button Menu */}
-      <div className="fab-container">
-        {/* Menu Items (appear when expanded) */}
-        <button
-          className={`fab-menu-item fab-menu-item-1 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => {
-            alert('🌙 Dark Mode toggle - funcționalitate viitoare!');
-          }}
-          title="Dark Mode"
-        >
-          🌙
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-2 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleSettings}
-          title="Settings"
-        >
-          ⚙️
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-3 ${showFabMenu ? 'show' : ''}`}
-          onClick={handleHelp}
-          title="Help & Support"
-        >
-          ❓
-        </button>
-        <button
-          className={`fab-menu-item fab-menu-item-4 ${showFabMenu ? 'show' : ''}`}
-          onClick={() => setShowShortcuts(true)}
-          title="Keyboard Shortcuts (apasă ?)"
-        >
-          ⌨️
-        </button>
-        
-        {/* Main FAB Button */}
-        <button
-          className={`fab-main ${showFabMenu ? 'active' : ''}`}
-          onClick={() => setShowFabMenu(!showFabMenu)}
-          title="Menu"
-        >
-          <span className="fab-icon">{showFabMenu ? '×' : '+'}</span>
-        </button>
-      </div>
 
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcuts && (
@@ -1356,5 +1131,7 @@ export default function AccountSettings({ userEmail, onBack, onEmailChange, onLo
     </div>
   );
 }
+
+
 
 
