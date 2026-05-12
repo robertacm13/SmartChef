@@ -16,6 +16,7 @@ const Goals = lazy(() => import("./Goals"));
 const WeightTracking = lazy(() => import("./WeightTracking"));
 const Home = lazy(() => import("./Home"));
 const AnalyzeFood = lazy(() => import("./AnalyzeFood"));
+const RecipeGenerator = lazy(() => import("./RecipeGenerator"));
 
 function App() {
   const [currentPage, setCurrentPage] = useState("main");
@@ -143,6 +144,8 @@ function App() {
         return <WeightTracking userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} currentPage={currentPage} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleHelp={handleHelp} />;
       case "analyze-food":
         return <AnalyzeFood authToken={authToken} userEmail={userEmail} onNavigate={(page) => setCurrentPage(page)} onLogout={handleLogout} darkMode={darkMode} toggleDarkMode={toggleDarkMode} currentPage={currentPage} handleHelp={handleHelp} />;
+      case "recipe-generator":
+        return <RecipeGenerator userEmail={userEmail} onBack={handleGoHome} onLogout={handleLogout} onNavigate={(page) => setCurrentPage(page)} darkMode={darkMode} toggleDarkMode={toggleDarkMode} handleHelp={handleHelp} currentPage={currentPage} />;
       default:
         return <Home authToken={authToken} userEmail={userEmail} onNavigate={(page) => setCurrentPage(page)} onLogout={handleLogout} darkMode={darkMode} toggleDarkMode={toggleDarkMode} currentPage={currentPage} />;
     }

@@ -19,6 +19,56 @@ NUTRITION_DATABASE = {
         "vitamin_c": 13.7,
         "potassium": 237
     },
+    "apple": {
+        "calories": 52,
+        "protein": 0.3,
+        "carbs": 14,
+        "fat": 0.2,
+        "fiber": 2.4,
+        "vitamin_c": 4.6,
+        "potassium": 107
+    },
+    "flour": {
+        "calories": 364,
+        "protein": 10.3,
+        "carbs": 76.3,
+        "fat": 1,
+        "fiber": 2.7,
+        "iron": 3.6
+    },
+    "sugar": {
+        "calories": 387,
+        "protein": 0,
+        "carbs": 100,
+        "fat": 0,
+        "fiber": 0
+    },
+    "cinnamon": {
+        "calories": 247,
+        "protein": 4,
+        "carbs": 81,
+        "fat": 1.2,
+        "fiber": 53.1,
+        "calcium": 1002,
+        "iron": 8.3
+    },
+    "orange": {
+        "calories": 47,
+        "protein": 0.9,
+        "carbs": 12,
+        "fat": 0.3,
+        "fiber": 2.4,
+        "vitamin_c": 53.2,
+        "potassium": 181
+    },
+    "oil": {
+        "calories": 884,
+        "protein": 0,
+        "carbs": 0,
+        "fat": 100,
+        "fiber": 0,
+        "vitamin_e": 14
+    },
     "egg": {
         "calories": 155,
         "protein": 13,
@@ -36,6 +86,15 @@ NUTRITION_DATABASE = {
         "fiber": 0,
         "calcium": 721,
         "sodium": 621
+    },
+    "cream cheese": {
+        "calories": 342,
+        "protein": 5.9,
+        "carbs": 4.1,
+        "fat": 34.4,
+        "fiber": 0,
+        "calcium": 98,
+        "sodium": 345
     },
     "chicken": {
         "calories": 165,

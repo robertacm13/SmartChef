@@ -41,6 +41,23 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [userFriendlyError, setUserFriendlyError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState(null);
+  const [craving, setCraving] = useState("");
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [waterIntake, setWaterIntake] = useState(0.0);
+  const [vitaminAdvice, setVitaminAdvice] = useState("Loading advice...");
+  const [groceryList, setGroceryList] = useState(() => {
+    const saved = localStorage.getItem("groceryList");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("groceryList", JSON.stringify(groceryList));
+  }, [groceryList]);
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -72,7 +89,10 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
 
   const fetchStreak = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:8000/streak/${userEmail}`);
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const tz_offset = now.getTimezoneOffset();
+      const res = await fetch(`http://localhost:8000/streak/${userEmail}?date=${date}&tz_offset=${tz_offset}`);
       const data = await res.json();
       if (data.status === "success") {
         setStreak(data);
@@ -94,6 +114,72 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     }
   }, [userEmail]);
 
+  const fetchWaterIntake = useCallback(async () => {
+    try {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const res = await fetch(`http://localhost:8000/get_water_intake/${userEmail}?date=${date}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setWaterIntake(data.total);
+      }
+    } catch (err) {
+      console.error("Error fetching water intake:", err);
+    }
+  }, [userEmail]);
+
+  const fetchVitaminAdvice = useCallback(async () => {
+    try {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const tz_offset = now.getTimezoneOffset();
+      const res = await fetch(`http://localhost:8000/vitamin_advice/${userEmail}?date=${date}&tz_offset=${tz_offset}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setVitaminAdvice(data.advice);
+      }
+    } catch (err) {
+      console.error("Error fetching vitamin advice:", err);
+    }
+  }, [userEmail]);
+
+  const fetchSuggestions = useCallback(async () => {
+    setLoadingSuggestions(true);
+    try {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const tz_offset = now.getTimezoneOffset();
+      const res = await fetch(`http://localhost:8000/suggest_meals/${userEmail}?date=${date}&tz_offset=${tz_offset}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        setSuggestions(data.suggestions);
+      }
+    } catch (err) {
+      console.error("Error fetching suggestions:", err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }, [userEmail]);
+
+  const handleFindRestaurants = async () => {
+    try {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const tz_offset = now.getTimezoneOffset();
+      const res = await fetch(`http://localhost:8000/get_restaurant_query/${userEmail}?date=${date}&tz_offset=${tz_offset}`);
+      const data = await res.json();
+      if (data.status === "success") {
+        const query = encodeURIComponent(data.query);
+        window.open(`https://www.google.com/maps/search/${query}+nearby`, '_blank');
+      } else {
+        window.open(`https://www.google.com/maps/search/healthy+restaurants+nearby`, '_blank');
+      }
+    } catch (err) {
+      console.error("Error getting restaurant query:", err);
+      window.open(`https://www.google.com/maps/search/healthy+restaurants+nearby`, '_blank');
+    }
+  };
+
   useEffect(() => {
     const fetchUnreadNotifications = async () => {
       try {
@@ -110,8 +196,46 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
     fetchAnalyses();
     fetchStreak();
     fetchGoals();
+    fetchWaterIntake();
+    fetchVitaminAdvice();
     fetchUnreadNotifications();
-  }, [userEmail, fetchAnalyses, fetchStreak, fetchGoals]);
+    fetchSuggestions();
+  }, [userEmail, fetchAnalyses, fetchStreak, fetchGoals, fetchSuggestions]);
+
+  // Schedule a one-time refresh at the user's next local midnight to update "today" counters
+  useEffect(() => {
+    let timeoutId;
+    const scheduleMidnightRefresh = () => {
+      const now = new Date();
+      const next = new Date(now);
+      next.setDate(now.getDate() + 1);
+      next.setHours(0, 0, 0, 0);
+      let ms = next - now;
+      if (ms < 0) ms = 0;
+
+      timeoutId = setTimeout(async () => {
+        if (userEmail) {
+          try {
+            await Promise.all([
+              fetchAnalyses(),
+              fetchStreak(),
+              fetchGoals(),
+              fetchWaterIntake(),
+              fetchVitaminAdvice(),
+              fetchSuggestions()
+            ]);
+          } catch (err) {
+            console.error('Error refreshing daily data at midnight:', err);
+          }
+        }
+        // schedule next midnight
+        scheduleMidnightRefresh();
+      }, ms);
+    };
+
+    scheduleMidnightRefresh();
+    return () => clearTimeout(timeoutId);
+  }, [userEmail, fetchAnalyses, fetchStreak, fetchGoals, fetchWaterIntake, fetchVitaminAdvice, fetchSuggestions]);
 
   // Calculează statistici
   const getStats = () => {
@@ -263,39 +387,71 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
           boxShadow: "0 10px 30px rgba(59, 130, 246, 0.2)"
         }}>
           <h3 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: "0.75rem" }}>
-            🍲 Ready to analyze your meal?
+            Ready to analyze your meal?
           </h3>
           <p style={{ fontSize: "1rem", marginBottom: "1.5rem", opacity: 0.95 }}>
             Upload an image and instantly discover nutritional values
           </p>
-          <button
-            onClick={() => onNavigate('analyze-food')}
-            style={{
-              background: "white",
-              color: "#3B82F6",
-              border: "none",
-              padding: "0.75rem 1.5rem",
-              borderRadius: "8px",
-              fontSize: "1rem",
-              fontWeight: "600",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              transition: "all 0.3s ease",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.2)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
-            }}
-          >
-            📸 Analyze Now
-          </button>
+          <div style={{ display: "flex", justifyContent: "center", gap: "1rem" }}>
+            <button
+              onClick={() => onNavigate('analyze-food')}
+              style={{
+                background: "white",
+                color: "#3B82F6",
+                border: "none",
+                padding: "0.75rem 1.5rem",
+                borderRadius: "8px",
+                fontSize: "1rem",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                transition: "all 0.3s ease",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+              }}
+            >
+              📸 Analyze Now
+            </button>
+            
+            <button
+              onClick={() => onNavigate('recipe-generator')}
+              style={{
+                background: "transparent",
+                color: "white",
+                border: "2px solid white",
+                padding: "0.75rem 1.5rem",
+                borderRadius: "8px",
+                fontSize: "1rem",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                transition: "all 0.3s ease",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.background = "rgba(255, 255, 255, 0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.background = "transparent";
+              }}
+            >
+              🍳 Recipe Generator
+            </button>
+          </div>
+
         </div>
 
         {/* Header */}
@@ -522,8 +678,22 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
                       <span>🔥 Calories</span>
-                      <span style={{ fontWeight: "600" }}>
+                      <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         {Math.round(todayProgress.calories)} / {goals.target_calories} kcal
+                        {todayProgress.calories > goals.target_calories && (
+                          <button 
+                            onClick={() => {
+                              setWarningMessage("You have exceeded your daily calorie limit! You should go for a walk or run to compensate.");
+                              setShowWarningModal(true);
+                            }}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", transition: "transform 0.2s" }}
+                            title="Warning"
+                            onMouseEnter={(e) => e.target.style.transform = "scale(1.3)"}
+                            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                          >
+                            ⚠️
+                          </button>
+                        )}
                       </span>
                     </div>
                     <div style={{
@@ -560,8 +730,22 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
                       <span>🍗 Protein</span>
-                      <span style={{ fontWeight: "600" }}>
+                      <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         {Math.round(todayProgress.protein)}g / {goals.target_protein}g
+                        {todayProgress.protein > goals.target_protein && (
+                          <button 
+                            onClick={() => {
+                              setWarningMessage("You have exceeded your daily protein limit! Excessive intake can strain kidneys. Drink more water to help flush the excess.");
+                              setShowWarningModal(true);
+                            }}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", transition: "transform 0.2s" }}
+                            title="Warning"
+                            onMouseEnter={(e) => e.target.style.transform = "scale(1.3)"}
+                            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                          >
+                            ⚠️
+                          </button>
+                        )}
                       </span>
                     </div>
                     <div style={{
@@ -598,8 +782,22 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
                       <span>🍞 Carbs</span>
-                      <span style={{ fontWeight: "600" }}>
+                      <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         {Math.round(todayProgress.carbs)}g / {goals.target_carbs}g
+                        {todayProgress.carbs > goals.target_carbs && (
+                          <button 
+                            onClick={() => {
+                              setWarningMessage("You have exceeded your daily carbohydrate limit! Try to do some exercise to burn the energy and avoid sweets for the rest of the day.");
+                              setShowWarningModal(true);
+                            }}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", transition: "transform 0.2s" }}
+                            title="Warning"
+                            onMouseEnter={(e) => e.target.style.transform = "scale(1.3)"}
+                            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                          >
+                            ⚠️
+                          </button>
+                        )}
                       </span>
                     </div>
                     <div style={{
@@ -636,8 +834,22 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.9rem" }}>
                       <span>🥑 Fats</span>
-                      <span style={{ fontWeight: "600" }}>
+                      <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         {Math.round(todayProgress.fat)}g / {goals.target_fat}g
+                        {todayProgress.fat > goals.target_fat && (
+                          <button 
+                            onClick={() => {
+                              setWarningMessage("You have exceeded your daily fat limit! Try to eat leaner foods for the next meals and do some cardio.");
+                              setShowWarningModal(true);
+                            }}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", transition: "transform 0.2s" }}
+                            title="Warning"
+                            onMouseEnter={(e) => e.target.style.transform = "scale(1.3)"}
+                            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+                          >
+                            ⚠️
+                          </button>
+                        )}
                       </span>
                     </div>
                     <div style={{
@@ -668,6 +880,215 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
                         {Math.round((todayProgress.fat / goals.target_fat) * 100)}%
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Hydration & Supplements Card */}
+                <div style={{ 
+                  marginTop: "1.5rem", 
+                  padding: "1rem", 
+                  background: darkMode ? "#334155" : "#F8FAFC", 
+                  borderRadius: "12px",
+                  border: darkMode ? "1px solid #475569" : "1px solid #E2E8F0"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                    <h4 style={{ fontSize: "1rem", fontWeight: "600", color: darkMode ? "#E2E8F0" : "#1E293B" }}>
+                      💧 Hydration & Supplements
+                    </h4>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button
+                        onClick={async () => {
+                          const now = new Date();
+                          const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                          const res = await fetch("http://localhost:8000/add_water_intake", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: userEmail, amount: -0.5, date })
+                          });
+                          const data = await res.json();
+                          if (data.status === "success") {
+                            fetchWaterIntake();
+                          }
+                        }}
+                        style={{
+                          background: "#EF4444",
+                          color: "white",
+                          border: "none",
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "6px",
+                          fontSize: "0.8rem",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                        onMouseOver={(e) => e.target.style.background = "#DC2626"}
+                        onMouseOut={(e) => e.target.style.background = "#EF4444"}
+                      >
+                        -0.5L
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const now = new Date();
+                          const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                          const res = await fetch("http://localhost:8000/add_water_intake", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: userEmail, amount: -0.25, date })
+                          });
+                          const data = await res.json();
+                          if (data.status === "success") {
+                            fetchWaterIntake();
+                          }
+                        }}
+                        style={{
+                          background: "#EF4444",
+                          color: "white",
+                          border: "none",
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "6px",
+                          fontSize: "0.8rem",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                        onMouseOver={(e) => e.target.style.background = "#DC2626"}
+                        onMouseOut={(e) => e.target.style.background = "#EF4444"}
+                      >
+                        -0.25L
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const now = new Date();
+                          const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                          const res = await fetch("http://localhost:8000/add_water_intake", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: userEmail, amount: 0.25, date })
+                          });
+                          const data = await res.json();
+                          if (data.status === "success") {
+                            fetchWaterIntake();
+                          }
+                        }}
+                        style={{
+                          background: "#3B82F6",
+                          color: "white",
+                          border: "none",
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "6px",
+                          fontSize: "0.8rem",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                        onMouseOver={(e) => e.target.style.background = "#2563EB"}
+                        onMouseOut={(e) => e.target.style.background = "#3B82F6"}
+                      >
+                        +0.25L
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const now = new Date();
+                          const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                          const res = await fetch("http://localhost:8000/add_water_intake", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email: userEmail, amount: 0.5, date })
+                          });
+                          const data = await res.json();
+                          if (data.status === "success") {
+                            fetchWaterIntake();
+                          }
+                        }}
+                        style={{
+                          background: "#3B82F6",
+                          color: "white",
+                          border: "none",
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "6px",
+                          fontSize: "0.8rem",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                        onMouseOver={(e) => e.target.style.background = "#2563EB"}
+                        onMouseOut={(e) => e.target.style.background = "#3B82F6"}
+                      >
+                        +0.5L
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <p style={{ fontSize: "0.9rem", color: darkMode ? "#CBD5E1" : "#475569", marginBottom: "0.5rem" }}>
+                    You drank <span style={{ fontWeight: "700", color: "#3B82F6", fontSize: "1rem" }}>{waterIntake.toFixed(2)}L</span> of water today. Target: <span style={{ fontWeight: "700", color: darkMode ? "#E2E8F0" : "#1E293B" }}>2.5L</span> for your weight.
+                  </p>
+                  
+                  <div style={{ 
+                    fontSize: "0.85rem", 
+                    color: darkMode ? "#94A3B8" : "#64748B",
+                    fontStyle: "italic",
+                    borderTop: darkMode ? "1px solid #475569" : "1px solid #E2E8F0",
+                    paddingTop: "0.5rem"
+                  }}
+                    dangerouslySetInnerHTML={{ __html: `💡 ${vitaminAdvice}` }}
+                  />
+                </div>
+
+                {/* Meal Suggestions & Restaurant Search */}
+                <div style={{ 
+                  marginTop: "1.5rem", 
+                  paddingTop: "1rem", 
+                  borderTop: darkMode ? "1px solid #334155" : "1px solid #eee",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "1rem",
+                  flexWrap: "wrap"
+                }}>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="btn btn-outline"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      fontSize: "0.9rem",
+                      padding: "0.5rem 1rem"
+                    }}
+                  >
+                    💡 AI Meal Suggestions
+                  </button>
+
+                  {/* Craving / Restaurant Search */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <input 
+                      type="text" 
+                      placeholder="Craving something? (e.g., salad)" 
+                      value={craving}
+                      onChange={(e) => setCraving(e.target.value)}
+                      style={{
+                        padding: "0.5rem",
+                        borderRadius: "8px",
+                        border: "1px solid #ccc",
+                        fontSize: "0.9rem",
+                        width: "280px",
+                        background: darkMode ? "#334155" : "white",
+                        color: darkMode ? "white" : "#1E293B"
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (craving.trim()) {
+                          window.open(`https://www.google.com/maps/search/${encodeURIComponent(craving)}+restaurants+nearby`, '_blank');
+                        }
+                      }}
+                      className="btn btn-outline"
+                      style={{
+                        fontSize: "0.9rem",
+                        padding: "0.5rem 1rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.5rem"
+                      }}
+                    >
+                      🔍 Find Places to Eat
+                    </button>
                   </div>
                 </div>
               </div>
@@ -782,6 +1203,216 @@ export default function Dashboard({ userEmail, onBack, onLogout, onNavigate, dar
       
 
       
+      {/* AI Suggestions Modal */}
+      {showModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: darkMode ? "#1E293B" : "white",
+            padding: "2rem",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "500px",
+            maxHeight: "80vh",
+            overflowY: "auto",
+            color: darkMode ? "#E2E8F0" : "#1E293B",
+            position: "relative"
+          }}>
+            <button 
+              onClick={() => {
+                setShowModal(false);
+                setSelectedMeal(null);
+              }}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                color: darkMode ? "#94A3B8" : "#64748B"
+              }}
+            >
+              ×
+            </button>
+            
+            <h3 style={{ fontSize: "1.5rem", marginBottom: "1.5rem", color: "#3B82F6" }}>
+              💡 AI Meal Suggestions
+            </h3>
+            
+            {loadingSuggestions ? (
+              <p>Loading suggestions from Ollama...</p>
+            ) : suggestions.length > 0 ? (
+              <div>
+                {!selectedMeal ? (
+                  <div>
+                    <p style={{ marginBottom: "1rem", fontSize: "0.9rem" }}>Select a meal to see the recipe:</p>
+                    <ul style={{ listStyle: "none", padding: 0 }}>
+                      {suggestions.map((meal, idx) => (
+                        <li key={idx} style={{ marginBottom: "0.5rem" }}>
+                          <button
+                            onClick={() => setSelectedMeal(meal)}
+                            style={{
+                              width: "100%",
+                              textAlign: "left",
+                              padding: "0.75rem",
+                              background: darkMode ? "#334155" : "#F1F5F9",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              fontSize: "1rem",
+                              fontWeight: "600",
+                              color: darkMode ? "#E2E8F0" : "#1E293B",
+                              transition: "background 0.2s"
+                            }}
+                            onMouseOver={(e) => e.target.style.background = darkMode ? "#475569" : "#E2E8F0"}
+                            onMouseOut={(e) => e.target.style.background = darkMode ? "#334155" : "#F1F5F9"}
+                          >
+                            🍽️ {meal.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div>
+                    <button 
+                      onClick={() => setSelectedMeal(null)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#3B82F6",
+                        cursor: "pointer",
+                        fontSize: "0.9rem",
+                        marginBottom: "1rem",
+                        padding: 0
+                      }}
+                    >
+                      ← Back to list
+                    </button>
+                    <h4 style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>{selectedMeal.name}</h4>
+                    
+                    {/* Reason */}
+                    {selectedMeal.reason && (
+                      <p style={{ 
+                        fontSize: "0.9rem", 
+                        color: darkMode ? "#94A3B8" : "#666", 
+                        fontStyle: "italic",
+                        marginBottom: "1rem" 
+                      }}>
+                        💡 {selectedMeal.reason}
+                      </p>
+                    )}
+                    
+                    <div style={{ 
+                      fontSize: "0.9rem", 
+                      color: darkMode ? "#CBD5E1" : "#555",
+                      background: darkMode ? "#334155" : "#F8FAFC",
+                      padding: "1rem",
+                      borderRadius: "8px"
+                    }}>
+                      {selectedMeal.recipe.split(/(?=\d+\.)/).map((step, idx) => (
+                        <p key={idx} style={{ marginBottom: "0.5rem", lastChild: { marginBottom: 0 } }}>{step.trim()}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p>No suggestions available or you have reached your goals!</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000,
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: darkMode ? "#1E293B" : "white",
+            padding: "2rem",
+            borderRadius: "16px",
+            width: "400px",
+            maxWidth: "90%",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+            border: darkMode ? "1px solid #334155" : "none",
+            position: "relative"
+          }}>
+            <button 
+              onClick={() => setShowWarningModal(false)}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                color: darkMode ? "#94A3B8" : "#64748B"
+              }}
+            >
+              ×
+            </button>
+            
+            <h3 style={{ fontSize: "1.5rem", marginBottom: "1rem", color: "#EF4444", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              ⚠️ Warning!
+            </h3>
+            
+            <p style={{ 
+              fontSize: "1rem", 
+              color: darkMode ? "#CBD5E1" : "#1E293B",
+              lineHeight: "1.6"
+            }}>
+              {warningMessage}
+            </p>
+            
+            <div style={{ marginTop: "1.5rem", textAlign: "right" }}>
+              <button
+                onClick={() => setShowWarningModal(false)}
+                onMouseOver={(e) => e.target.style.filter = "brightness(1.1)"}
+                onMouseOut={(e) => e.target.style.filter = "none"}
+                style={{
+                  background: "#EF4444",
+                  color: "white",
+                  border: "none",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "8px",
+                  fontSize: "0.9rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)"
+                }}
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcuts && (
         <ShortcutsHelp 

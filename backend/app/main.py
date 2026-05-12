@@ -1,13 +1,15 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Header
+import json
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from app.auth import register_user, login_user, request_password_reset, verify_reset_token, reset_password
 from app.model import get_model
 from app.nutrition import get_nutrition_info, format_nutrition_response, get_ingredient_suggestions
+from app.ollama_client import generate_suggestions, generate_recipes_from_ingredients, generate_restaurant_query, generate_vitamin_advice
 from app.database import (
     food_analyses_collection, 
     user_profiles_collection, 
@@ -15,7 +17,8 @@ from app.database import (
     user_goals_collection,
     weight_history_collection,
     notifications_collection,
-    notification_preferences_collection
+    notification_preferences_collection,
+    water_intake_collection
 )
 from passlib.hash import pbkdf2_sha256
 from PIL import Image
@@ -44,6 +47,55 @@ MODEL_THRESHOLD = _read_model_threshold()
 
 app = FastAPI()
 
+
+def _compute_utc_range_for_local_date(date_str: Optional[str], tz_offset_minutes: Optional[int]):
+    """
+    Given a local date string (YYYY-MM-DD) and a JS-style timezone offset in minutes
+    (as returned by `new Date().getTimezoneOffset()`), compute the UTC start/end
+    datetimes that correspond to that local date.
+
+    Returns (utc_start, utc_end) as naive UTC datetimes.
+    """
+    if date_str:
+        try:
+            local_date = datetime.strptime(date_str, "%Y-%m-%d")
+        except Exception:
+            # Fallback to fromisoformat for more flexible parsing
+            local_date = datetime.fromisoformat(date_str)
+    else:
+        now = datetime.utcnow()
+        local_date = datetime(now.year, now.month, now.day)
+
+    if tz_offset_minutes is None:
+        tz_offset_minutes = 0
+
+    # JS getTimezoneOffset() is minutes to add to local to get UTC: UTC = local + offset
+    # Therefore UTC start = local_midnight + offset minutes
+    utc_start = local_date + timedelta(minutes=tz_offset_minutes)
+    utc_end = utc_start + timedelta(days=1)
+    return utc_start, utc_end
+
+
+def _parse_timestamp_to_datetime(ts):
+    if isinstance(ts, datetime):
+        return ts
+    if isinstance(ts, str):
+        try:
+            # Handle Z suffix
+            if ts.endswith('Z'):
+                return datetime.fromisoformat(ts.replace('Z', '+00:00')).replace(tzinfo=None)
+            dt = datetime.fromisoformat(ts)
+            # If datetime has tzinfo, convert to naive UTC
+            if dt.tzinfo is not None:
+                return dt.astimezone(timezone.utc).replace(tzinfo=None)
+            return dt
+        except Exception:
+            try:
+                return datetime.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S")
+            except Exception:
+                return None
+    return None
+
 # Allow CORS for frontend (React)
 app.add_middleware(
     CORSMiddleware,
@@ -57,16 +109,16 @@ async def startup_event():
     """Load ML model and start scheduler on startup"""
     try:
         model = get_model()
-        print("✅ Food recognition model loaded successfully")
+        print("[OK] Food recognition model loaded successfully")
     except Exception as e:
-        print(f"⚠️ Warning: Model loading issue - {e}")
+        print(f"[Warning] Model loading issue - {e}")
     
     # Start background scheduler for reminders
     try:
         start_scheduler()
-        print("✅ Background scheduler started")
+        print("[OK] Background scheduler started")
     except Exception as e:
-        print(f"⚠️ Warning: Scheduler startup issue - {e}")
+        print(f"[Warning] Scheduler startup issue - {e}")
 
 
 @app.on_event("shutdown")
@@ -223,6 +275,9 @@ async def analyze_food(
         }
         
     except Exception as e:
+        print(f"Error in analyze_food: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
 
@@ -849,6 +904,160 @@ async def update_user_goals(email: str, goals_data: UserGoalsData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating goals: {str(e)}")
 
+@app.get("/suggest_meals/{user_email}")
+async def suggest_meals(user_email: str, date: Optional[str] = None, tz_offset: Optional[int] = None):
+    """
+    Suggest meals based on missing nutrients for the day.
+    """
+    try:
+        # 1. Fetch user goals
+        goals_response = await get_user_goals(user_email)
+        goals = goals_response.get("goals", {})
+        
+        target_calories = goals.get("target_calories", 2000)
+        target_protein = goals.get("target_protein", 150)
+        target_carbs = goals.get("target_carbs", 200)
+        target_fat = goals.get("target_fat", 65)
+        
+        # 2. Fetch today's history
+        # Accept optional query params `date` (YYYY-MM-DD) and `tz_offset` (minutes as in JS getTimezoneOffset)
+        # so callers can pass their local date and timezone offset. FastAPI will map these from query params.
+        utc_start, utc_end = _compute_utc_range_for_local_date(date, tz_offset)
+
+        # Fetch all for user and filter in Python to support both Mock and Real DB
+        analyses_cursor = food_analyses_collection.find({"user_email": user_email})
+        analyses = list(analyses_cursor) if not isinstance(analyses_cursor, list) else analyses_cursor
+
+        # 3. Calculate consumed
+        consumed = {"calories": 0, "protein": 0, "carbs": 0, "fat": 0}
+
+        for analysis in analyses:
+            ts = analysis.get("timestamp")
+            dt = _parse_timestamp_to_datetime(ts)
+            if not dt:
+                continue
+            if dt >= utc_start and dt < utc_end:
+                nut = analysis.get("nutrition", {})
+                # support both 'total_nutrition' and 'nutrition' shapes
+                total_nut = nut.get("total_nutrition") if isinstance(nut, dict) and "total_nutrition" in nut else nut
+                consumed["calories"] += total_nut.get("calories", 0)
+                consumed["protein"] += total_nut.get("protein", 0)
+                consumed["carbs"] += total_nut.get("carbs", 0)
+                consumed["fat"] += total_nut.get("fat", 0)
+            
+        # 4. Calculate missing
+        missing = {
+            "calories": max(0, round(target_calories - consumed["calories"], 2)),
+            "protein": max(0, round(target_protein - consumed["protein"], 2)),
+            "carbs": max(0, round(target_carbs - consumed["carbs"], 2)),
+            "fat": max(0, round(target_fat - consumed["fat"], 2))
+        }
+        
+        # 5. Get suggestions from Ollama
+        suggestions = []
+        if missing["calories"] > 0 or missing["protein"] > 0 or missing["carbs"] > 0 or missing["fat"] > 0:
+            suggestions_str = generate_suggestions(missing)
+            try:
+                suggestions = json.loads(suggestions_str)
+            except json.JSONDecodeError:
+                print(f"Failed to parse suggestions JSON: {suggestions_str}")
+                suggestions = [{"name": "AI Suggestion (Fallback)", "recipe": suggestions_str}]
+            
+        return {
+            "status": "success",
+            "target": {
+                "calories": target_calories,
+                "protein": target_protein,
+                "carbs": target_carbs,
+                "fat": target_fat
+            },
+            "consumed": {k: round(v, 2) for k, v in consumed.items()},
+            "missing": missing,
+            "suggestions": suggestions
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error suggesting meals: {str(e)}")
+
+
+class RecipeRequest(BaseModel):
+    ingredients: list[str]
+
+@app.post("/generate_recipes")
+async def generate_recipes(request: RecipeRequest):
+    """
+    Generate recipes based on a list of ingredients.
+    """
+    try:
+        recipes_str = generate_recipes_from_ingredients(request.ingredients)
+        try:
+            recipes = json.loads(recipes_str)
+        except json.JSONDecodeError:
+            print(f"Failed to parse recipes JSON: {recipes_str}")
+            recipes = [{"name": "AI Recipe (Fallback)", "recipe": recipes_str, "missing_ingredients": []}]
+            
+        return {
+            "status": "success",
+            "recipes": recipes
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating recipes: {str(e)}")
+
+
+@app.get("/get_restaurant_query/{user_email}")
+async def get_restaurant_query(user_email: str, date: Optional[str] = None, tz_offset: Optional[int] = None):
+    """
+    Get a search query for restaurants based on missing nutrients.
+    """
+    try:
+        goals = user_goals_collection.find_one({"email": user_email})
+        if not goals:
+            target = {"calories": 2000, "carbs": 200, "fat": 65, "protein": 150}
+        else:
+            target = {
+                "calories": goals.get("target_calories", 2000),
+                "carbs": goals.get("target_carbs", 200),
+                "fat": goals.get("target_fat", 65),
+                "protein": goals.get("target_protein", 150)
+            }
+            
+        analyses = list(food_analyses_collection.find({"user_email": user_email}))
+        # Compute UTC range for the requested local date
+        utc_start, utc_end = _compute_utc_range_for_local_date(date, tz_offset)
+
+        today_analyses = []
+        for a in analyses:
+            ts = a.get("timestamp")
+            dt = _parse_timestamp_to_datetime(ts)
+            if not dt:
+                continue
+            if dt >= utc_start and dt < utc_end:
+                today_analyses.append(a)
+        
+        consumed = {"calories": 0, "carbs": 0, "fat": 0, "protein": 0}
+        for a in today_analyses:
+            nutrients = a.get("nutrition_info", {})
+            consumed["calories"] += nutrients.get("calories", 0)
+            consumed["carbs"] += nutrients.get("carbohydrates", 0)
+            consumed["fat"] += nutrients.get("fat", 0)
+            consumed["protein"] += nutrients.get("protein", 0)
+            
+        missing = {
+            "calories": max(0, target["calories"] - consumed["calories"]),
+            "carbs": max(0, target["carbs"] - consumed["carbs"]),
+            "fat": max(0, target["fat"] - consumed["fat"]),
+            "protein": max(0, target["protein"] - consumed["protein"])
+        }
+        
+        query = generate_restaurant_query(missing)
+        
+        return {
+            "status": "success",
+            "query": query
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating restaurant query: {str(e)}")
+
 
 class WeightEntry(BaseModel):
     weight: float  # in kg
@@ -968,7 +1177,7 @@ async def delete_weight_entry(entry_id: str, email: Optional[str] = Header(None,
 
 
 @app.get("/streak/{email}")
-async def get_user_streak(email: str):
+async def get_user_streak(email: str, date: Optional[str] = None, tz_offset: Optional[int] = None):
     """
     Calculate user's meal tracking streak (consecutive days with analyses).
     
@@ -992,21 +1201,36 @@ async def get_user_streak(email: str):
                 "last_activity": None
             }
         
-        # Extract unique dates
+        # Extract unique local dates (respecting user's tz_offset if provided)
         dates_set = set()
         for analysis in analyses:
             if "timestamp" in analysis:
-                date_str = analysis["timestamp"].date() if hasattr(analysis["timestamp"], "date") else analysis["timestamp"][:10]
-                dates_set.add(str(date_str))
-        
+                ts = analysis["timestamp"]
+                dt = _parse_timestamp_to_datetime(ts)
+                if not dt:
+                    continue
+                if tz_offset is not None:
+                    # Convert UTC timestamp to user's local time: local = UTC - tzOffset
+                    local_dt = dt - timedelta(minutes=tz_offset)
+                else:
+                    local_dt = dt
+                dates_set.add(str(local_dt.date()))
+
         dates_list = sorted(list(dates_set), reverse=True)
-        
-        # Calculate current streak
+
+        # Calculate current streak using user's local 'today' if provided
+        if date:
+            try:
+                today = datetime.strptime(date, "%Y-%m-%d").date()
+            except Exception:
+                today = datetime.fromisoformat(date).date()
+        else:
+            # use server UTC date as fallback
+            today = datetime.utcnow().date()
+
         current_streak = 0
-        today = datetime.utcnow().date()
-        
         for i, date_str in enumerate(dates_list):
-            expected_date = today - datetime.timedelta(days=i)
+            expected_date = today - timedelta(days=i)
             if str(expected_date) == date_str or str(expected_date)[:10] == date_str[:10]:
                 current_streak += 1
             else:
@@ -1036,11 +1260,6 @@ async def get_user_streak(email: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculating streak: {str(e)}")
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error updating account settings: {str(e)}")
 
 
 # ==================== NOTIFICATION ENDPOINTS ====================
@@ -1245,5 +1464,120 @@ def set_notification_preferences_endpoint(email: str, preferences: dict):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating preferences: {str(e)}")
+
+
+@app.get("/get_water_intake/{email}")
+def get_water_intake_endpoint(email: str, date: Optional[str] = None):
+    """
+    Get today's water intake for a user.
+    """
+    try:
+        today = date if date else datetime.utcnow().strftime("%Y-%m-%d")
+        records = water_intake_collection.find({"user_email": email, "date": today})
+        
+        total = 0.0
+        for r in records:
+            total += r.get("amount", 0.0)
+            
+        return {
+            "status": "success",
+            "total": total
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching water intake: {str(e)}")
+
+
+@app.post("/add_water_intake")
+def add_water_intake_endpoint(data: dict):
+    """
+    Add water intake for a user.
+    """
+    try:
+        email = data.get("email")
+        amount = data.get("amount")
+        if not email or amount is None:
+            raise HTTPException(status_code=400, detail="Missing email or amount")
+
+        # Allow frontend to provide the local date string (YYYY-MM-DD) so water entries
+        # can be grouped by user's local day. If not provided, fall back to server UTC date.
+        provided_date = data.get("date")
+        today = provided_date if provided_date else datetime.utcnow().strftime("%Y-%m-%d")
+
+        record = water_intake_collection.find_one({"user_email": email, "date": today})
+
+        if record:
+            new_total = max(0.0, record.get("amount", 0.0) + amount)
+            water_intake_collection.update_one(
+                {"_id": record["_id"]},
+                {"$set": {"amount": new_total, "timestamp": datetime.utcnow()}}
+            )
+        else:
+            water_intake_collection.insert_one({
+                "user_email": email,
+                "date": today,
+                "amount": amount,
+                "timestamp": datetime.utcnow()
+            })
+            
+        return {
+            "status": "success",
+            "message": "Water intake updated"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating water intake: {str(e)}")
+
+
+@app.get("/vitamin_advice/{email}")
+def get_vitamin_advice_endpoint(email: str, date: Optional[str] = None, tz_offset: Optional[int] = None):
+    """
+    Get advice on missing vitamins based on today's missing nutrients.
+    """
+    try:
+        # Fetch goals
+        goals_doc = user_goals_collection.find_one({"email": email})
+        if not goals_doc:
+            goals = {
+                "target_calories": 2000,
+                "target_protein": 150,
+                "target_carbs": 200,
+                "target_fat": 65
+            }
+        else:
+            goals = goals_doc.get("goals", {})
+            
+        # Fetch progress for the requested local date
+        utc_start, utc_end = _compute_utc_range_for_local_date(date, tz_offset)
+        records = food_analyses_collection.find({"user_email": email})
+
+        # Filter for the UTC range corresponding to the local date and calculate totals
+        consumed = {"calories": 0, "protein": 0, "carbs": 0, "fat": 0}
+        for r in records:
+            dt = _parse_timestamp_to_datetime(r.get("timestamp"))
+            if not dt:
+                continue
+            if dt >= utc_start and dt < utc_end:
+                nutrients = r.get("nutrients", {})
+                consumed["calories"] += nutrients.get("calories", 0)
+                consumed["protein"] += nutrients.get("protein", 0)
+                consumed["carbs"] += nutrients.get("carbs", 0)
+                consumed["fat"] += nutrients.get("fat", 0)
+                
+        # Calculate missing
+        missing = {
+            "calories": max(0, goals.get("target_calories", 2000) - consumed["calories"]),
+            "protein": max(0, goals.get("target_protein", 150) - consumed["protein"]),
+            "carbs": max(0, goals.get("target_carbs", 200) - consumed["carbs"]),
+            "fat": max(0, goals.get("target_fat", 65) - consumed["fat"])
+        }
+        
+        # Generate advice
+        advice = generate_vitamin_advice(missing)
+        
+        return {
+            "status": "success",
+            "advice": advice
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating vitamin advice: {str(e)}")
 
 

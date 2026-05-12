@@ -112,9 +112,9 @@ export function applyTheme(themeId) {
   document.documentElement.style.setProperty("--fab-color", theme.fabColor);
   // Convert hex to rgb components for rgba() usage
   const hex = theme.primary.replace("#", "");
-  const r = parseInt(hex.substring(0,2), 16);
-  const g = parseInt(hex.substring(2,4), 16);
-  const b = parseInt(hex.substring(4,6), 16);
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
   document.documentElement.style.setProperty("--primary-rgb", `${r}, ${g}, ${b}`);
   document.body.setAttribute("data-theme", themeId);
 }
@@ -228,6 +228,7 @@ export default function AppSettings({
   darkMode,
   toggleDarkMode,
   currentPage,
+  handleHelp,
 }) {
   const [activeTheme, setActiveTheme] = useState(
     () => localStorage.getItem("appTheme") || "orange"
@@ -235,9 +236,7 @@ export default function AppSettings({
   const [activeFontSize, setActiveFontSize] = useState(
     () => localStorage.getItem("appFontSize") || "medium"
   );
-  const [activeLanguage, setActiveLanguage] = useState(
-    () => localStorage.getItem("appLanguage") || "ro"
-  );
+  const [activeLanguage, setActiveLanguage] = useState("en");
   const t = TRANSLATIONS[activeLanguage] || TRANSLATIONS.en;
   const [langBanner, setLangBanner] = useState(false);
   const [activeDefaultPage, setActiveDefaultPage] = useState(
@@ -248,10 +247,6 @@ export default function AppSettings({
   );
   const [saved, setSaved] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-
-  const handleHelp = () => {
-    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
-  };
 
   const handleThemeChange = (themeId) => {
     setActiveTheme(themeId);
@@ -301,7 +296,7 @@ export default function AppSettings({
     if (window.confirm(t.confirmReset)) {
       handleThemeChange("orange");
       handleFontSizeChange("medium");
-      handleLanguageChange("ro");
+      handleLanguageChange("en");
       setLangBanner(false);
       handleDefaultPageChange("main");
       handleUnitsChange("kcal");
@@ -314,8 +309,8 @@ export default function AppSettings({
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
-      
-      <Navbar 
+
+      <Navbar
         userEmail={userEmail}
         onBack={onBack}
         onNavigate={onNavigate}
@@ -453,41 +448,6 @@ export default function AppSettings({
           </div>
         </div>
 
-        {/* ===== SECTION: Language ===== */}
-        <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
-          <h3 className="appsettings-section-title">🌍 {t.language}</h3>
-          <p className="appsettings-section-desc">
-            {t.setLanguage}
-          </p>
-            <div style={{
-              padding: "0.7rem 1rem",
-              background: "rgba(33, 150, 243, 0.08)",
-              border: "1px solid rgba(33, 150, 243, 0.35)",
-              borderRadius: "8px",
-              color: "#1565c0",
-              fontSize: "0.85rem",
-              marginBottom: "1rem"
-            }}>
-              {activeLanguage === "en" ? (
-                <>ℹ️ <strong>English</strong> — Complete interface translation is in progress. Some texts may remain in Romanian for now.</>
-              ) : (
-                <>ℹ️ <strong>Română</strong> — Traducerea completă a interfeței este în curs. Unele texte pot rămâne în engleză deocamdată.</>
-              )}
-            </div>
-
-          <div className="appsettings-option-row">
-            {LANGUAGES.map((lang) => (
-              <button
-                key={lang.id}
-                className={`appsettings-option-btn ${activeLanguage === lang.id ? "active" : ""}`}
-                onClick={() => handleLanguageChange(lang.id)}
-              >
-                <span style={{ fontSize: "1.4rem", fontWeight: "800", fontFamily: "monospace", letterSpacing: "1px" }}>{lang.code}</span>
-                <span className="appsettings-option-label">{lang.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* ===== SECTION: Default Page ===== */}
         <div className="card appsettings-section" style={{ padding: "1.8rem", marginBottom: "1.5rem" }}>
@@ -542,7 +502,7 @@ export default function AppSettings({
 
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcuts && (
-        <ShortcutsHelp 
+        <ShortcutsHelp
           onClose={() => setShowShortcuts(false)}
         />
       )}

@@ -770,7 +770,7 @@ button:disabled:hover {
   background: white;
   border-radius: 20px;
   padding: 40px;
-  max-width: 500px;
+  max-width: 600px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;

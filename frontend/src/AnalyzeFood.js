@@ -29,7 +29,7 @@ ChartJS.register(
   Legend
 );
 
-function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDarkMode }) {
+function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, toggleDarkMode, handleHelp }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [results, setResults] = useState(null);
@@ -137,7 +137,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
         weight: 100 // default 100g
       })));
     }
-  }, [results?.food_name]); // Only re-initialize on new food, not on nutrition recalculation
+  }, [results?.ingredients?.join(',')]); // Re-initialize when ingredient list changes
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -166,10 +166,6 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
   const handleSettings = () => {
     onNavigate("app-settings");
-  };
-
-  const handleHelp = () => {
-    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
   };
 
   const handleFileSelect = (event) => {
@@ -1149,7 +1145,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
               <div className="modal-nutrition-item">
                 <div className="modal-nutrition-label">
-                  <span>💪 Proteine</span>
+                  <span>💪 Protein</span>
                   <span className="modal-nutrition-value">{Number(selectedIngredient.nutrition.protein).toFixed(2)}g</span>
                 </div>
                 <div className="modal-progress-bar">
@@ -1175,7 +1171,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
 
               <div className="modal-nutrition-item">
                 <div className="modal-nutrition-label">
-                  <span>🥑 Grăsimi</span>
+                  <span>🥑 Fat</span>
                   <span className="modal-nutrition-value">{Number(selectedIngredient.nutrition.fat).toFixed(2)}g</span>
                 </div>
                 <div className="modal-progress-bar">
@@ -1224,7 +1220,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
             <h2 className="modal-title">➕ Add Ingredient</h2>
             <div className="modal-subtitle">Enter ingredient name</div>
             
-            <div style={{ padding: "1rem 0", position: "relative" }}>
+            <div style={{ padding: "1.5rem 0", position: "relative" }}>
               <input
                 type="text"
                 value={newIngredientName}
@@ -1292,7 +1288,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                 </div>
               )}
               
-              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
                 <button
                   onClick={handleAddIngredient}
                   style={{

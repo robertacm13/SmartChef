@@ -8,6 +8,7 @@ import "./utils/keyboardShortcuts.css";
 import { AnalysisCardSkeleton } from "./components/SkeletonLoader";
 import logoImg from "./logo.png";
 import Navbar from "./components/Navbar";
+import { MdOutlineKeyboardArrowUp, MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 export default function History({ userEmail, onBack, onLogout, onNavigate, darkMode, toggleDarkMode, handleSettings, handleHelp }) {
   const ITEMS_PER_PAGE = 20;
@@ -26,6 +27,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [userFriendlyError, setUserFriendlyError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showScroll, setShowScroll] = useState(false);
 
   // Keyboard shortcuts - Nielsen Heuristic #7
   useKeyboardShortcuts({
@@ -81,6 +83,26 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
     fetchHistory();
     fetchUnreadNotifications();
   }, [userEmail, fetchHistory]);
+
+  // Scroll event listener for showing scroll buttons
+  useEffect(() => {
+    const updateScrollVisibility = () => {
+      const isScrollable = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight > 100;
+      setShowScroll(isScrollable);
+    };
+
+    updateScrollVisibility();
+    setTimeout(updateScrollVisibility, 50);
+    setTimeout(updateScrollVisibility, 200);
+    setTimeout(updateScrollVisibility, 500);
+    
+    window.addEventListener("scroll", updateScrollVisibility);
+    window.addEventListener("resize", updateScrollVisibility);
+    return () => {
+      window.removeEventListener("scroll", updateScrollVisibility);
+      window.removeEventListener("resize", updateScrollVisibility);
+    };
+  }, [loading, analyses, currentPage]);
 
   const toggleFavorite = async (analysisId, e) => {
     e.stopPropagation();
@@ -139,7 +161,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
-    return date.toLocaleDateString("ro-RO", {
+    return date.toLocaleDateString("en-US", {
       day: "2-digit",
       month: "long",
       year: "numeric",
@@ -259,7 +281,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
 
         <div style={{ marginBottom: "0.8rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
-            <span style={{ fontSize: "0.9rem", color: "#666" }}>💪 Proteine</span>
+            <span style={{ fontSize: "0.9rem", color: "#666" }}>💪 Protein</span>
             <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.protein).toFixed(2)}g
             </span>
@@ -282,7 +304,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
 
         <div style={{ marginBottom: "0.8rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
-            <span style={{ fontSize: "0.9rem", color: "#666" }}>🍞 Carbohidrați</span>
+            <span style={{ fontSize: "0.9rem", color: "#666" }}>🍞 Carbohydrates</span>
             <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.carbs).toFixed(2)}g
             </span>
@@ -305,7 +327,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
 
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
-            <span style={{ fontSize: "0.9rem", color: "#666" }}>🥑 Grăsimi</span>
+            <span style={{ fontSize: "0.9rem", color: "#666" }}>🥑 Fat</span>
             <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#3B82F6" }}>
               {Number(totalNutrition.fat).toFixed(2)}g
             </span>
@@ -510,7 +532,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                   className="error-action-btn secondary"
                   onClick={() => setUserFriendlyError(null)}
                 >
-                  Închide
+                  Close
                 </button>
               </div>
             </div>
@@ -528,8 +550,8 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
             <p style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</p>
             <p style={{ fontSize: "1.2rem", color: "#666" }}>
               {analyses.length === 0 
-                ? "Nu ai încă nicio analiză. Uploadează prima ta imagine!"
-                : "Nu s-au găsit rezultate pentru filtrele aplicate."}
+                ? "You don't have any analyses yet. Upload your first image!"
+                : "No results found for the applied filters."}
             </p>
           </div>
         )}
@@ -610,7 +632,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <Tooltip text={analysis.is_favorite ? "Elimină din favorite" : "Adaugă la favorite"} position="left">
+                      <Tooltip text={analysis.is_favorite ? "Remove from favorites" : "Add to favorites"} position="left">
                         <button
                           onClick={(e) => toggleFavorite(analysis._id, e)}
                           style={{
@@ -622,7 +644,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                             filter: analysis.is_favorite ? "none" : "grayscale(100%)",
                             opacity: analysis.is_favorite ? 1 : 0.4
                           }}
-                          aria-label={analysis.is_favorite ? "Elimină din favorite" : "Adaugă la favorite"}
+                          aria-label={analysis.is_favorite ? "Remove from favorites" : "Add to favorites"}
                           aria-pressed={analysis.is_favorite}
                           onMouseEnter={(e) => {
                             e.target.style.transform = "scale(1.3)";
@@ -695,7 +717,7 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                       borderTop: "2px solid #f0f0f0"
                     }}>
                       <p style={{ fontSize: "1rem", fontWeight: "600", color: "#333", marginBottom: "1rem" }}>
-                        📊 Valori Nutriționale:
+                        📊 Nutritional Values:
                       </p>
                       {renderNutritionBars(analysis.nutrition)}
                     </div>
@@ -729,22 +751,22 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
                   className="btn btn-outline"
                   onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                   disabled={currentPage === 1}
-                  aria-label="Pagina anterioară"
+                  aria-label="Previous page"
                 >
-                  ← Anterior
+                  ← Previous
                 </button>
 
                 <span style={{ fontWeight: 600, color: "#666" }}>
-                  Pagina {currentPage} din {totalPages}
+                  Page {currentPage} of {totalPages}
                 </span>
 
                 <button
                   className="btn btn-outline"
                   onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
                   disabled={currentPage === totalPages}
-                  aria-label="Pagina următoare"
+                  aria-label="Next page"
                 >
-                  Următor →
+                  Next →
                 </button>
               </div>
             )}
@@ -791,10 +813,89 @@ export default function History({ userEmail, onBack, onLogout, onNavigate, darkM
         <ShortcutsHelp 
           onClose={() => setShowShortcuts(false)}
           customShortcuts={{
-            'f': { description: 'Focus căutare', action: 'focus-search' },
+            'f': { description: 'Focus search', action: 'focus-search' },
             's': { description: 'Go to History (current)', action: 'navigate-history' }
           }}
         />
+      )}
+
+      {showScroll && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "2rem",
+            right: "2rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
+            zIndex: 1100
+          }}
+        >
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="Scroll to top"
+            style={{
+              padding: "0.75rem",
+              background: "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.75rem",
+              height: "2.75rem"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.5)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+            }}
+          >
+            <MdOutlineKeyboardArrowUp style={{ width: "1.5rem", height: "1.5rem" }} />
+          </button>
+          <button
+            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+            aria-label="Scroll to bottom"
+            style={{
+              padding: "0.75rem",
+              background: "var(--primary)",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "2.75rem",
+              height: "2.75rem"
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "var(--accent)";
+              e.currentTarget.style.transform = "translateY(3px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(59, 130, 246, 0.5)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.4)";
+            }}
+          >
+            <MdOutlineKeyboardArrowDown style={{ width: "1.5rem", height: "1.5rem" }} />
+          </button>
+        </div>
       )}
       </main>
     </div>

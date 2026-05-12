@@ -5,7 +5,7 @@ import "./utils/keyboardShortcuts.css";
 import "./App.css";
 import Navbar from "./components/Navbar";
 
-export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, currentPage, darkMode, toggleDarkMode }) {
+export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, currentPage, darkMode, toggleDarkMode, handleHelp }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -16,10 +16,6 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, 
 
   const handleSettings = () => {
     onNavigate("app-settings");
-  };
-
-  const handleHelp = () => {
-    alert("❓ Help & Support\n\nFor assistance:\n📧 Email: support@smartchef.ro\n🐛 Report bugs on GitHub\n\nQuick Tips:\n- Upload clear food images\n- Use dark mode for better viewing\n- Export analyses as PDF\n- Mark favorites with ⭐");
   };
   
   const [formData, setFormData] = useState({

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
 from PIL import Image
+from app.ollama_client import detect_ingredients_from_image
 
 # Lazy imports to avoid hard failures at startup on environments with broken torch DLLs.
 torch = None
@@ -87,6 +88,7 @@ FOOD101_CLASSES: List[str] = [
 
 
 FOOD_CLASS_TO_INGREDIENTS: Dict[str, List[str]] = {
+    "apple_pie": ["apple", "flour", "sugar", "butter", "cinnamon"],
     "pizza": ["cheese", "tomato", "bread"],
     "spaghetti_bolognese": ["pasta", "beef", "tomato", "onion"],
     "spaghetti_carbonara": ["pasta", "egg", "cheese"],
@@ -124,6 +126,7 @@ FOOD_CLASS_TO_INGREDIENTS: Dict[str, List[str]] = {
     "chicken_wings": ["chicken"],
     "breakfast_burrito": ["egg", "cheese", "onion"],
     "guacamole": ["tomato", "onion"],
+    "falafel": ["lettuce", "onion", "garlic", "bread", "olive oil"],
     "huevos_rancheros": ["egg", "tomato", "onion"],
     "pad_thai": ["pasta", "egg"],
     "pho": ["pasta", "beef", "onion"],
@@ -335,7 +338,7 @@ class FoodRecognitionModel:
         Predict food name and ingredients from an image.
 
         For this B5 checkpoint, the network predicts Food-101 classes first and
-        then maps top classes to known SmartChef ingredients.
+        then maps top classes to known SmartChef ingredients using hardcoded mappings.
         
         Returns dict with:
         - food_name: str (e.g., "pizza", "spaghetti_bolognese")
@@ -346,7 +349,7 @@ class FoodRecognitionModel:
             if not self._torch_available or not self.model_loaded or self.model is None:
                 return {
                     "food_name": "unknown",
-                    "ingredients": ["tomato", "cheese", "egg"],
+                    "ingredients": [],
                     "confidence": 0.0
                 }
 
@@ -383,12 +386,6 @@ class FoodRecognitionModel:
                 ingredient_predictions.extend(_map_food_class_to_ingredients(food_label))
 
             ingredient_predictions = _dedupe(ingredient_predictions)
-            ingredient_predictions = [
-                ingredient for ingredient in ingredient_predictions if ingredient in self.ingredient_classes
-            ]
-
-            if not ingredient_predictions:
-                ingredient_predictions = ["tomato", "onion"]
 
             return {
                 "food_name": top_food_name,
@@ -399,7 +396,7 @@ class FoodRecognitionModel:
             print(f"Prediction error: {exc}")
             return {
                 "food_name": "unknown",
-                "ingredients": ["tomato", "cheese", "egg"],
+                "ingredients": [],
                 "confidence": 0.0
             }
 

@@ -35,6 +35,7 @@ try:
     password_reset_tokens_collection = db["password_reset_tokens"]
     notifications_collection = db["notifications"]
     notification_preferences_collection = db["notification_preferences"]
+    water_intake_collection = db["water_intake"]
     
     # Create indexes for better performance
     # Unique index on email to prevent duplicates
@@ -65,13 +66,17 @@ try:
     # Index on email for notification preferences
     notification_preferences_collection.create_index([("email", ASCENDING)], unique=True)
     
+    # Index on user_email and date for water_intake
+    water_intake_collection.create_index([("user_email", ASCENDING)])
+    water_intake_collection.create_index([("date", ASCENDING)])
+    
     # Test connection
     client.admin.command('ping')
-    print("✅ MongoDB Atlas connection successful!")
-    print("✅ Indexes created: email (unique), user_email, timestamp, goals, weight_history, notifications")
+    print("[OK] MongoDB Atlas connection successful!")
+    print("[OK] Indexes created: email (unique), user_email, timestamp, goals, weight_history, notifications")
 except Exception as e:
-    print(f"❌ MongoDB Atlas connection failed: {e}")
-    print("⚠️ Falling back to MockCollection for testing...")
+    print(f"[Error] MongoDB Atlas connection failed: {e}")
+    print("[Warning] Falling back to MockCollection for testing...")
     
     # Fallback to in-memory storage if connection fails
     users_storage = []
@@ -82,6 +87,7 @@ except Exception as e:
     password_reset_tokens_storage = []
     notifications_storage = []
     notification_preferences_storage = []
+    water_intake_storage = []
 
     class MockCollection:
         def __init__(self, storage):
@@ -129,5 +135,6 @@ except Exception as e:
     password_reset_tokens_collection = MockCollection(password_reset_tokens_storage)
     notifications_collection = MockCollection(notifications_storage)
     notification_preferences_collection = MockCollection(notification_preferences_storage)
+    water_intake_collection = MockCollection(water_intake_storage)
 
 

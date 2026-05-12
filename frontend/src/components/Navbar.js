@@ -37,7 +37,24 @@ export default function Navbar({
       }
     };
 
+    // Fetch immediately on mount
     fetchUnreadNotifications();
+
+    // Set up interval to refresh every 5 seconds
+    const intervalId = setInterval(fetchUnreadNotifications, 5000);
+
+    // Refresh when page becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUnreadNotifications();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [userEmail]);
 
   useEffect(() => {
@@ -263,7 +280,7 @@ export default function Navbar({
             e.target.style.boxShadow = "0 4px 6px rgba(var(--primary-rgb), 0.3)";
           }}
         >
-          {localStorage.getItem("appLanguage") === "en" ? "Analyze" : "Analizează"}
+          Analyze
         </button>
 
         {/* Vertical Divider */}
