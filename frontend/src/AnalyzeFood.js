@@ -502,7 +502,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
       );
     }
     
-    doc.save(`SmartChef-Analiza-${now.toISOString().slice(0,10)}.pdf`);
+    doc.save(`SmartChef-Analysis-${now.toISOString().slice(0,10)}.pdf`);
   };
 
   return (
@@ -1094,7 +1094,7 @@ function AnalyzeFood({ authToken, userEmail, onNavigate, onLogout, darkMode, tog
                         const url = URL.createObjectURL(dataBlob);
                         const link = document.createElement('a');
                         link.href = url;
-                        link.download = `smartchef-analiza-${new Date().toISOString().slice(0,10)}.json`;
+                        link.download = `smartchef-analysis-${new Date().toISOString().slice(0,10)}.json`;
                         link.click();
                         URL.revokeObjectURL(url);
                       }}

@@ -73,10 +73,10 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, 
           sex: data.profile.sex || ""
         });
       } else {
-        setError("Eroare la încărcarea datelor");
+        setError("Error loading data");
       }
     } catch (err) {
-      setError(`Eroare la conectarea cu serverul. Asigură-te că backend-ul rulează pe portul 8000.`);
+      setError(`Error connecting to server. Make sure the backend is running on port 8000.`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -121,13 +121,13 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, 
       const data = await res.json();
 
       if (res.ok && data.status === "success") {
-        setSuccess("✅ Datele personale au fost salvate cu succes!");
+        setSuccess("✅ Personal data saved successfully!");
         setTimeout(() => setSuccess(""), 3000);
       } else {
-        setError(data.detail || "Eroare la salvarea datelor");
+        setError(data.detail || "Error saving data");
       }
     } catch (err) {
-      setError("Eroare la conectarea cu serverul");
+      setError("Error connecting to server");
       console.error(err);
     } finally {
       setSaving(false);
@@ -149,7 +149,7 @@ export default function PersonalData({ userEmail, onBack, onLogout, onNavigate, 
         />
         <div style={{ textAlign: "center", padding: "3rem", marginTop: "4rem" }}>
           <div className="spinner" style={{ margin: "0 auto 1rem" }}></div>
-          <p style={{ color: "#666" }}>Se încarcă datele...</p>
+          <p style={{ color: "#666" }}>Loading data...</p>
         </div>
       </div>
     );
