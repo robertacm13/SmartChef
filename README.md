@@ -14,9 +14,9 @@ SmartChef is an advanced food analysis and health tracking platform that leverag
 
 ### AI Recognition & Analysis
 * **Deep Learning Food Recognition**: Automated identification of food dishes using a PyTorch EfficientNet-B5 model.
-* **Ingredient Mapping**: Intelligent mapping of detected dishes to their constituent ingredients for nutritional analysis.
-* **Nutritional Breakdown**: Real-time calculation of calories, protein, carbohydrates, fats, and fiber based on ingredient profiles.
-* **Enhanced Visual Intelligence**: Advanced ingredient detection using the Moondream vision model via Ollama for detailed visual analysis.
+* **Ingredient Mapping**: Mapping from predicted dish class to typical ingredients (derived from internal rules/dictionaries in the code). Ingredient lists are inferred from the predicted `food_name`, not directly extracted per-ingredient from pixels.
+* **Nutritional Breakdown**: Real-time calculation of calories, protein, carbohydrates, fats, and fiber based on the inferred ingredient profiles and the internal `NUTRITION_DATABASE`.
+* **Enhanced Visual Intelligence (experimental)**: Optional advanced ingredient detection using the Moondream vision model via Ollama. This component is experimental and is not invoked by the default analysis pipeline unless explicitly enabled.
 
 
 ### Health & Progress Tracking
@@ -43,7 +43,7 @@ SmartChef is an advanced food analysis and health tracking platform that leverag
 ### Backend
 * **Framework**: FastAPI
 * **ML Engine**: PyTorch, TorchVision, Timm
-* **Local AI**: Ollama (qwen2.5-coder:1.5b, moondream)
+* **Local AI (optional/experimental)**: Ollama (qwen2.5-coder:1.5b, moondream)
 * **Database**: MongoDB Atlas
 * **Security**: PyOTP (2FA), JWT, Bcrypt
 * **Task Scheduling**: APScheduler
@@ -62,13 +62,13 @@ SmartChef is an advanced food analysis and health tracking platform that leverag
 * MongoDB Atlas account
 * Ollama installed locally
 
-### 2. Ollama Configuration
-Install Ollama and pull the required models:
+### 2. Ollama Configuration (optional)
+The Ollama integration is optional and used only for experimental advanced visual features (Moondream). If you plan to enable these features, install Ollama and pull the required models:
 ```bash
 ollama pull qwen2.5-coder:1.5b
 ollama pull moondream
 ```
-Ensure the Ollama service is running on `http://localhost:11434`.
+Ensure the Ollama service is running on `http://localhost:11434` if you enable the experimental features. The default analysis pipeline does not require Ollama.
 
 ### 3. Backend Setup
 ```bash
