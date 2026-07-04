@@ -273,7 +273,7 @@ export default function ResetPassword({ onBack, onLoginSuccess }) {
                   Invalid or expired token
                 </p>
                 <p style={{ color: "#555", fontSize: "0.9rem" }}>
-                  {error || "The password reset link is no longer valid."}}
+                  {error || "The password reset link is no longer valid."}
                 </p>
               </div>
 
